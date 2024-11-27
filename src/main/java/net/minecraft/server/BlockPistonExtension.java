@@ -16,7 +16,7 @@ public class BlockPistonExtension extends Block {
     public void remove(World world, int i, int j, int k) {
         super.remove(world, i, j, k);
         int l = world.getData(i, j, k);
-        if (l > 5 || l < 0) return; // CraftBukkit - fixed a piston AIOOBE issue.
+        if (l < 0 || l == 6 || l == 7 || l > 13) return; // CraftBukkit - fixed a piston AIOOBE issue.
         int i1 = PistonBlockTextures.a[b(l)];
 
         i += PistonBlockTextures.b[i1];

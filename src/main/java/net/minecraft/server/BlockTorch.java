@@ -1,5 +1,7 @@
 package net.minecraft.server;
 
+import com.legacyminecraft.poseidon.PoseidonConfig;
+
 import java.util.Random;
 
 public class BlockTorch extends Block {
@@ -30,6 +32,7 @@ public class BlockTorch extends Block {
     }
 
     public void postPlace(World world, int i, int j, int k, int l) {
+        if (PoseidonConfig.getInstance().getConfigBoolean("world.settings.pistons.transmutation-fix.enabled", true) && world.getTypeId(i, j, k) != this.id) return;
         int i1 = world.getData(i, j, k);
 
         if (l == 1 && this.g(world, i, j - 1, k)) {
@@ -111,7 +114,7 @@ public class BlockTorch extends Block {
     }
 
     private boolean h(World world, int i, int j, int k) {
-        if (!this.canPlace(world, i, j, k)) {
+        if (!this.canPlace(world, i, j, k) && (!PoseidonConfig.getInstance().getConfigBoolean("world.settings.pistons.other-fixes.enabled") || world.getTypeId(i, j, k) == this.id)) {
             this.g(world, i, j, k, world.getData(i, j, k));
             world.setTypeId(i, j, k, 0);
             return false;
