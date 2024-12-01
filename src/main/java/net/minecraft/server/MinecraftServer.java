@@ -53,6 +53,7 @@ public class MinecraftServer implements Runnable, ICommandListener {
     public boolean spawnAnimals;
     public boolean pvpMode;
     public boolean allowFlight;
+    public String messageOfTheDay;
 
     // CraftBukkit start
     public List<WorldServer> worlds = new ArrayList<WorldServer>();
@@ -126,6 +127,8 @@ public class MinecraftServer implements Runnable, ICommandListener {
         this.spawnAnimals = this.propertyManager.getBoolean("spawn-animals", true);
         this.pvpMode = this.propertyManager.getBoolean("pvp", true);
         this.allowFlight = this.propertyManager.getBoolean("allow-flight", false);
+        this.messageOfTheDay = this.propertyManager.getString("motd", "A Minecraft Server");
+        this.messageOfTheDay.replace('\u00a7', '$');
         InetAddress inetaddress = null;
 
         if (s.length() > 0) {
