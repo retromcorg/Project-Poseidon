@@ -14,6 +14,11 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Properties;
+import java.util.logging.Logger;
 
 public final class PoseidonServer {
     private final MinecraftServer server;
@@ -112,8 +117,7 @@ public final class PoseidonServer {
 //            throw new UnsupportedOperationException("Server not initialized");
             return;
         }
-
-
+      
         getLogger().info("[Poseidon] Stopping Project Poseidon Modules!");
 
         UUIDManager.getInstance().saveJsonArray();

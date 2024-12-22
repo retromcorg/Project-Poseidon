@@ -2,11 +2,15 @@ package net.minecraft.server;
 
 import com.legacyminecraft.poseidon.Poseidon;
 import com.legacyminecraft.poseidon.PoseidonConfig;
+import com.legacyminecraft.poseidon.PoseidonPlugin;
 import com.legacyminecraft.poseidon.util.ServerLogRotator;
 import com.legacyminecraft.poseidon.utility.PerformanceStatistic;
+import com.legacyminecraft.poseidon.utility.PoseidonVersionChecker;
+import com.projectposeidon.johnymuffin.UUIDManager;
 import com.legacyminecraft.poseidon.watchdog.WatchDogThread;
 import jline.ConsoleReader;
 import joptsimple.OptionSet;
+import org.bukkit.Bukkit;
 import org.bukkit.World.Environment;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.LoggerOutputStream;
