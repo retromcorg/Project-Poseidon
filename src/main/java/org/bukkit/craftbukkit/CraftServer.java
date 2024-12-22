@@ -65,9 +65,9 @@ public final class CraftServer implements Server {
     private final String protocolVersion = "1.7.3";
     private final String GameVersion = "b1.7.3";
     private final ServicesManager servicesManager = new SimpleServicesManager();
-    private final BukkitScheduler scheduler = new CraftScheduler(this);
+    private final BukkitScheduler scheduler;
     private final SimpleCommandMap commandMap = new SimpleCommandMap(this);
-    private final PluginManager pluginManager = new SimplePluginManager(this, commandMap);
+    private final PluginManager pluginManager;
     protected final MinecraftServer console;
     protected final ServerConfigurationManager server;
     private final Map<String, World> worlds = new LinkedHashMap<String, World>();
@@ -87,6 +87,9 @@ public final class CraftServer implements Server {
         PoseidonServer poseidonServer = new PoseidonServer(console, this);
         Poseidon.setServer(poseidonServer);
         //Project Poseidon End
+
+        this.pluginManager = new SimplePluginManager(this, commandMap); //Project Poseidon - This must run after PoseidonServer is set
+        this.scheduler = new CraftScheduler(this); //Project Poseidon - This must run after PoseidonServer is set
 
         configuration = new Configuration((File) console.options.valueOf("bukkit-settings"));
         loadConfig();

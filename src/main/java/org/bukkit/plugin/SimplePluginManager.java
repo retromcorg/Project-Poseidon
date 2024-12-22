@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MapMaker;
 import com.legacyminecraft.poseidon.Poseidon;
 import com.legacyminecraft.poseidon.event.PoseidonCustomListener;
+import com.legacyminecraft.poseidon.utility.PerformanceStatistic;
 import org.bukkit.Server;
 import org.bukkit.command.Command;
 import org.bukkit.command.PluginCommandYamlParser;
@@ -56,9 +57,23 @@ public final class SimplePluginManager implements PluginManager {
 
         defaultPerms.put(true, new HashSet<Permission>());
         defaultPerms.put(false, new HashSet<Permission>());
+
+        // Project Poseidon Start
+        this.listenerPerformanceEnabled = Poseidon.getServer().getConfig().getConfigBoolean("settings.performance-monitoring.listener-reporting.enabled");
+        this.printOnSlowListener = Poseidon.getServer().getConfig().getConfigBoolean("settings.performance-monitoring.listener-reporting.print-on-slow-listeners.enabled");
+        this.printOnSlowListenerThreshold = Poseidon.getServer().getConfig().getConfigInteger("settings.performance-monitoring.listener-reporting.print-on-slow-listeners.value");
+
+        this.listenerPerformance = Poseidon.getServer().getListenerPerformance(); // Get the listener performance map from PoseidonServer for storing listener performance statistics
+        // Project Poseidon End
     }
 
     // Project Poseidon Start
+
+    private final boolean listenerPerformanceEnabled; // Project Poseidon
+    private final Map<String, PerformanceStatistic> listenerPerformance; // Project Poseidon
+
+    private final boolean printOnSlowListener;
+    private final int printOnSlowListenerThreshold;
 
     @Override
     public void registerEvents(Listener listener, Plugin plugin) {
@@ -185,12 +200,12 @@ public final class SimplePluginManager implements PluginManager {
 
     /**
      * Loads the plugin in the specified file
-     *
+     * <p>
      * File must be valid according to the current enabled Plugin interfaces
      *
      * @param file File containing the plugin to load
      * @return The Plugin loaded, or null if it was invalid
-     * @throws InvalidPluginException Thrown when the specified file is not a valid plugin
+     * @throws InvalidPluginException      Thrown when the specified file is not a valid plugin
      * @throws InvalidDescriptionException Thrown when the specified file contains an invalid description
      */
     public synchronized Plugin loadPlugin(File file) throws InvalidPluginException, InvalidDescriptionException, UnknownDependencyException {
@@ -199,13 +214,13 @@ public final class SimplePluginManager implements PluginManager {
 
     /**
      * Loads the plugin in the specified file
-     *
+     * <p>
      * File must be valid according to the current enabled Plugin interfaces
      *
-     * @param file File containing the plugin to load
+     * @param file                   File containing the plugin to load
      * @param ignoreSoftDependencies Loader will ignore soft dependencies if this flag is set to true
      * @return The Plugin loaded, or null if it was invalid
-     * @throws InvalidPluginException Thrown when the specified file is not a valid plugin
+     * @throws InvalidPluginException      Thrown when the specified file is not a valid plugin
      * @throws InvalidDescriptionException Thrown when the specified file contains an invalid description
      */
     public synchronized Plugin loadPlugin(File file, boolean ignoreSoftDependencies) throws InvalidPluginException, InvalidDescriptionException, UnknownDependencyException {
@@ -242,7 +257,7 @@ public final class SimplePluginManager implements PluginManager {
 
     /**
      * Checks if the given plugin is loaded and returns it when applicable
-     *
+     * <p>
      * Please note that the name of the plugin is case-sensitive
      *
      * @param name Name of the plugin to check
@@ -258,7 +273,7 @@ public final class SimplePluginManager implements PluginManager {
 
     /**
      * Checks if the given plugin is enabled or not
-     *
+     * <p>
      * Please note that the name of the plugin is case-sensitive.
      *
      * @param name Name of the plugin to check
@@ -292,15 +307,15 @@ public final class SimplePluginManager implements PluginManager {
                 commandMap.registerAll(plugin.getDescription().getName(), pluginCommands);
 
                 // Project Poseidon - Start - Hide commands
-                for(Command c : pluginCommands) {
-                    if(c.isHidden()) {
+                for (Command c : pluginCommands) {
+                    if (c.isHidden()) {
                         Poseidon.getServer().addHiddenCommand(c.getLabel());
                         Poseidon.getServer().addHiddenCommands(c.getAliases());
                     }
                 }
                 // Project Poseidon - End - Hide commands
             }
-            
+
             try {
                 plugin.getPluginLoader().enablePlugin(plugin);
             } catch (Throwable ex) {
@@ -310,7 +325,7 @@ public final class SimplePluginManager implements PluginManager {
     }
 
     public void disablePlugins() {
-        for (Plugin plugin: getPlugins()) {
+        for (Plugin plugin : getPlugins()) {
             disablePlugin(plugin);
         }
     }
@@ -351,7 +366,7 @@ public final class SimplePluginManager implements PluginManager {
     }
 
     /**
-     * Calls a player related event with the given details
+     * Calls a player related event with the given details and logs execution time, calling plugin, and listener class.
      *
      * @param event Event details
      */
@@ -360,8 +375,31 @@ public final class SimplePluginManager implements PluginManager {
 
         if (eventListeners != null) {
             for (RegisteredListener registration : eventListeners) {
+                long startTime = System.currentTimeMillis();  // Start timing before event call
+
                 try {
-                    registration.callEvent(event);
+                    registration.callEvent(event);  // Call the event
+
+                    // Project Poseidon - Start - Listener Performance Reporting
+                    if (listenerPerformanceEnabled) {
+                        long duration = System.currentTimeMillis() - startTime;  // Calculate duration in milliseconds
+
+                        String listenerKey = registration.getListener().getClass().getName() + ":" + event.getType().toString();
+
+                        listenerPerformance.computeIfAbsent(listenerKey, k -> new PerformanceStatistic()).update(duration);
+
+                        // If event took longer than the threshold, print the performance statistics for the listener
+                        if (printOnSlowListener && duration > printOnSlowListenerThreshold) {
+                            server.getLogger().log(Level.WARNING, String.format(
+                                    "[Poseidon] Event %s in %s took %d milliseconds. Statistics: %s",
+                                    event.getType(),
+                                    listenerKey,
+                                    duration,
+                                    listenerPerformance.get(listenerKey).printStats()
+                            ));
+                        }
+                    }
+                    // Project Poseidon - End - Listener Performance Reporting
                 } catch (AuthorNagException ex) {
                     Plugin plugin = registration.getPlugin();
 
@@ -374,10 +412,10 @@ public final class SimplePluginManager implements PluginManager {
                             author = plugin.getDescription().getAuthors().get(0);
                         }
                         server.getLogger().log(Level.SEVERE, String.format(
-                            "Nag author: '%s' of '%s' about the following: %s",
-                            author,
-                            plugin.getDescription().getName(),
-                            ex.getMessage()
+                                "Nag author: '%s' of '%s' about the following: %s",
+                                author,
+                                plugin.getDescription().getName(),
+                                ex.getMessage()
                         ));
                     }
                 } catch (Throwable ex) {
@@ -387,13 +425,14 @@ public final class SimplePluginManager implements PluginManager {
         }
     }
 
+
     /**
      * Registers the given event to the specified listener
      *
-     * @param type EventType to register
+     * @param type     EventType to register
      * @param listener PlayerListener to register
      * @param priority Priority of this event
-     * @param plugin Plugin to register
+     * @param plugin   Plugin to register
      */
     public void registerEvent(Event.Type type, Listener listener, Priority priority, Plugin plugin) {
         if (!plugin.isEnabled()) {
@@ -406,11 +445,11 @@ public final class SimplePluginManager implements PluginManager {
     /**
      * Registers the given event to the specified listener using a directly passed EventExecutor
      *
-     * @param type EventType to register
+     * @param type     EventType to register
      * @param listener PlayerListener to register
      * @param executor EventExecutor to register
      * @param priority Priority of this event
-     * @param plugin Plugin to register
+     * @param plugin   Plugin to register
      */
     public void registerEvent(Event.Type type, Listener listener, EventExecutor executor, Priority priority, Plugin plugin) {
         if (!plugin.isEnabled()) {

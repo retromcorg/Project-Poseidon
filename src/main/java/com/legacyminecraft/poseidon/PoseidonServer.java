@@ -1,5 +1,6 @@
 package com.legacyminecraft.poseidon;
 
+import com.legacyminecraft.poseidon.utility.PerformanceStatistic;
 import com.legacyminecraft.poseidon.utility.PoseidonVersionChecker;
 import com.legacyminecraft.poseidon.watchdog.WatchDogThread;
 import com.projectposeidon.johnymuffin.UUIDManager;
@@ -10,11 +11,9 @@ import org.bukkit.craftbukkit.CraftServer;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public final class PoseidonServer {
     private final MinecraftServer server;
@@ -28,9 +27,16 @@ public final class PoseidonServer {
     private PoseidonVersionChecker poseidonVersionChecker;
     private WatchDogThread watchDogThread;
 
+    private Map<String, PerformanceStatistic> listenerPerformance = new HashMap<String, PerformanceStatistic>();
+
+    private Map<String, PerformanceStatistic> taskPerformance = new HashMap<String, PerformanceStatistic>();
+
+    private PoseidonConfig config;
+
     public PoseidonServer(MinecraftServer server, CraftServer craftServer) {
         this.server = server;
         this.craftServer = craftServer;
+        this.config = PoseidonConfig.getInstance();
 
         loadVersionProperties();
 
@@ -84,7 +90,7 @@ public final class PoseidonServer {
             return;
         }
 
-        if(!getBuildType().equalsIgnoreCase("production")) {
+        if (!getBuildType().equalsIgnoreCase("production")) {
             getLogger().warning("[Poseidon] Version checker is disabled as this is a " + getBuildType() + " build. The updater will only check for updates on production builds.");
             return;
         }
@@ -103,8 +109,10 @@ public final class PoseidonServer {
 
     public void shutdownServer() {
         if (!serverInitialized) {
-            throw new UnsupportedOperationException("Server not initialized");
+//            throw new UnsupportedOperationException("Server not initialized");
+            return;
         }
+
 
         getLogger().info("[Poseidon] Stopping Project Poseidon Modules!");
 
@@ -169,7 +177,6 @@ public final class PoseidonServer {
         return hiddenCommands.contains(cmdName.toLowerCase());
     }
 
-
     /**
      * Hides the command from param from being logged to server console
      *
@@ -197,4 +204,40 @@ public final class PoseidonServer {
         }
     }
 
+    public Map<String, PerformanceStatistic> getListenerPerformance() {
+        return listenerPerformance;
+    }
+
+    public Map<String, PerformanceStatistic> getTaskPerformance() {
+        return taskPerformance;
+    }
+
+    // Generic method to sort any performance map
+    public Map<String, PerformanceStatistic> getSortedPerformance(Map<String, PerformanceStatistic> unsortedMap) {
+        return unsortedMap.entrySet()
+                .stream()
+                .sorted(Map.Entry.<String, PerformanceStatistic>comparingByValue(
+                        Comparator.comparingLong(PerformanceStatistic::getAverageExecutionTime).reversed()
+                ))
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (e1, e2) -> e1, // if same key, keep the first
+                        LinkedHashMap::new
+                ));
+    }
+
+    // Specific method to get sorted listener performance
+    public Map<String, PerformanceStatistic> getSortedListenerPerformance() {
+        return getSortedPerformance(getListenerPerformance());
+    }
+
+    // Specific method to get sorted task performance
+    public Map<String, PerformanceStatistic> getSortedTaskPerformance() {
+        return getSortedPerformance(getTaskPerformance());
+    }
+
+    public PoseidonConfig getConfig() {
+        return config;
+    }
 }

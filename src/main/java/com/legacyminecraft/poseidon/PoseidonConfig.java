@@ -109,6 +109,23 @@ public class PoseidonConfig extends Configuration {
         generateConfigOption("settings.watchdog.debug-timeout.value", 30);
         generateConfigOption("settings.watchdog.debug-timeout.info", "debug-timeout can be used to print a stack trace at a lower interval then the main timeout allowing admins to locate blocking tasks that cause hangs over a certain duration. Only enable this if you have experienced temporary hangs/server freezes.");
 
+        // Performance Monitoring
+        generateConfigOption("settings.performance-monitoring.listener-reporting.info", "This setting will cause the server to record listener execution times.");
+        generateConfigOption("settings.performance-monitoring.listener-reporting.enabled", true);
+        generateConfigOption("settings.performance-monitoring.listener-reporting.print-statistics-on-shutdown.info", "Prints the listener statistics to the console on server shutdown.");
+        generateConfigOption("settings.performance-monitoring.listener-reporting.print-statistics-on-shutdown.enabled", false);
+        generateConfigOption("settings.performance-monitoring.listener-reporting.print-on-slow-listeners.info", "Print to console when a listener takes longer than the specified time in milliseconds. It isn't recommended to set this any lower then 10ms to prevent console spam.");
+        generateConfigOption("settings.performance-monitoring.listener-reporting.print-on-slow-listeners.enabled", true);
+        generateConfigOption("settings.performance-monitoring.listener-reporting.print-on-slow-listeners.value", 50); // Default to one Minecraft tick
+
+        generateConfigOption("settings.performance-monitoring.task-reporting.info", "This setting will cause the server to record synchronous task execution times.");
+        generateConfigOption("settings.performance-monitoring.task-reporting.enabled", true);
+        generateConfigOption("settings.performance-monitoring.task-reporting.print-statistics-on-shutdown.info", "Prints the task statistics to the console on server shutdown.");
+        generateConfigOption("settings.performance-monitoring.task-reporting.print-statistics-on-shutdown.enabled", false);
+        generateConfigOption("settings.performance-monitoring.task-reporting.print-on-slow-tasks.info", "Print to console when a task takes longer than the specified time in milliseconds. It isn't recommended to set this any lower then 10ms to prevent console spam.");
+        generateConfigOption("settings.performance-monitoring.task-reporting.print-on-slow-tasks.enabled", true);
+        generateConfigOption("settings.performance-monitoring.task-reporting.print-on-slow-tasks.value", 50); // Default to one Minecraft tick
+
         //Packet Events
         generateConfigOption("settings.packet-events.enabled", false);
         generateConfigOption("settings.packet-events.info", "This setting causes the server to fire a Bukkit event for each packet received and sent to a player once they have finished the initial login process. This only needs to be enabled if you have a plugin that uses this specific feature.");
