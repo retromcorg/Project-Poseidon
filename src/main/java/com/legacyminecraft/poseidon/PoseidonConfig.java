@@ -116,7 +116,7 @@ public class PoseidonConfig extends Configuration {
         generateConfigOption("settings.performance-monitoring.listener-reporting.print-statistics-on-shutdown.enabled", false);
         generateConfigOption("settings.performance-monitoring.listener-reporting.print-on-slow-listeners.info", "Print to console when a listener takes longer than the specified time in milliseconds. It isn't recommended to set this any lower then 10ms to prevent console spam.");
         generateConfigOption("settings.performance-monitoring.listener-reporting.print-on-slow-listeners.enabled", true);
-        generateConfigOption("settings.performance-monitoring.listener-reporting.print-on-slow-listeners.value", 50); // Default to one Minecraft tick
+        generateConfigOption("settings.performance-monitoring.listener-reporting.print-on-slow-listeners.value", 100); // Default to two Minecraft tick
 
         generateConfigOption("settings.performance-monitoring.task-reporting.info", "This setting will cause the server to record synchronous task execution times.");
         generateConfigOption("settings.performance-monitoring.task-reporting.enabled", true);
@@ -124,7 +124,7 @@ public class PoseidonConfig extends Configuration {
         generateConfigOption("settings.performance-monitoring.task-reporting.print-statistics-on-shutdown.enabled", false);
         generateConfigOption("settings.performance-monitoring.task-reporting.print-on-slow-tasks.info", "Print to console when a task takes longer than the specified time in milliseconds. It isn't recommended to set this any lower then 10ms to prevent console spam.");
         generateConfigOption("settings.performance-monitoring.task-reporting.print-on-slow-tasks.enabled", true);
-        generateConfigOption("settings.performance-monitoring.task-reporting.print-on-slow-tasks.value", 50); // Default to one Minecraft tick
+        generateConfigOption("settings.performance-monitoring.task-reporting.print-on-slow-tasks.value", 100); // Default to two Minecraft tick
 
         //Packet Events
         generateConfigOption("settings.packet-events.enabled", false);
