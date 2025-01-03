@@ -1,15 +1,28 @@
 package net.minecraft.server;
 
+import org.bukkit.entity.HumanEntity;
+import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.InventoryType;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public class InventoryCrafting implements IInventory {
 
     private ItemStack[] items;
     private int b;
     private Container c;
+    // Poseidon start
+    public IInventory resultInventory;
+    public CraftingRecipe currentRecipe;
+    private List<HumanEntity> viewers = new ArrayList<HumanEntity>();
+    // Poseidon end
 
     // CraftBukkit start
     public ItemStack[] getContents() {
         return this.items;
     }
+
     // CraftBukkit end
 
     public InventoryCrafting(Container container, int i, int j) {
@@ -79,4 +92,26 @@ public class InventoryCrafting implements IInventory {
     public boolean a_(EntityHuman entityhuman) {
         return true;
     }
+
+    // Poseidon start
+    public InventoryType getType() {
+        return items.length == 4 ? InventoryType.CRAFTING : InventoryType.WORKBENCH;
+    }
+
+    public List<HumanEntity> getViewers() {
+        return viewers;
+    }
+
+    public void onOpen(HumanEntity player) {
+        viewers.add(player);
+    }
+
+    public void onClose(HumanEntity player) {
+        viewers.remove(player);
+    }
+
+    public InventoryHolder getOwner() {
+        return null;
+    }
+    // Poseidon end
 }
