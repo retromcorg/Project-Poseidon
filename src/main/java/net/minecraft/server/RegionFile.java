@@ -2,6 +2,8 @@ package net.minecraft.server;
 
 import com.legacyminecraft.poseidon.PoseidonConfig;
 import com.legacyminecraft.poseidon.level.ChunkCompressionType;
+import net.jpountz.lz4.LZ4BlockInputStream;
+import net.jpountz.lz4.LZ4BlockOutputStream;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -149,31 +151,29 @@ public class RegionFile {
                             this.b("READ", i, j, "invalid length: " + j1 + " > 4096 * " + i1);
                             return null;
                         } else {
-                            byte b0 = this.c.readByte();
-                            byte[] abyte;
-                            DataInputStream datainputstream;
-
                             // Poseidon start - More compression formats
+                            byte b0 = this.c.readByte();
+                            byte[] abyte = new byte[j1 - 1];
+                            this.c.read(abyte);
+
+                            DataInputStream datainputstream;
+                            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(abyte);
+
                             if (b0 == ChunkCompressionType.NONE.getId()) {
-                                abyte = new byte[j1 - 1];
-                                this.c.read(abyte);
-                                datainputstream = new DataInputStream(new ByteArrayInputStream(abyte));
-                                return datainputstream;
+                                datainputstream = new DataInputStream(byteArrayInputStream);
                             } else if (b0 == ChunkCompressionType.GZIP.getId()) {
-                                abyte = new byte[j1 - 1];
-                                this.c.read(abyte);
-                                datainputstream = new DataInputStream(new GZIPInputStream(new ByteArrayInputStream(abyte)));
-                                return datainputstream;
+                                datainputstream = new DataInputStream(new GZIPInputStream(byteArrayInputStream));
                             } else if (b0 == ChunkCompressionType.DEFLATE.getId()) {
-                                abyte = new byte[j1 - 1];
-                                this.c.read(abyte);
-                                datainputstream = new DataInputStream(new InflaterInputStream(new ByteArrayInputStream(abyte)));
-                                return datainputstream;
-                            // Poseidon end
+                                datainputstream = new DataInputStream(new InflaterInputStream(byteArrayInputStream));
+                            } else if (b0 == ChunkCompressionType.LZ4.getId()) {
+                                datainputstream = new DataInputStream(new LZ4BlockInputStream(byteArrayInputStream));
                             } else {
                                 this.b("READ", i, j, "unknown version " + b0);
                                 return null;
                             }
+
+                            return datainputstream;
+                            // Poseidon end
                         }
                     }
                 }
@@ -189,17 +189,21 @@ public class RegionFile {
         if(this.d(i, j)) { // Check if chunk is in bounds.
             return null;
         } else {
+            ChunkBuffer chunkBuffer = new ChunkBuffer(this, i, j);
+
             switch(chunkCompressionType) {
                 case NONE:
-                    return new DataOutputStream(new ChunkBuffer(this, i, j));
+                    return new DataOutputStream(chunkBuffer);
                 case GZIP:
                     try {
-                        return new DataOutputStream(new GZIPOutputStream(new ChunkBuffer(this, i, j)));
+                        return new DataOutputStream(new GZIPOutputStream(chunkBuffer));
                     } catch (IOException ex) {
                         return null;
                     }
                 case DEFLATE:
-                    return new DataOutputStream(new DeflaterOutputStream(new ChunkBuffer(this, i, j)));
+                    return new DataOutputStream(new DeflaterOutputStream(chunkBuffer));
+                case LZ4:
+                    return new DataOutputStream(new LZ4BlockOutputStream(chunkBuffer));
                 default:
                     return null;
             }
