@@ -1,5 +1,7 @@
 package net.minecraft.server;
 
+import com.legacyminecraft.poseidon.PoseidonConfig;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.zip.DeflaterOutputStream;
@@ -89,7 +91,13 @@ public class RegionFile {
         return i;
     }
 
-    private void a(String s) {}
+    private void a(String s) {
+        // Poseidon start - Allow printing region debug information. Useful for developers (and nerds).
+        if(PoseidonConfig.getInstance().getConfigBoolean("developer.region-transaction-logs.enable", false)) {
+            MinecraftServer.log.info(s);
+        }
+        // Poseidon end
+    }
 
     private void b(String s) {
         this.a(s + "\n");
