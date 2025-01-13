@@ -169,6 +169,9 @@ public class PoseidonConfig extends Configuration {
         generateConfigOption("world.settings.mob-spawner-area-limit.chunk-radius", 8);
         generateConfigOption("world.settings.mob-spawner-area-limit.info",
                 "This setting controls the maximum number of entities of a mob spawner type that can exist within the defined chunk radius around a mob spawner. If the number of entities exceeds this limit, the spawner will stop spawning additional entities of that type. This is useful to stop the extreme lag that can be caused by mob spawners.");
+        generateConfigOption("world.settings.compression.level", "deflate");
+        generateConfigOption("world.settings.compression.info",
+                "Allows changing the compression applied to world chunks. Possible values are \"none\", \"deflate\", and \"gzip\".");
 
         //generateConfigOption("world-settings.eject-from-vehicle-on-teleport.enabled", true);
         //generateConfigOption("world-settings.eject-from-vehicle-on-teleport.info", "Eject the player from a boat or minecart before teleporting them preventing cross world coordinate exploits.");
@@ -222,7 +225,7 @@ public class PoseidonConfig extends Configuration {
 
         //Developer options
         generateConfigOption("developer.region-transaction-logs.enable", false);
-        generateConfigOption("developer.region-transaction-logs", "Enables region transaction logs. Very useful for developers trying to work on the region format, not at all useful for most end-users. Logs a LOT of data.");
+        generateConfigOption("developer.region-transaction-logs.info", "Enables region transaction logs. Very useful for developers trying to work on the region format, not at all useful for most end-users. Logs a LOT of data.");
 
         //Tree Leave Destroy Blacklist
         if (Boolean.valueOf(String.valueOf(getConfigOption("world.settings.block-tree-growth.enabled", true)))) {
