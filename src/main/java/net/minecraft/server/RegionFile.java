@@ -4,6 +4,9 @@ import com.legacyminecraft.poseidon.PoseidonConfig;
 import com.legacyminecraft.poseidon.level.ChunkCompressionType;
 import net.jpountz.lz4.LZ4BlockInputStream;
 import net.jpountz.lz4.LZ4BlockOutputStream;
+import org.tukaani.xz.LZMA2Options;
+import org.tukaani.xz.XZInputStream;
+import org.tukaani.xz.XZOutputStream;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -167,6 +170,8 @@ public class RegionFile {
                                 datainputstream = new DataInputStream(new InflaterInputStream(byteArrayInputStream));
                             } else if (b0 == ChunkCompressionType.LZ4.getId()) {
                                 datainputstream = new DataInputStream(new LZ4BlockInputStream(byteArrayInputStream));
+                            } else if (b0 == ChunkCompressionType.XZ.getId()) {
+                                datainputstream = new DataInputStream(new XZInputStream(byteArrayInputStream));
                             } else {
                                 this.b("READ", i, j, "unknown version " + b0);
                                 return null;
@@ -191,21 +196,23 @@ public class RegionFile {
         } else {
             ChunkBuffer chunkBuffer = new ChunkBuffer(this, i, j);
 
-            switch(chunkCompressionType) {
-                case NONE:
-                    return new DataOutputStream(chunkBuffer);
-                case GZIP:
-                    try {
+            try {
+                switch (chunkCompressionType) {
+                    case NONE:
+                        return new DataOutputStream(chunkBuffer);
+                    case GZIP:
                         return new DataOutputStream(new GZIPOutputStream(chunkBuffer));
-                    } catch (IOException ex) {
+                    case DEFLATE:
+                        return new DataOutputStream(new DeflaterOutputStream(chunkBuffer));
+                    case LZ4:
+                        return new DataOutputStream(new LZ4BlockOutputStream(chunkBuffer));
+                    case XZ:
+                        return new DataOutputStream(new XZOutputStream(chunkBuffer, new LZMA2Options(1)));
+                    default:
                         return null;
-                    }
-                case DEFLATE:
-                    return new DataOutputStream(new DeflaterOutputStream(chunkBuffer));
-                case LZ4:
-                    return new DataOutputStream(new LZ4BlockOutputStream(chunkBuffer));
-                default:
-                    return null;
+                }
+            } catch (IOException ex) {
+                return null;
             }
 
         }

@@ -7,7 +7,8 @@ public enum ChunkCompressionType {
     NONE("none", 0),
     GZIP("gzip", 1),
     DEFLATE("deflate", 2),
-    LZ4("lz4", 3);
+    LZ4("lz4", 3),
+    XZ("xz", 4);
 
     private static final Map<String, ChunkCompressionType> BY_NAME = new HashMap<>();
     private static final Map<Integer, ChunkCompressionType> BY_ID = new HashMap<>();
