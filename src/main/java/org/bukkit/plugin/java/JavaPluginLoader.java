@@ -625,6 +625,12 @@ public class JavaPluginLoader implements PluginLoader
                         ((PlayerListener) listener).onPlayerChangedWorld((PlayerChangedWorldEvent) event);
                     }
                 };
+            case PLAYER_BUNGEE_MESSAGE:
+                return new EventExecutor() {
+                    public void execute(Listener listener, Event event) {
+                        ((PlayerListener) listener).onPlayerBungeeMessage((PlayerBungeeMessageEvent) event);
+                    }
+                };
 
             // Block Events
             case BLOCK_PHYSICS:
