@@ -350,4 +350,6 @@ public interface Player extends HumanEntity, CommandSender, OfflinePlayer {
 
     public void sendPacket(final Player player, final Packet packet);
 
+    public void sendBungeeMessage(Plugin source, byte[] message); // Poseidon
+
 }

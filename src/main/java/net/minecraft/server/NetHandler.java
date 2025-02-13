@@ -211,4 +211,9 @@ public abstract class NetHandler {
     public void a(Packet61 packet61) {
         this.a((Packet) packet61);
     }
+    
+    // Poseidon
+    public void handleBungeePayload(Packet250BungeePayload packet250bungeepayload) {
+        this.a((Packet) packet250bungeepayload);
+    }
 }
