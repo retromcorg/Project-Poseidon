@@ -5,6 +5,7 @@ import net.minecraft.server.Packet;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.map.MapView;
+import org.bukkit.plugin.Plugin;
 
 import java.net.InetSocketAddress;
 import java.util.UUID;

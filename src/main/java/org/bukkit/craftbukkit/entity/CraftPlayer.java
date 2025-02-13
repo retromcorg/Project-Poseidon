@@ -13,6 +13,7 @@ import org.bukkit.craftbukkit.map.RenderData;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.map.MapView;
+import org.bukkit.plugin.Plugin;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
