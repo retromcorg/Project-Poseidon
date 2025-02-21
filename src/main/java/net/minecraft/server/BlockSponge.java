@@ -33,6 +33,7 @@ public class BlockSponge extends Block {
                 for (int z = k - radius; z <= k + radius; ++z) {
                     int type = world.getTypeId(x, y, z);
                     if ((type != Block.WATER.id && type != Block.STATIONARY_WATER.id)) continue;
+                    if ((type != Block.LAVA.id && type != Block.STATIONARY_LAVA.id)) continue;
 
                     world.applyPhysics(x, y, z, type);
                 }
