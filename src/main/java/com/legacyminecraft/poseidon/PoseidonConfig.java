@@ -219,7 +219,7 @@ public class PoseidonConfig extends Configuration {
         generateConfigOption("command.tps.enabled", true);
 
         //UberBukkit
-        generateConfigOption("fix.optimize-sponges.enabled", true);
+        generateConfigOption("fix.optimize-sponges.enabled", false);
         generateConfigOption("fix.optimize-sponges.info", "Optimizes sponges by removing unnecessary block updates. This can also prevent some block duplication methods.");
 
         //Tree Leave Destroy Blacklist

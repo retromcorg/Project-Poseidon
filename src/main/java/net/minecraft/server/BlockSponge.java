@@ -33,13 +33,15 @@ public class BlockSponge extends Block {
                 for (int z = k - radius; z <= k + radius; ++z) {
                     int type = world.getTypeId(x, y, z);
 
-                    if (type == Block.WATER.id || type == Block.STATIONARY_WATER.id) {
+                    if (type == Block.WATER.id && type == Block.STATIONARY_WATER.id) {
                         world.setTypeId(x, y, z, 0);
+                        continue;
                     }
 
-                    else if ((type == Block.LAVA.id || type == Block.STATIONARY_LAVA.id) &&
-                            PoseidonConfig.getInstance().getConfigBoolean("sponge-lava-drain", true)) {
-                        world.setTypeId(x, y, z, 0);
+                    if (PoseidonConfig.getInstance().getConfigBoolean("sponge-drain-lava", true)) {
+                        if (type == Block.LAVA.id && type == Block.STATIONARY_LAVA.id) {
+                            world.setTypeId(x, y, z, 0); continue;
+                        }
                     }
 
                     world.applyPhysics(x, y, z, type);
