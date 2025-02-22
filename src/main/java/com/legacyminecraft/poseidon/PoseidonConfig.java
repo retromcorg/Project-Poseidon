@@ -141,6 +141,7 @@ public class PoseidonConfig extends Configuration {
 
         //World Settings
         generateConfigOption("world-settings.optimized-explosions", false);
+        generateConfigOption("world.settings.sponge-lava-drain", true);
         generateConfigOption("world-settings.send-explosion-velocity", true);
         generateConfigOption("world-settings.randomize-spawn", true);
         generateConfigOption("world-settings.teleport-to-highest-safe-block", true);
