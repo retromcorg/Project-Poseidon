@@ -38,7 +38,7 @@ public class BlockSponge extends Block {
                         continue;
                     }
 
-                    if (PoseidonConfig.getInstance().getConfigBoolean("sponge-drain-lava", true)) {
+                    if (PoseidonConfig.getInstance().getConfigBoolean("sponge-lava-drain", true)) {
                         if (type == Block.LAVA.id && type == Block.STATIONARY_LAVA.id) {
                             world.setTypeId(x, y, z, 0); continue;
                         }

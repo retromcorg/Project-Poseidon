@@ -141,7 +141,6 @@ public class PoseidonConfig extends Configuration {
 
         //World Settings
         generateConfigOption("world-settings.optimized-explosions", false);
-        generateConfigOption("world.settings.sponge-lava-drain", true);
         generateConfigOption("world-settings.send-explosion-velocity", true);
         generateConfigOption("world-settings.randomize-spawn", true);
         generateConfigOption("world-settings.teleport-to-highest-safe-block", true);
@@ -219,8 +218,9 @@ public class PoseidonConfig extends Configuration {
         generateConfigOption("command.tps.enabled", true);
 
         //UberBukkit
-        generateConfigOption("fix.optimize-sponges.enabled", false);
+        generateConfigOption("fix.optimize-sponges.enabled", true);
         generateConfigOption("fix.optimize-sponges.info", "Optimizes sponges by removing unnecessary block updates. This can also prevent some block duplication methods.");
+        generateConfigOption("sponge-lava-drain", false);
 
         //Tree Leave Destroy Blacklist
         if (Boolean.valueOf(String.valueOf(getConfigOption("world.settings.block-tree-growth.enabled", true)))) {
