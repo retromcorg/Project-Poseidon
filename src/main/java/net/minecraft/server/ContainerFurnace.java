@@ -1,17 +1,26 @@
 package net.minecraft.server;
 
+import org.bukkit.craftbukkit.inventory.CraftInventoryFurnace;
+import org.bukkit.craftbukkit.inventory.CraftInventoryView;
+import org.bukkit.entity.HumanEntity;
+
 public class ContainerFurnace extends Container {
 
     private TileEntityFurnace a;
     private int b = 0;
     private int c = 0;
     private int h = 0;
+    // Poseidon start
+    private CraftInventoryView view = null;
+    private InventoryPlayer player;
+    // Poseidon end
 
     public ContainerFurnace(InventoryPlayer inventoryplayer, TileEntityFurnace tileentityfurnace) {
         this.a = tileentityfurnace;
         this.a(new Slot(tileentityfurnace, 0, 56, 17));
         this.a(new Slot(tileentityfurnace, 1, 56, 53));
         this.a(new SlotResult2(inventoryplayer.d, tileentityfurnace, 2, 116, 35));
+        this.player = inventoryplayer;
 
         int i;
 
@@ -58,6 +67,7 @@ public class ContainerFurnace extends Container {
     }
 
     public boolean b(EntityHuman entityhuman) {
+        if (!this.checkReachable) return true; // Poseidon
         return this.a.a_(entityhuman);
     }
 
@@ -93,5 +103,14 @@ public class ContainerFurnace extends Container {
         }
 
         return itemstack;
+    }
+
+    // Poseidon
+    @Override
+    public CraftInventoryView getBukkitView() {
+        if (view != null) return view;
+        CraftInventoryFurnace inventory = new CraftInventoryFurnace(a);
+        view = new CraftInventoryView((HumanEntity) this.player.d.getBukkitEntity(), inventory, this);
+        return view;
     }
 }

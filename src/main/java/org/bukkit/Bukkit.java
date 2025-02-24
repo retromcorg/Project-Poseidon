@@ -6,6 +6,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.generator.ChunkGenerator;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.InventoryType;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.map.MapView;
 import org.bukkit.plugin.PluginManager;
@@ -260,5 +263,21 @@ public final class Bukkit {
 
     public static void reloadWhitelist() {
         server.reloadWhitelist();
+    }
+
+    public static Inventory createInventory(InventoryHolder owner, InventoryType type) {
+        return server.createInventory(owner, type);
+    }
+
+    public static Inventory createInventory(InventoryHolder owner, int size) {
+        return server.createInventory(owner, size);
+    }
+
+    public static Inventory createInventory(InventoryHolder owner, String title, int size) {
+        return server.createInventory(owner, title, size);
+    }
+
+    public static Inventory createInventory(InventoryHolder owner, String title, int size, int stackSize) {
+        return server.createInventory(owner, title, size, stackSize);
     }
 }

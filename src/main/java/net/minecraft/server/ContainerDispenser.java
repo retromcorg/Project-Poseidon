@@ -1,11 +1,20 @@
 package net.minecraft.server;
 
+import org.bukkit.craftbukkit.inventory.CraftInventory;
+import org.bukkit.craftbukkit.inventory.CraftInventoryView;
+import org.bukkit.entity.HumanEntity;
+
 public class ContainerDispenser extends Container {
 
-    private TileEntityDispenser a;
+    public TileEntityDispenser a; // Poseidon - private -> public
+    // Poseidon start
+    private CraftInventoryView view = null;
+    private InventoryPlayer player;
+    // Poseidon end
 
     public ContainerDispenser(IInventory iinventory, TileEntityDispenser tileentitydispenser) {
         this.a = tileentitydispenser;
+        this.player = (InventoryPlayer) iinventory;
 
         int i;
         int j;
@@ -28,6 +37,16 @@ public class ContainerDispenser extends Container {
     }
 
     public boolean b(EntityHuman entityhuman) {
+        if (!this.checkReachable) return true; // Poseidon
         return this.a.a_(entityhuman);
+    }
+
+    // Poseidon
+    @Override
+    public CraftInventoryView getBukkitView() {
+        if (view != null) return view;
+        CraftInventory inventory = new CraftInventory(a);
+        view = new CraftInventoryView((HumanEntity) this.player.d.getBukkitEntity(), inventory, this);
+        return view;
     }
 }
