@@ -5,6 +5,7 @@ import net.minecraft.server.Packet;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.map.MapView;
+import org.bukkit.plugin.Plugin;
 
 import java.net.InetSocketAddress;
 import java.util.UUID;
@@ -349,5 +350,7 @@ public interface Player extends HumanEntity, CommandSender, OfflinePlayer {
     public boolean canSee(Player player);
 
     public void sendPacket(final Player player, final Packet packet);
+
+    public void sendBungeeMessage(Plugin source, byte[] message); // Poseidon
 
 }

@@ -206,4 +206,11 @@ public class PlayerListener implements Listener {
      * @param event Relevant event details
      */
     public void onPlayerItemDamage(PlayerItemDamageEvent event) {}
+	
+    /**
+     * Called when a player recieves a BungeeCord message
+     *
+     * @param event Relevant event details
+     */
+    public void onPlayerBungeeMessage(PlayerBungeeMessageEvent event) {}
 }
