@@ -756,7 +756,7 @@ public class NetServerHandler extends NetHandler implements ICommandListener {
             Packet6SpawnPosition packet6 = (Packet6SpawnPosition) packet;
             this.player.compassTarget = new Location(this.getPlayer().getWorld(), packet6.x, packet6.y, packet6.z);
         } else if (packet instanceof Packet3Chat) {
-            String message = ((Packet3Chat) packet).message;
+            String message = ChatColor.translateAlternateColorCodes('&', ((Packet3Chat) packet).message);
             for (final String line : TextWrapper.wrapText(message)) {
                 this.networkManager.queue(new Packet3Chat(line));
             }

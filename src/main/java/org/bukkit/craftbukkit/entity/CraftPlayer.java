@@ -95,10 +95,8 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     }
 
     public void sendRawMessage(String message) {
-        // plugins inconsistently apply color codes, so make sure they are applied
-        String colorCodedMessage = ChatColor.translateAlternateColorCodes('&', message);
         try {
-            getHandle().netServerHandler.sendPacket(new Packet3Chat(colorCodedMessage));
+            getHandle().netServerHandler.sendPacket(new Packet3Chat(message));
         } catch (NullPointerException exception) {
             System.out.println("[Poseidon] Exception thrown when attempting to send packet to " + getName() + ". Does this player exist, or are they a phantom?????");
             exception.printStackTrace();
