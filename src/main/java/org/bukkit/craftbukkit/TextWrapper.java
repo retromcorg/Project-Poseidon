@@ -39,6 +39,9 @@ public class TextWrapper {
         Pattern p = Pattern.compile("(" + COLOR_CHAR + "[0-9a-fA-F])+");
         Pattern p2 = Pattern.compile(".*(" + COLOR_CHAR + "[0-9A-Fa-f])+.*$"); // to get just the last occurrence of color format in token
         String temp;
+
+        String lastColorChar = COLOR_CHAR + "f";
+        
         for (int i = 0; i < tokens.length; i++) {
             // append space to token unless it is last token
             if (i == tokens.length - 1) {
@@ -55,7 +58,10 @@ public class TextWrapper {
             lineWidth += tokenWidth;
             Matcher m = p2.matcher(tokens[i]);
 
-            String lastColorChar = m.matches() ? m.group(1) : COLOR_CHAR + "f";
+            if (m.matches()) {
+                // need to update the color to persist over new lines
+                lastColorChar = m.group(1);
+            }
 
             if (tokenLength >= CHAT_STRING_LENGTH || tokenWidth >= CHAT_WINDOW_WIDTH) {
                 // this token is too big for one line so split it
