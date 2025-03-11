@@ -107,8 +107,8 @@ public class TextWrapper {
                 // try again on a new line
                 out.append(TEMP_CHAR);
                 out.append(lastColorChar);
-                lineWidth = 2;
-                lineLength = 0;
+                lineLength = 2;
+                lineWidth = 0;
                 i--;
                 continue;
             }
