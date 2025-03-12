@@ -62,6 +62,7 @@ public class PoseidonConfig extends Configuration {
         generateConfigOption("settings.per-day-log-file.enabled", false);
         generateConfigOption("settings.per-day-log-file.latest-log.info", "This setting causes the server to create a latest.log similar to modern Minecraft servers. This can be useful for certain control panels and log file management.");
         generateConfigOption("settings.per-day-log-file.latest-log.enabled", true);
+        generateConfigOption("settings.message.wraptext", true);
 
         //generateConfigOption("settings.fetch-uuids-from", "https://api.mojang.com/profiles/minecraft");
 

@@ -106,8 +106,11 @@ public class TextWrapper {
             if (lineLength >= CHAT_STRING_LENGTH || lineWidth >= CHAT_WINDOW_WIDTH) {
                 // try again on a new line
                 out.append(TEMP_CHAR);
-                out.append(lastColorChar);
-                lineLength = 2;
+                // only include color char if it is not white since default is white
+                if (!lastColorChar.equals(COLOR_CHAR + "f")) {
+                    out.append(lastColorChar);
+                    lineLength = 2;
+                }
                 lineWidth = 0;
                 i--;
                 continue;
