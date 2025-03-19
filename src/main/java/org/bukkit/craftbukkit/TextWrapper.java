@@ -29,6 +29,12 @@ public class TextWrapper {
     public static final String allowedChars = net.minecraft.server.FontAllowedCharacters.allowedCharacters;
 
     public static String[] wrapText(final String text) {
+        /*
+        TODO: strip out all the "useless" color formats
+            Useless means that it is instantly overwritten by a succeeding color format
+            Ex: &a&b&chi -> &chi, hi&a &b &chi -> hi  &chi"
+         */
+
         final StringBuilder out = new StringBuilder();
         int lineLength = 0;
         int lineWidth = 0;
@@ -36,8 +42,7 @@ public class TextWrapper {
         int tokenLength;
         // tokens are just individual words in the message
         String[] tokens = text.split(" ");
-        Pattern p = Pattern.compile("(" + COLOR_CHAR + "[0-9a-fA-F])+");
-        Pattern p2 = Pattern.compile(".*(" + COLOR_CHAR + "[0-9A-Fa-f])+.*$"); // to get just the last occurrence of color format in token
+        Pattern p = Pattern.compile(COLOR_CHAR + "[a-fA-F0-9]"); // regex for all color formats
         String temp;
 
         String lastColorChar = COLOR_CHAR + "f";
@@ -50,18 +55,18 @@ public class TextWrapper {
                 temp = tokens[i] + " ";
             }
 
-            boolean containsColorCodes;
+            // getting the last color char in the token to persist to new line
+            Matcher m = p.matcher(tokens[i]);
+            while (m.find()) {
+                lastColorChar = temp.substring(m.start(), m.end());
+            }
+
+            boolean lastCharIsColorCode = false;
 
             tokenLength = temp.length();
             lineLength += tokenLength;
             tokenWidth = widthInPixels(temp);
             lineWidth += tokenWidth;
-            Matcher m = p2.matcher(tokens[i]);
-
-            if (m.matches()) {
-                // need to update the color to persist over new lines
-                lastColorChar = m.group(1);
-            }
 
             if (tokenLength >= CHAT_STRING_LENGTH || tokenWidth >= CHAT_WINDOW_WIDTH) {
                 // this token is too big for one line so split it
@@ -75,34 +80,37 @@ public class TextWrapper {
                     if (j < temp.length() - 1 && p.matcher(temp.substring(j, j + 1)).matches()) {
                         // we have a color format, so increment length by 2 but this will not contribute to width
                         lineLength += 2;
-                        containsColorCodes = true;
+                        lastCharIsColorCode = true;
+                        lastColorChar = temp.substring(j, j + 1);
                     } else {
                         // no color format, so normal increments
                         lineWidth += characterWidths[temp.charAt(j)];
                         lineLength++;
-                        containsColorCodes = false;
+                        lastCharIsColorCode = false;
                     }
 
                     if (lineLength >= CHAT_STRING_LENGTH || lineWidth >= CHAT_WINDOW_WIDTH) {
                         out.append(TEMP_CHAR);
-                        out.append(lastColorChar);
-                        lineLength = 2;
-                        lineWidth = 0;
 
-                        if (containsColorCodes) {
+                        if (lastCharIsColorCode && !lastColorChar.equals(COLOR_CHAR + "f")) {
                             // we need to move both the color char and the color specifier to the next line
-                            j -= 2;
+                            out.append(lastColorChar);
+                            lineLength = 2;
                         } else {
                             // not a color format, so just move one char to the next line
                             j--;
+                            lineLength = 0;
                         }
+                        lineWidth = 0;
                         continue;
                     }
                     out.append(temp.charAt(j));
                 }
                 continue;
             }
+
             // we have a smaller token than the max size so wrap based on token instead of char
+
             if (lineLength >= CHAT_STRING_LENGTH || lineWidth >= CHAT_WINDOW_WIDTH) {
                 // try again on a new line
                 out.append(TEMP_CHAR);
@@ -110,6 +118,8 @@ public class TextWrapper {
                 if (!lastColorChar.equals(COLOR_CHAR + "f")) {
                     out.append(lastColorChar);
                     lineLength = 2;
+                } else {
+                    lineLength = 0;
                 }
                 lineWidth = 0;
                 i--;
