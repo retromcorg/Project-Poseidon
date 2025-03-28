@@ -1,5 +1,8 @@
 package org.bukkit.craftbukkit;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class TextWrapper {
     private static final int[] characterWidths = new int[] {
         1, 9, 9, 8, 8, 8, 8, 7, 9, 8, 9, 9, 8, 9, 9, 9,
@@ -20,70 +23,112 @@ public class TextWrapper {
         7, 7, 7, 7, 9, 6, 7, 8, 7, 6, 6, 9, 7, 6, 7, 1
     };
     public static final char COLOR_CHAR = '\u00A7';
+    private static final char TEMP_CHAR = '\u03d5';
     public static final int CHAT_WINDOW_WIDTH = 320;
     public static final int CHAT_STRING_LENGTH = 119;
     public static final String allowedChars = net.minecraft.server.FontAllowedCharacters.allowedCharacters;
 
     public static String[] wrapText(final String text) {
+        /*
+        TODO: strip out all the "useless" color formats
+            Useless means that it is instantly overwritten by a succeeding color format
+            Ex: &a&b&chi -> &chi, hi&a &b &chi -> hi  &chi"
+         */
+
         final StringBuilder out = new StringBuilder();
-        char colorChar = 'f';
-        int lineWidth = 0;
         int lineLength = 0;
+        int lineWidth = 0;
+        int tokenWidth;
+        int tokenLength;
+        // tokens are just individual words in the message
+        String[] tokens = text.split(" ");
+        Pattern p = Pattern.compile(COLOR_CHAR + "[a-fA-F0-9]"); // regex for all color formats
+        String temp;
 
-        // Go over the message char by char.
-        for (int i = 0; i < text.length(); i++) {
-            char ch = text.charAt(i);
-
-            // Get the color
-            if (ch == COLOR_CHAR && i < text.length() - 1) {
-                // We might need a linebreak ... so ugly ;(
-                if (lineLength + 2 > CHAT_STRING_LENGTH) {
-                    out.append('\n');
-                    lineLength = 0;
-                    if (colorChar != 'f' && colorChar != 'F') {
-                        out.append(COLOR_CHAR).append(colorChar);
-                        lineLength += 2;
-                    }
-                }
-                colorChar = text.charAt(++i);
-                out.append(COLOR_CHAR).append(colorChar);
-                lineLength += 2;
-                continue;
-            }
-
-            // Figure out if it's allowed
-            int index = allowedChars.indexOf(ch);
-            if (index == -1) {
-                // Invalid character .. skip it.
-                continue;
+        String lastColorChar = COLOR_CHAR + "f";
+        
+        for (int i = 0; i < tokens.length; i++) {
+            // append space to token unless it is last token
+            if (i == tokens.length - 1) {
+                temp = tokens[i];
             } else {
-                // Sadly needed as the allowedChars string misses the first
-                index += 32;
+                temp = tokens[i] + " ";
             }
 
-            // Find the width
-            final int width = characterWidths[index];
+            // getting the last color char in the token to persist to new line
+            Matcher m = p.matcher(tokens[i]);
+            while (m.find()) {
+                lastColorChar = temp.substring(m.start(), m.end());
+            }
 
-            // See if we need a linebreak
-            if (lineLength + 1 > CHAT_STRING_LENGTH || lineWidth + width >= CHAT_WINDOW_WIDTH) {
-                out.append('\n');
+            boolean lastCharIsColorCode = false;
+
+            tokenLength = temp.length();
+            lineLength += tokenLength;
+            tokenWidth = widthInPixels(temp);
+            lineWidth += tokenWidth;
+
+            if (tokenLength >= CHAT_STRING_LENGTH || tokenWidth >= CHAT_WINDOW_WIDTH) {
+                // this token is too big for one line so split it
+
+                // reset the line accumulators since we will be taking up the whole line
+                lineWidth = 0;
                 lineLength = 0;
 
-                // Re-apply the last color if it isn't the default
-                if (colorChar != 'f' && colorChar != 'F') {
-                    out.append(COLOR_CHAR).append(colorChar);
-                    lineLength += 2;
+                for (int j = 0; j < temp.length(); j++) {
+                    // color format checking
+                    if (j < temp.length() - 1 && p.matcher(temp.substring(j, j + 1)).matches()) {
+                        // we have a color format, so increment length by 2 but this will not contribute to width
+                        lineLength += 2;
+                        lastCharIsColorCode = true;
+                        lastColorChar = temp.substring(j, j + 1);
+                    } else {
+                        // no color format, so normal increments
+                        lineWidth += characterWidths[temp.charAt(j)];
+                        lineLength++;
+                        lastCharIsColorCode = false;
+                    }
+
+                    if (lineLength >= CHAT_STRING_LENGTH || lineWidth >= CHAT_WINDOW_WIDTH) {
+                        out.append(TEMP_CHAR);
+
+                        if (lastCharIsColorCode && !lastColorChar.equals(COLOR_CHAR + "f")) {
+                            // we need to move both the color char and the color specifier to the next line
+                            out.append(lastColorChar);
+                            lineLength = 2;
+                        } else {
+                            // not a color format, so just move one char to the next line
+                            j--;
+                            lineLength = 0;
+                        }
+                        lineWidth = 0;
+                        continue;
+                    }
+                    out.append(temp.charAt(j));
                 }
-                lineWidth = width;
-            } else {
-                lineWidth += width;
+                continue;
             }
-            out.append(ch);
-            lineLength++;
+
+            // we have a smaller token than the max size so wrap based on token instead of char
+
+            if (lineLength >= CHAT_STRING_LENGTH || lineWidth >= CHAT_WINDOW_WIDTH) {
+                // try again on a new line
+                out.append(TEMP_CHAR);
+                // only include color char if it is not white since default is white
+                if (!lastColorChar.equals(COLOR_CHAR + "f")) {
+                    out.append(lastColorChar);
+                    lineLength = 2;
+                } else {
+                    lineLength = 0;
+                }
+                lineWidth = 0;
+                i--;
+                continue;
+            }
+            out.append(temp);
         }
 
-        // Return it split
-        return out.toString().split("\n");
+        return out.toString().split(String.valueOf(TEMP_CHAR));
     }
 
     /**
