@@ -1,6 +1,14 @@
 package org.bukkit.inventory;
 
 import org.bukkit.Material;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.entity.Player;
+
+import net.minecraft.server.ContainerPlayer;
+import net.minecraft.server.EntityPlayer;
+import net.minecraft.server.InventoryCrafting;
+import net.minecraft.server.NetServerHandler;
+import net.minecraft.server.Packet103SetSlot;
 
 import java.util.HashMap;
 
@@ -216,4 +224,37 @@ public interface Inventory {
      * Clear out the whole index
      */
     public void clear();
+
+    /**
+     * Set the players 2x2 crafting grid.
+     * This is not a perfect clone of the modern version.
+     * This uses a static method instead with the player passed in.
+     * 
+     * @param grid The {@link ItemStack}[] to set the crafting grid to
+     * @param player The {@link Player} to modify. This is not necessary in modern, but this is a quick addition
+     */
+    public static void setCraftingMatrix(final ItemStack[] grid, final Player player) {
+        final int slotCount = grid.length;
+        if (slotCount > 4)
+            throw new IllegalArgumentException("The number of items must be 4 or less");
+        
+        final EntityPlayer entityPlayer = ((CraftPlayer) player).getHandle();
+        
+        final NetServerHandler netServerHandler = entityPlayer.netServerHandler;
+        final InventoryCrafting inventoryCrafting = ((ContainerPlayer) entityPlayer.defaultContainer).craftInventory;
+
+        final net.minecraft.server.ItemStack[] fullGrid = new net.minecraft.server.ItemStack[4];
+        for (int slot = 0; slot < slotCount; slot++) {
+            fullGrid[slot] = new net.minecraft.server.ItemStack(grid[slot]);
+        }
+
+        for(int slot = 0; slot < 4; slot++) {
+            net.minecraft.server.ItemStack item = fullGrid[slot];
+
+            Packet103SetSlot packet = new Packet103SetSlot(0, slot, item);
+            netServerHandler.sendPacket(packet);
+    
+            inventoryCrafting.setItem(slot, item);
+        }
+    }
 }
