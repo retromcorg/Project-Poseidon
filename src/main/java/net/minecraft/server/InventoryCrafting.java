@@ -84,12 +84,13 @@ public class InventoryCrafting implements IInventory {
     }
 
     /**
-     * Set the players 2x2 crafting grid.
+     * This is a temporary implementation until a backport of modern inventory API is completed.
+     * Set the players 2x2 crafting grid to the partial, or complete ItemStack array.
      * 
-     * @param grid The ItemStack[] to set the crafting grid to.
-     * @param player The Player to modify.
+     * @param grid The {@link ItemStack} array to set the crafting grid to.
+     * @param player The {@link Player} to modify.
      */
-    public static void setCraftingMatrix(final org.bukkit.inventory.ItemStack[] grid, final Player player) {
+    public static void setCraftingMatrix(final ItemStack[] grid, final Player player) {
         int slotCount = 0;
         if (grid != null) {
             slotCount = grid.length;
@@ -104,7 +105,7 @@ public class InventoryCrafting implements IInventory {
 
         final ItemStack[] fullGrid = new ItemStack[4];
         for (int slot = 0; slot < slotCount; slot++) {
-            fullGrid[slot] = new ItemStack(grid[slot]);
+            fullGrid[slot] = grid[slot];
         }
 
         for(int slot = 0; slot < 4; slot++) {

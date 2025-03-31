@@ -388,6 +388,13 @@ public class InventoryPlayer implements IInventory {
         return false;
     }
 
+    /**
+     * This is a temporary implementation until a backport of modern inventory API is completed.
+     * This function sets the cursor item in the players inventory to the {@link ItemStack} provided
+     * 
+     * @param itemstack The {@link ItemStack} to set the cursor item to
+     * @param player The {@link Player} to modify
+     */
     public static void setCursor(ItemStack itemstack, Player player) {
         final CraftHumanEntity craftHumanEntity = (CraftHumanEntity) player;
         final CraftInventoryPlayer craftInventoryPlayer = (CraftInventoryPlayer) craftHumanEntity.getInventory();
