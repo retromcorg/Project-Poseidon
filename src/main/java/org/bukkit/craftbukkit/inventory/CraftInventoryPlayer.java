@@ -43,7 +43,7 @@ public class CraftInventoryPlayer extends CraftInventory implements PlayerInvent
     }
 
     public ItemStack getBoots() {
-        return getItem(getSize() + 0);
+        return getItem(getSize());
     }
 
     public void setHelmet(ItemStack helmet) {
@@ -59,17 +59,11 @@ public class CraftInventoryPlayer extends CraftInventory implements PlayerInvent
     }
 
     public void setBoots(ItemStack boots) {
-        setItem(getSize() + 0, boots);
+        setItem(getSize(), boots);
     }
 
-    public CraftItemStack[] getArmorContents() {
-        net.minecraft.server.ItemStack[] mcItems = getInventory().getArmorContents();
-        CraftItemStack[] ret = new CraftItemStack[mcItems.length];
-
-        for (int i = 0; i < mcItems.length; i++) {
-            ret[i] = new CraftItemStack(mcItems[i]);
-        }
-        return ret;
+    public ItemStack[] getArmorContents() {
+        return new ItemStack[] { getBoots(), getLeggings(), getChestplate(), getHelmet() };
     }
 
     public void setArmorContents(ItemStack[] items) {
