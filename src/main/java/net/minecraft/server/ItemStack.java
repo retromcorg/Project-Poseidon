@@ -46,6 +46,14 @@ public final class ItemStack {
         this.count = 0;
         this.b(nbttagcompound);
     }
+    
+    public ItemStack(org.bukkit.inventory.ItemStack itemStack) {
+        this(
+            itemStack.getTypeId(),
+            itemStack.getAmount(),
+            itemStack.getDurability()
+        );
+    }
 
     public ItemStack a(int i) {
         this.count -= i;

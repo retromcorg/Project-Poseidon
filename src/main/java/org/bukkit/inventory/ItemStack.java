@@ -50,6 +50,14 @@ public class ItemStack {
         this(type.getId(), amount, damage, data);
     }
 
+    public ItemStack(final net.minecraft.server.ItemStack itemStack) {
+        this(
+            itemStack.id,
+            itemStack.count,
+            (short) itemStack.damage
+        );
+    }
+
     /**
      * Gets the type of this item
      *
