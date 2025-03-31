@@ -85,19 +85,20 @@ public class InventoryCrafting implements IInventory {
 
     /**
      * Set the players 2x2 crafting grid.
-     * This is not a perfect clone of the modern version.
-     * This uses a static method instead with the player passed in.
      * 
-     * @param grid The {@link ItemStack}[] to set the crafting grid to
-     * @param player The {@link Player} to modify. This is not necessary in modern, but this is a quick addition
+     * @param grid The ItemStack[] to set the crafting grid to.
+     * @param player The Player to modify.
      */
     public static void setCraftingMatrix(final org.bukkit.inventory.ItemStack[] grid, final Player player) {
-        final int slotCount = grid.length;
-        if (slotCount > 4)
-            throw new IllegalArgumentException("The number of items must be 4 or less");
-        
+        int slotCount = 0;
+        if (grid != null) {
+            slotCount = grid.length;
+            if (slotCount > 4)
+                throw new IllegalArgumentException("The number of items must be 4 or less");
+        }
+
         final EntityPlayer entityPlayer = ((CraftPlayer) player).getHandle();
-        
+
         final NetServerHandler netServerHandler = entityPlayer.netServerHandler;
         final InventoryCrafting inventoryCrafting = ((ContainerPlayer) entityPlayer.defaultContainer).craftInventory;
 
@@ -107,9 +108,9 @@ public class InventoryCrafting implements IInventory {
         }
 
         for(int slot = 0; slot < 4; slot++) {
-            ItemStack item = fullGrid[slot];
+            final ItemStack item = fullGrid[slot];
 
-            Packet103SetSlot packet = new Packet103SetSlot(0, slot, item);
+            final Packet103SetSlot packet = new Packet103SetSlot(0, slot, item);
             netServerHandler.sendPacket(packet);
     
             inventoryCrafting.setItem(slot, item);
