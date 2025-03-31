@@ -358,7 +358,7 @@ public class CraftInventory implements org.bukkit.inventory.Inventory {
     }
 
     public void clear() {
-        for (int i = 0; i < getSize(); i++) {
+        for (int i = 0; i < getSize() + 4; i++) {
             clear(i);
         }
     }
