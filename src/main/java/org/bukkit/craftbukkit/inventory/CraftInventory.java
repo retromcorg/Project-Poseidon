@@ -34,10 +34,7 @@ public class CraftInventory implements Inventory {
     }
 
     public ItemStack getItem(int index) {
-        // Poseidon start - Backport modern Inventory API
-        net.minecraft.server.ItemStack item = getInventory().getItem(index);
-        return item == null ? null : new CraftItemStack(item);
-        // Poseidon end
+        return new CraftItemStack(getInventory().getItem(index));
     }
 
     public ItemStack[] getContents() {
