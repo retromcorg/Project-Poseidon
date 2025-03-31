@@ -9,6 +9,8 @@ import org.bukkit.block.BlockState;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.craftbukkit.inventory.CraftInventoryCrafting;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.entity.AnimalTamer;
 import org.bukkit.entity.CreatureType;
@@ -23,10 +25,13 @@ import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.entity.EntityTameEvent;
 import org.bukkit.event.entity.ItemDespawnEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.InventoryView;
 
 public class CraftEventFactory {
     private static boolean canBuild(CraftWorld world, Player player, int x, int z) {
@@ -263,4 +268,36 @@ public class CraftEventFactory {
         ((CraftServer) entity.getServer()).getPluginManager().callEvent(event);
         return event;
     }
+
+    // Poseidon start - Backport modern Inventory API
+    /**
+     * InventoryOpenEvent
+     */
+    public static InventoryOpenEvent callInventoryOpenEvent(EntityPlayer player, Container container) {
+        if (player.activeContainer != player.defaultContainer) {
+            player.netServerHandler.a(new Packet101CloseWindow(player.activeContainer.windowId));
+        }
+
+        CraftPlayer craftPlayer = (CraftPlayer) player.getBukkitEntity();
+        player.activeContainer.transferTo(container, craftPlayer);
+
+        InventoryOpenEvent event = new InventoryOpenEvent(container.getBukkitView());
+        Bukkit.getPluginManager().callEvent(event);
+        return event;
+    }
+
+    /**
+     * PrepareItemCraftEvent
+     */
+    public static ItemStack callPreCraftEvent(InventoryCrafting matrix, ItemStack result, InventoryView lastCraftView) {
+        CraftInventoryCrafting inventory = new CraftInventoryCrafting(matrix, matrix.resultInventory);
+        inventory.setResult(new CraftItemStack(result));
+
+        PrepareItemCraftEvent event = new PrepareItemCraftEvent(inventory, lastCraftView);
+        Bukkit.getPluginManager().callEvent(event);
+
+        org.bukkit.inventory.ItemStack item = event.getInventory().getResult();
+        return new ItemStack(item.getTypeId(), item.getAmount(), item.getDurability());
+    }
+    // Poseidon end
 }

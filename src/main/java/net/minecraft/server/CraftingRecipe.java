@@ -1,5 +1,7 @@
 package net.minecraft.server;
 
+import org.bukkit.inventory.Recipe;
+
 public interface CraftingRecipe {
 
     boolean a(InventoryCrafting inventorycrafting);
@@ -9,4 +11,6 @@ public interface CraftingRecipe {
     int a();
 
     ItemStack b();
+
+    Recipe toBukkitRecipe(); // Poseidon - Backport modern Inventory API
 }

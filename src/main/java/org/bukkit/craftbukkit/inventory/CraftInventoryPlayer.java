@@ -1,6 +1,7 @@
 package org.bukkit.craftbukkit.inventory;
 
 import net.minecraft.server.InventoryPlayer;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
@@ -85,4 +86,11 @@ public class CraftInventoryPlayer extends CraftInventory implements PlayerInvent
             }
         }
     }
+
+    // Poseidon start - Backport modern Inventory API
+    @Override
+    public HumanEntity getHolder() {
+        return (HumanEntity) super.getHolder();
+    }
+    // Poseidon end
 }

@@ -1,5 +1,9 @@
 package net.minecraft.server;
 
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.inventory.CraftShapelessRecipe;
+import org.bukkit.inventory.ShapelessRecipe;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -13,6 +17,19 @@ public class ShapelessRecipes implements CraftingRecipe {
         this.a = itemstack;
         this.b = list;
     }
+
+    // Poseidon start - Backport modern Inventory API
+    public ShapelessRecipe toBukkitRecipe() {
+        CraftItemStack result = new CraftItemStack(this.a);
+        CraftShapelessRecipe recipe = new CraftShapelessRecipe(result);
+        for (ItemStack stack : (List<ItemStack>) this.b) {
+            if (stack != null) {
+                recipe.addIngredient(org.bukkit.Material.getMaterial(stack.id), stack.getData());
+            }
+        }
+        return recipe;
+    }
+    // Poseidon end
 
     public ItemStack b() {
         return this.a;

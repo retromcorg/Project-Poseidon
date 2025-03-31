@@ -1,5 +1,11 @@
 package net.minecraft.server;
 
+import org.bukkit.entity.HumanEntity;
+import org.bukkit.inventory.InventoryHolder;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public class InventoryCraftResult implements IInventory {
 
     private ItemStack[] items = new ItemStack[1];
@@ -48,4 +54,18 @@ public class InventoryCraftResult implements IInventory {
     public boolean a_(EntityHuman entityhuman) {
         return true;
     }
+
+    // Poseidon - Backport modern Inventory API
+    public List<HumanEntity> getViewers() {
+        return new ArrayList<HumanEntity>();
+    }
+
+    public void onOpen(HumanEntity player) {}
+
+    public void onClose(HumanEntity player) {}
+
+    public InventoryHolder getOwner() {
+        return null;
+    }
+    // Poseidon end
 }

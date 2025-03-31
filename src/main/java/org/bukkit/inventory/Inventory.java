@@ -1,8 +1,10 @@
 package org.bukkit.inventory;
 
 import org.bukkit.Material;
+import org.bukkit.entity.HumanEntity;
 
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Interface to the various inventories
@@ -74,6 +76,28 @@ public interface Inventory {
      * @return All the ItemStacks from all slots
      */
     public void setContents(ItemStack[] items);
+
+    // Poseidon start - Backport modern Inventory API
+    /**
+     * Returns a list of all players viewing this inventory
+     *
+     * @return A list of players viewing the inventory
+     */
+    public List<HumanEntity> getViewers();
+
+    /**
+     * Returns the type of this inventory
+     *
+     * @return The inventory type
+     */
+    public InventoryType getType();
+
+    /**
+     * Gets the block or entity belonging to the open inventory
+     * @return The holder of the inventory; null if it has no holder.
+     */
+    public InventoryHolder getHolder();
+    // Poseidon end
 
     /**
      * Check if the inventory contains any ItemStacks with the given materialId

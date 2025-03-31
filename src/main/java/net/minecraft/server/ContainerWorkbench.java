@@ -1,19 +1,33 @@
 package net.minecraft.server;
 
+import org.bukkit.craftbukkit.inventory.CraftInventoryCrafting;
+import org.bukkit.craftbukkit.inventory.CraftInventoryView;
+import org.bukkit.entity.HumanEntity;
+
 public class ContainerWorkbench extends Container {
 
-    public InventoryCrafting craftInventory = new InventoryCrafting(this, 3, 3);
-    public IInventory resultInventory = new InventoryCraftResult();
+    public InventoryCrafting craftInventory;
+    public IInventory resultInventory;
     private World c;
     private int h;
     private int i;
     private int j;
+    // Poseidon start- Backport modern Inventory API
+    private CraftInventoryView view = null;
+    private InventoryPlayer player;
+    // Poseidon end
 
     public ContainerWorkbench(InventoryPlayer inventoryplayer, World world, int i, int j, int k) {
+        // Poseidon start - Backport modern Inventory API
+        this.resultInventory = new InventoryCraftResult();
+        this.craftInventory = new InventoryCrafting(this, 3, 3);
+        this.craftInventory.resultInventory = this.resultInventory;
+        // Poseidon end
         this.c = world;
         this.h = i;
         this.i = j;
         this.j = k;
+        this.player = inventoryplayer; // Poseidon - Backport modern Inventory API
         this.a((Slot) (new SlotResult(inventoryplayer.d, this.craftInventory, this.resultInventory, 0, 124, 35)));
 
         int l;
@@ -40,6 +54,7 @@ public class ContainerWorkbench extends Container {
 
     public void a(IInventory iinventory) {
         // CraftBukkit start
+        CraftingManager.getInstance().lastCraftView = getBukkitView(); // Poseidon - Backport modern Inventory API
         ItemStack craftResult = CraftingManager.getInstance().craft(this.craftInventory);
         this.resultInventory.setItem(0, craftResult);
         if (super.listeners.size() < 1) {
@@ -65,6 +80,7 @@ public class ContainerWorkbench extends Container {
     }
 
     public boolean b(EntityHuman entityhuman) {
+        if (!this.checkReachable) return true; // Poseidon - Backport modern Inventory API
         return this.c.getTypeId(this.h, this.i, this.j) != Block.WORKBENCH.id ? false : entityhuman.e((double) this.h + 0.5D, (double) this.i + 0.5D, (double) this.j + 0.5D) <= 64.0D;
     }
 
@@ -101,4 +117,14 @@ public class ContainerWorkbench extends Container {
 
         return itemstack;
     }
+
+    // Poseidon start - Backport modern Inventory API
+    @Override
+    public CraftInventoryView getBukkitView() {
+        if (view != null) return view;
+        CraftInventoryCrafting inventory = new CraftInventoryCrafting(craftInventory, resultInventory);
+        view = new CraftInventoryView((HumanEntity) this.player.d.getBukkitEntity(), inventory, this);
+        return view;
+    }
+    // Poseidon end
 }

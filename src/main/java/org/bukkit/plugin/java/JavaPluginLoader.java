@@ -8,10 +8,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
 import org.bukkit.event.entity.*;
-import org.bukkit.event.inventory.FurnaceBurnEvent;
-import org.bukkit.event.inventory.FurnaceSmeltEvent;
-import org.bukkit.event.inventory.InventoryListener;
-import org.bukkit.event.inventory.InventoryTransactionEvent;
+import org.bukkit.event.inventory.*;
 import org.bukkit.event.packet.PacketListener;
 import org.bukkit.event.packet.PacketReceivedEvent;
 import org.bukkit.event.painting.PaintingBreakEvent;
@@ -519,15 +516,6 @@ public class JavaPluginLoader implements PluginLoader
                     public void execute(Listener listener, Event event)
                     {
                         ((PlayerListener) listener).onPlayerAnimation((PlayerAnimationEvent) event);
-                    }
-                };
-
-            case INVENTORY_OPEN:
-                return new EventExecutor()
-                {
-                    public void execute(Listener listener, Event event)
-                    {
-                        ((PlayerListener) listener).onInventoryOpen((PlayerInventoryEvent) event);
                     }
                 };
 
@@ -1180,7 +1168,43 @@ public class JavaPluginLoader implements PluginLoader
                     }
                 };
 
-            // Inventory Events
+            // Poseidon start - Backport modern Inventory API
+            case INVENTORY_OPEN:
+                return new EventExecutor() {
+                    public void execute(Listener listener, Event event) {
+                        ((InventoryListener) listener).onInventoryOpen((InventoryOpenEvent) event);
+                    }
+                };
+
+            case INVENTORY_CLOSE:
+                return new EventExecutor() {
+                    public void execute(Listener listener, Event event) {
+                        ((InventoryListener) listener).onInventoryClose((InventoryCloseEvent) event);
+                    }
+                };
+
+            case INVENTORY_CLICK:
+                return new EventExecutor() {
+                    public void execute(Listener listener, Event event) {
+                        ((InventoryListener) listener).onInventoryClick((InventoryClickEvent) event);
+                    }
+                };
+
+            case CRAFT_ITEM:
+                return new EventExecutor() {
+                    public void execute(Listener listener, Event event) {
+                        ((InventoryListener) listener).onCraftItem((CraftItemEvent) event);
+                    }
+                };
+
+            case PREPARE_ITEM_CRAFT:
+                return new EventExecutor() {
+                    public void execute(Listener listener, Event event) {
+                        ((InventoryListener) listener).onPrepareItemCraft((PrepareItemCraftEvent) event);
+                    }
+                };
+            // Poseidon end
+
             case FURNACE_SMELT:
                 return new EventExecutor()
                 {
@@ -1189,6 +1213,7 @@ public class JavaPluginLoader implements PluginLoader
                         ((InventoryListener) listener).onFurnaceSmelt((FurnaceSmeltEvent) event);
                     }
                 };
+
             case FURNACE_BURN:
                 return new EventExecutor()
                 {

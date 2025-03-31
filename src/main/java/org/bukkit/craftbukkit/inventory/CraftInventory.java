@@ -1,15 +1,20 @@
 package org.bukkit.craftbukkit.inventory;
 
-import net.minecraft.server.IInventory;
+import net.minecraft.server.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.inventory.InventoryTransactionEvent;
 import org.bukkit.event.inventory.InventoryTransactionType;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.InventoryType;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
+import java.util.List;
 
-public class CraftInventory implements org.bukkit.inventory.Inventory {
+public class CraftInventory implements Inventory {
     protected IInventory inventory;
 
     public CraftInventory(IInventory inventory) {
@@ -29,7 +34,10 @@ public class CraftInventory implements org.bukkit.inventory.Inventory {
     }
 
     public ItemStack getItem(int index) {
-        return new CraftItemStack(getInventory().getItem(index));
+        // Poseidon start - Backport modern Inventory API
+        net.minecraft.server.ItemStack item = getInventory().getItem(index);
+        return item == null ? null : new CraftItemStack(item);
+        // Poseidon end
     }
 
     public ItemStack[] getContents() {
@@ -44,25 +52,54 @@ public class CraftInventory implements org.bukkit.inventory.Inventory {
     }
 
     public void setContents(ItemStack[] items) {
-        if (getInventory().getContents().length != items.length) {
-            throw new IllegalArgumentException("Invalid inventory size; expected " + getInventory().getContents().length + " and got " + items.length); // Poseidon
+        if (getInventory().getContents().length < items.length) {
+            throw new IllegalArgumentException("Invalid inventory size; expected " + getInventory().getContents().length + " or less and got " + items.length); // Poseidon - Backport modern Inventory API
         }
 
         net.minecraft.server.ItemStack[] mcItems = getInventory().getContents();
 
-        for (int i = 0; i < items.length; i++) {
-            ItemStack item = items[i];
-            if (item == null || item.getTypeId() <= 0) {
+        // Poseidon start - Backport modern Inventory API
+        for (int i = 0; i < mcItems.length; i++) {
+            if (i >= items.length) {
                 mcItems[i] = null;
             } else {
-                mcItems[i] = new net.minecraft.server.ItemStack(item.getTypeId(), item.getAmount(), item.getDurability());
+                mcItems[i] = items[i] == null ? null : new net.minecraft.server.ItemStack(items[i].getTypeId(), items[i].getAmount(), items[i].getDurability());
             }
         }
+        // Poseidon end
     }
 
     public void setItem(int index, ItemStack item) {
         getInventory().setItem(index, (item == null ? null : new net.minecraft.server.ItemStack(item.getTypeId(), item.getAmount(), item.getDurability())));
     }
+
+    // Poseidon start - Backport modern Inventory API
+    public List<HumanEntity> getViewers() {
+        return inventory.getViewers();
+    }
+
+    public InventoryType getType() {
+        if (inventory instanceof TileEntityDispenser) {
+            return InventoryType.DISPENSER;
+        } else if (inventory instanceof TileEntityFurnace) {
+            return InventoryType.FURNACE;
+        } else if (inventory instanceof InventoryCrafting) {
+            return inventory.getSize() >= 9 ? InventoryType.WORKBENCH : InventoryType.CRAFTING;
+        } else if (inventory instanceof InventoryPlayer) {
+            return InventoryType.PLAYER;
+        } else if (inventory instanceof InventoryLargeChest) {
+            return InventoryType.LARGE_CHEST;
+        } else if (inventory instanceof CraftInventoryCustom.MinecraftInventory) {
+            return InventoryType.CUSTOM;
+        } else {
+            return InventoryType.CHEST;
+        }
+    }
+
+    public InventoryHolder getHolder() {
+        return inventory.getOwner();
+    }
+    // Poseidon end
 
     public boolean contains(int materialId) {
         for (ItemStack item: getContents()) {

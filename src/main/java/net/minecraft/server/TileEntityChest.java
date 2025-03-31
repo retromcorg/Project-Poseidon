@@ -1,8 +1,14 @@
 package net.minecraft.server;
 
+import org.bukkit.entity.HumanEntity;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public class TileEntityChest extends TileEntity implements IInventory {
 
     private ItemStack[] items = new ItemStack[27]; // CraftBukkit
+    private List<HumanEntity> viewers = new ArrayList<HumanEntity>(); // Poseidon - Backport modern Inventory API
 
     // CraftBukkit start
     public ItemStack[] getContents() {
@@ -96,4 +102,18 @@ public class TileEntityChest extends TileEntity implements IInventory {
     public boolean a_(EntityHuman entityhuman) {
         return this.world.getTileEntity(this.x, this.y, this.z) != this ? false : entityhuman.e((double) this.x + 0.5D, (double) this.y + 0.5D, (double) this.z + 0.5D) <= 64.0D;
     }
+
+    // Poseidon start - Backport modern Inventory API
+    public List<HumanEntity> getViewers() {
+        return viewers;
+    }
+
+    public void onOpen(HumanEntity player) {
+        viewers.add(player);
+    }
+
+    public void onClose(HumanEntity player) {
+        viewers.remove(player);
+    }
+    // Poseidon end
 }

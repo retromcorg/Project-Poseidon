@@ -5,12 +5,10 @@ import com.avaje.ebean.config.ServerConfig;
 import com.avaje.ebean.config.dbplatform.SQLitePlatform;
 import com.avaje.ebeaninternal.server.lib.sql.TransactionIsolation;
 import com.legacyminecraft.poseidon.Poseidon;
-import com.legacyminecraft.poseidon.PoseidonConfig;
-import com.legacyminecraft.poseidon.PoseidonPlugin;
 import com.legacyminecraft.poseidon.PoseidonServer;
-import com.legacyminecraft.poseidon.utility.PoseidonVersionChecker;
 import jline.ConsoleReader;
 import net.minecraft.server.*;
+import net.minecraft.server.ItemStack;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
@@ -20,10 +18,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.command.SimpleCommandMap;
-import org.bukkit.craftbukkit.inventory.CraftFurnaceRecipe;
-import org.bukkit.craftbukkit.inventory.CraftRecipe;
-import org.bukkit.craftbukkit.inventory.CraftShapedRecipe;
-import org.bukkit.craftbukkit.inventory.CraftShapelessRecipe;
+import org.bukkit.craftbukkit.inventory.*;
 import org.bukkit.craftbukkit.map.CraftMapView;
 import org.bukkit.craftbukkit.scheduler.CraftScheduler;
 import org.bukkit.entity.Player;
@@ -32,10 +27,7 @@ import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
 import org.bukkit.generator.ChunkGenerator;
-import org.bukkit.inventory.FurnaceRecipe;
-import org.bukkit.inventory.Recipe;
-import org.bukkit.inventory.ShapedRecipe;
-import org.bukkit.inventory.ShapelessRecipe;
+import org.bukkit.inventory.*;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.*;
 import org.bukkit.plugin.java.JavaPluginLoader;
@@ -854,6 +846,33 @@ public final class CraftServer implements Server {
     public void reloadWhitelist() {
         server.f();
     }
+
+    // Poseidon start - Backport modern Inventory API
+    public Inventory createInventory(InventoryHolder owner, InventoryType type) {
+        return new CraftInventoryCustom(owner, type);
+    }
+
+    public Inventory createInventory(InventoryHolder owner, int size) throws IllegalArgumentException {
+        if (size % 9 != 0) {
+            throw new IllegalArgumentException("Inventory size must be a multiple of 9!");
+        }
+        return new CraftInventoryCustom(owner, size);
+    }
+
+    public Inventory createInventory(InventoryHolder owner, String title, int size) {
+        if (size % 9 != 0) {
+            throw new IllegalArgumentException("Inventory size must be a multiple of 9!");
+        }
+        return new CraftInventoryCustom(owner, title, size);
+    }
+
+    public Inventory createInventory(InventoryHolder owner, String title, int size, int stackSize) {
+        if (size % 9 != 0) {
+            throw new IllegalArgumentException("Inventory size must be a multiple of 9!");
+        }
+        return new CraftInventoryCustom(owner, title, size, stackSize);
+    }
+    // Poseidon end
 
     public boolean isShuttingdown() {
         return shuttingdown;
