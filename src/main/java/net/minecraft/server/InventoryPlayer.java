@@ -1,5 +1,9 @@
 package net.minecraft.server;
 
+import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.inventory.CraftInventoryPlayer;
+import org.bukkit.entity.Player;
+
 public class InventoryPlayer implements IInventory {
 
     public ItemStack[] items = new ItemStack[36];
@@ -382,5 +386,13 @@ public class InventoryPlayer implements IInventory {
         }
 
         return false;
+    }
+
+    public static void setCursor(ItemStack itemstack, Player player) {
+        final CraftHumanEntity craftHumanEntity = (CraftHumanEntity) player;
+        final CraftInventoryPlayer craftInventoryPlayer = (CraftInventoryPlayer) craftHumanEntity.getInventory();
+        final InventoryPlayer inventoryPlayer = craftInventoryPlayer.getInventory();
+
+        inventoryPlayer.b(itemstack);
     }
 }
