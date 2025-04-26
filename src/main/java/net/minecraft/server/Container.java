@@ -1,6 +1,6 @@
 package net.minecraft.server;
 
-import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.craftbukkit.inventory.CraftInventory;
 import org.bukkit.craftbukkit.inventory.CraftInventoryView;
 import org.bukkit.inventory.InventoryView;
@@ -294,7 +294,7 @@ public abstract class Container {
         return null;
     }
 
-    public void transferTo(Container other, CraftHumanEntity player) {
+    public void transferTo(Container other, CraftPlayer player) {
         InventoryView source = getBukkitView();
         InventoryView destination = other.getBukkitView();
         ((CraftInventory)source.getTopInventory()).getInventory().onClose(player);

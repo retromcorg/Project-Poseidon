@@ -2,7 +2,7 @@ package net.minecraft.server;
 
 // CraftBukkit start
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
-import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.FurnaceBurnEvent;
 import org.bukkit.event.inventory.FurnaceSmeltEvent;
 
@@ -16,7 +16,7 @@ public class TileEntityFurnace extends TileEntity implements IInventory {
     public int burnTime = 0;
     public int ticksForCurrentFuel = 0;
     public int cookTime = 0;
-    private List<HumanEntity> viewers = new ArrayList<HumanEntity>(); // Poseidon - Backport modern Inventory API
+    private List<Player> viewers = new ArrayList<Player>(); // Poseidon - Backport modern Inventory API
 
     // CraftBukkit start
     private int lastTick = (int) (System.currentTimeMillis() / 50);
@@ -252,15 +252,15 @@ public class TileEntityFurnace extends TileEntity implements IInventory {
     }
 
     // Poseidon start - Backport modern Inventory API
-    public List<HumanEntity> getViewers() {
+    public List<Player> getViewers() {
         return viewers;
     }
 
-    public void onOpen(HumanEntity player) {
+    public void onOpen(Player player) {
         viewers.add(player);
     }
 
-    public void onClose(HumanEntity player) {
+    public void onClose(Player player) {
         viewers.remove(player);
     }
     // Poseidon end

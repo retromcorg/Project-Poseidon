@@ -1,4 +1,3 @@
-
 package org.bukkit.craftbukkit.entity;
 
 import net.minecraft.server.*;
@@ -97,18 +96,24 @@ public class CraftHumanEntity extends CraftLivingEntity implements HumanEntity {
     }
 
     public void openInventory(InventoryView inventory) {
-        if (getHandle().activeContainer != getHandle().defaultContainer) {
-            ((EntityPlayer)getHandle()).netServerHandler.a(new Packet101CloseWindow(getHandle().activeContainer.windowId));
+        Container container = ((CraftInventoryView) inventory).getHandle();
+
+        if (!(this instanceof CraftPlayer)) {
+            getHandle().activeContainer = container;
+            return;
         }
 
         EntityPlayer player = (EntityPlayer) getHandle();
-        Container container = ((CraftInventoryView) inventory).getHandle();
+
+        if (player.activeContainer != player.defaultContainer) {
+            player.netServerHandler.a(new Packet101CloseWindow(player.activeContainer.windowId));
+        }
 
         InventoryOpenEvent event = new InventoryOpenEvent(inventory);
-        player.activeContainer.transferTo(container, this);
+        player.activeContainer.transferTo(container, (CraftPlayer) this);
         server.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
-            container.transferTo(player.activeContainer, this);
+            container.transferTo(player.activeContainer, (CraftPlayer) this);
             return;
         }
 
@@ -118,7 +123,7 @@ public class CraftHumanEntity extends CraftLivingEntity implements HumanEntity {
     }
 
     public void closeInventory() {
-        ((EntityPlayer) getHandle()).y();
+        getHandle().y();
     }
     // Poseidon end
 
@@ -137,7 +142,9 @@ public class CraftHumanEntity extends CraftLivingEntity implements HumanEntity {
 
     public void setItemOnCursor(ItemStack item) {
         getHandle().inventory.b(new net.minecraft.server.ItemStack(item.getTypeId(), item.getAmount(), item.getDurability()));
-        ((EntityPlayer) getHandle()).z();
+        if (getHandle() instanceof EntityPlayer) {
+            ((EntityPlayer) getHandle()).z();
+        }
     }
     // Poseidon end
 

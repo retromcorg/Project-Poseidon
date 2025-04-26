@@ -1,6 +1,7 @@
 package net.minecraft.server;
 
 import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.InventoryHolder;
 
 import java.util.ArrayList;
@@ -14,7 +15,7 @@ public class InventoryPlayer implements IInventory {
     public EntityHuman d; // CraftBukkit - private -> public
     private ItemStack f;
     public boolean e = false;
-    private List<HumanEntity> viewers = new ArrayList<HumanEntity>(); // Poseidon - Backport modern Inventory API
+    private List<Player> viewers = new ArrayList<Player>(); // Poseidon - Backport modern Inventory API
 
     // CraftBukkit start
     public ItemStack[] getContents() {
@@ -392,15 +393,15 @@ public class InventoryPlayer implements IInventory {
     }
 
     // Poseidon start - Backport modern Inventory API
-    public List<HumanEntity> getViewers() {
+    public List<Player> getViewers() {
         return viewers;
     }
 
-    public void onOpen(HumanEntity player) {
+    public void onOpen(Player player) {
         viewers.add(player);
     }
 
-    public void onClose(HumanEntity player) {
+    public void onClose(Player player) {
         viewers.remove(player);
     }
 

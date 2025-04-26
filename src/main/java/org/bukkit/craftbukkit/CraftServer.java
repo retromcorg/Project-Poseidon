@@ -852,7 +852,7 @@ public final class CraftServer implements Server {
         return new CraftInventoryCustom(owner, type);
     }
 
-    public Inventory createInventory(InventoryHolder owner, int size) throws IllegalArgumentException {
+    public Inventory createInventory(InventoryHolder owner, int size) {
         if (size % 9 != 0) {
             throw new IllegalArgumentException("Inventory size must be a multiple of 9!");
         }

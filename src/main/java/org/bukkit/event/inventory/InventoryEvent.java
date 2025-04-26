@@ -1,6 +1,6 @@
 package org.bukkit.event.inventory;
 
-import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
@@ -32,7 +32,7 @@ public class InventoryEvent extends Event {
      *
      * @return A list of people viewing
      */
-    public List<HumanEntity> getViewers() {
+    public List<Player> getViewers() {
         return transaction.getTopInventory().getViewers();
     }
 
@@ -50,7 +50,7 @@ public class InventoryEvent extends Event {
      *
      * @return The player
      */
-    public HumanEntity getPlayer() {
-        return transaction.getPlayer();
+    public Player getPlayer() {
+        return (Player) transaction.getPlayer();
     }
 }

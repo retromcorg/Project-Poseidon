@@ -1,7 +1,7 @@
 package org.bukkit.inventory;
 
 import org.bukkit.Material;
-import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Player;
 
 import java.util.HashMap;
 import java.util.List;
@@ -83,7 +83,7 @@ public interface Inventory {
      *
      * @return A list of players viewing the inventory
      */
-    public List<HumanEntity> getViewers();
+    public List<Player> getViewers();
 
     /**
      * Returns the type of this inventory

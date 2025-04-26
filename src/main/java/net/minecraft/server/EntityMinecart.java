@@ -1,7 +1,7 @@
 package net.minecraft.server;
 
 import org.bukkit.Location;
-import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.Vehicle;
 import org.bukkit.event.vehicle.*;
 import org.bukkit.inventory.InventoryHolder;
@@ -15,7 +15,7 @@ import java.util.List;
 public class EntityMinecart extends Entity implements IInventory {
 
     private ItemStack[] items;
-    private List<HumanEntity> viewers = new ArrayList<HumanEntity>(); // Poseidon - Backport modern Inventory API
+    private List<Player> viewers = new ArrayList<Player>(); // Poseidon - Backport modern Inventory API
     public int damage;
     public int b;
     public int c;
@@ -890,15 +890,15 @@ public class EntityMinecart extends Entity implements IInventory {
     }
 
     // Poseidon start - Backport modern Inventory API
-    public List<HumanEntity> getViewers() {
+    public List<Player> getViewers() {
         return viewers;
     }
 
-    public void onOpen(HumanEntity player) {
+    public void onOpen(Player player) {
         viewers.add(player);
     }
 
-    public void onClose(HumanEntity player) {
+    public void onClose(Player player) {
         viewers.remove(player);
     }
 

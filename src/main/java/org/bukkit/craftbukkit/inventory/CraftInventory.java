@@ -3,7 +3,7 @@ package org.bukkit.craftbukkit.inventory;
 import net.minecraft.server.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryTransactionEvent;
 import org.bukkit.event.inventory.InventoryTransactionType;
 import org.bukkit.inventory.Inventory;
@@ -71,7 +71,7 @@ public class CraftInventory implements Inventory {
     }
 
     // Poseidon start - Backport modern Inventory API
-    public List<HumanEntity> getViewers() {
+    public List<Player> getViewers() {
         return inventory.getViewers();
     }
 
