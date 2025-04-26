@@ -1,11 +1,13 @@
 package org.bukkit.block;
 
+import org.bukkit.inventory.InventoryHolder;
+
 /**
  * Represents a dispenser.
  *
  * @author sk89q
  */
-public interface Dispenser extends BlockState, ContainerBlock {
+public interface Dispenser extends BlockState, ContainerBlock, InventoryHolder { // Poseidon - Backport modern Inventory API
 
     /**
      * Attempts to dispense the contents of this block<br />
