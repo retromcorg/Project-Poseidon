@@ -2,6 +2,7 @@ package org.bukkit.craftbukkit.entity;
 
 import net.minecraft.server.EntitySlime;
 import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Slime;
 
 public class CraftSlime extends CraftLivingEntity implements Slime {
@@ -25,5 +26,15 @@ public class CraftSlime extends CraftLivingEntity implements Slime {
 
     public void setSize(int size) {
         getHandle().setSize(size);
+    }
+
+    @Override
+    public void setTarget(LivingEntity target) {
+
+    }
+
+    @Override
+    public LivingEntity getTarget() {
+        return null;
     }
 }
