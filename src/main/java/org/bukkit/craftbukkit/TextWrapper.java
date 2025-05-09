@@ -2,7 +2,7 @@ package org.bukkit.craftbukkit;
 
 import com.legacyminecraft.poseidon.PoseidonConfig;
 
-import java.util.regex.Matcher;
+import java.util.ArrayList;
 import java.util.regex.Pattern;
 
 public class TextWrapper {
@@ -49,7 +49,32 @@ public class TextWrapper {
         if (input == null || input.isEmpty())
             return new String[0];
 
-        return new String[0];
+        ArrayList<String> parts = new ArrayList<>();
+        int length = input.length();
+
+        for (int i = 0; i < length;) {
+            String part = input.substring(i, Math.min(length, i + CHAT_STRING_LENGTH));
+
+            // Consider all lines except the last one
+            if (i + CHAT_STRING_LENGTH < length) {
+                if (part.charAt(part.length() - 1) == COLOR_CHAR &&
+                    isValidColor(input.charAt(i + CHAT_STRING_LENGTH))) {
+                    // Move the COLOR_CHAR to the next part
+                    // when: ".....§", "c....."
+                    part = part.substring(0, part.length() - 1);
+                } else if (part.charAt(part.length() - 2) == COLOR_CHAR &&
+                           isValidColor(part.charAt(part.length() - 1))) {
+                    // Move the COLOR_CHAR and the color code to the next part
+                    // when: ".....§c", "....."
+                    part = part.substring(0, part.length() - 2);
+                }
+            }
+
+            parts.add(part);
+            i += part.length();
+        }
+
+        return parts.toArray(new String[0]);
     }
 
     public static String[] wrapTextCraftBukkit(final String input) {
@@ -165,7 +190,7 @@ public class TextWrapper {
         if (text.startsWith(COLOR_CHAR + "f") ||
             text.startsWith(COLOR_CHAR + "F")) {
 
-            text = text.substring(2, text.length());
+            text = text.substring(2);
         }
 
         return text;
@@ -180,7 +205,7 @@ public class TextWrapper {
     }
 
     private static boolean endsWithColor(final String input) {
-        return input.length() >= 2 && COLOR_PATTERN.matcher(input.substring(input.length() - 2, input.length())).matches();
+        return input.length() >= 2 && COLOR_PATTERN.matcher(input.substring(input.length() - 2)).matches();
     }
 
     private static boolean isValidColor(final char color) {

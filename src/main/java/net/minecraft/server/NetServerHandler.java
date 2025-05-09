@@ -758,16 +758,12 @@ public class NetServerHandler extends NetHandler implements ICommandListener {
             this.player.compassTarget = new Location(this.getPlayer().getWorld(), packet6.x, packet6.y, packet6.z);
         } else if (packet instanceof Packet3Chat) {
             String message = ((Packet3Chat) packet).message;
-            if (PoseidonConfig.getInstance().getConfigBoolean("settings.message.wraptext")) {
-                for (String line : TextWrapper.wrapText(message)) {
-                    if (line.length() > 119) {
-                        server.getLogger().log(Level.WARNING, line + " is longer than the max of 119!");
-                        line = line.substring(0, 119);
-                    }
-                    this.networkManager.queue(new Packet3Chat(line));
+            for (String line : TextWrapper.wrapText(message)) {
+                if (line.length() > 119) {
+                    server.getLogger().log(Level.WARNING, line + " is longer than the max of 119!");
+                    line = line.substring(0, 119);
                 }
-            } else {
-                this.networkManager.queue(new Packet3Chat(message.substring(0, 119)));
+                this.networkManager.queue(new Packet3Chat(line));
             }
             packet = null;
         } else if (packet.k == true) {
