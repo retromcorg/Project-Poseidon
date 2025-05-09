@@ -22,18 +22,15 @@ public class TextWrapper {
         8, 7, 7, 8, 7, 8, 8, 8, 7, 8, 8, 7, 9, 9, 6, 7,
         7, 7, 7, 7, 9, 6, 7, 8, 7, 6, 6, 9, 7, 6, 7, 1
     };
-    public static final char COLOR_CHAR = '\u00A7';
-    private static final char TEMP_CHAR = '\u03d5';
-    public static final int CHAT_WINDOW_WIDTH = 320;
-    public static final int CHAT_STRING_LENGTH = 119;
-    public static final String allowedChars = net.minecraft.server.FontAllowedCharacters.allowedCharacters;
+    public static final char COLOR_CHAR = '\u00A7'; // Poseidon - private -> public
+    public static final Pattern COLOR_PATTERN = Pattern.compile(COLOR_CHAR + "[0-9a-fA-F]"); // Poseidon - Text wrap rework
+    private static final char TEMP_CHAR = '\u03d5'; // Poseidon - Text wrap rework
+    public static final int CHAT_WINDOW_WIDTH = 320; // Poseidon - private -> public
+    public static final int CHAT_STRING_LENGTH = 119; // Poseidon - private -> public
+    public static final String allowedChars = net.minecraft.server.FontAllowedCharacters.allowedCharacters; // Poseidon - private -> public
 
-    public static String[] wrapText(final String text) {
-        /*
-        TODO: strip out all the "useless" color formats
-            Useless means that it is instantly overwritten by a succeeding color format
-            Ex: &a&b&chi -> &chi, hi&a &b &chi -> hi  &chi"
-         */
+    public static String[] wrapText(final String input) {
+        String text = sanitizeText(input);
 
         final StringBuilder out = new StringBuilder();
         int lineLength = 0;
@@ -42,7 +39,6 @@ public class TextWrapper {
         int tokenLength;
         // tokens are just individual words in the message
         String[] tokens = text.split(" ");
-        Pattern p = Pattern.compile(COLOR_CHAR + "[a-fA-F0-9]"); // regex for all color formats
         String temp;
 
         String lastColorChar = COLOR_CHAR + "f";
@@ -56,7 +52,7 @@ public class TextWrapper {
             }
 
             // getting the last color char in the token to persist to new line
-            Matcher m = p.matcher(tokens[i]);
+            Matcher m = COLOR_PATTERN.matcher(tokens[i]);
             while (m.find()) {
                 lastColorChar = temp.substring(m.start(), m.end());
             }
@@ -77,7 +73,7 @@ public class TextWrapper {
 
                 for (int j = 0; j < temp.length(); j++) {
                     // color format checking
-                    if (j < temp.length() - 1 && p.matcher(temp.substring(j, j + 1)).matches()) {
+                    if (j < temp.length() - 1 && COLOR_PATTERN.matcher(temp.substring(j, j + 1)).matches()) {
                         // we have a color format, so increment length by 2 but this will not contribute to width
                         lineLength += 2;
                         lastCharIsColorCode = true;
@@ -131,11 +127,13 @@ public class TextWrapper {
         return out.toString().split(String.valueOf(TEMP_CHAR));
     }
 
+    // Poseidon start - widthInPixels method
+
     /**
      * Calculates the width of a string in pixels based on Minecraft's character widths.
      * The maximum width for chat is 320 pixels (Use CHAT_WINDOW_WIDTH).
      *
-     * @param string The input string.
+     * @param text The input string.
      * @return The width of the string in pixels.
      */
     public static int widthInPixels(final String text) {
@@ -164,4 +162,74 @@ public class TextWrapper {
 
         return output;
     }
+
+    // Poseidon end
+
+    // Poseidon start - Text wrap rework
+
+    private static String sanitizeText(final String input) {
+        String text = trimTrailing(input);
+
+        // Remove all trailing whitespaces and color codes
+        while (endsWithColor(text)) {
+            text = trimTrailing(text.substring(0, text.length() - 2));
+        }
+
+        StringBuilder sb = new StringBuilder();
+        char currentColor = TEMP_CHAR;
+
+        // Filter out all redundant color codes
+        for (int i = 0; i < text.length(); i++) {
+            // If there are multiple color codes chained together, we will get the last one
+            while (text.charAt(i) == COLOR_CHAR && i < text.length() - 1) {
+                char color = text.charAt(++i);
+                if (isValidColor(color)) {
+                    currentColor = color;
+                } else {
+                    // The color is invalid, so the chain is over
+                    i--;
+                    break;
+                }
+                i++;
+            }
+
+            // If a new color has been found, append it
+            if (currentColor != TEMP_CHAR) {
+                sb.append(COLOR_CHAR).append(currentColor);
+                currentColor = TEMP_CHAR;
+            }
+
+            sb.append(text.charAt(i));
+        }
+
+        text = sb.toString();
+
+        // If the text starts with a white color code, remove it
+        if (text.startsWith(COLOR_CHAR + "f") ||
+            text.startsWith(COLOR_CHAR + "F")) {
+
+            text = text.substring(2, text.length());
+        }
+
+        return text;
+    }
+
+    private static String trimTrailing(final String input) {
+        int length = input.length();
+        while (length > 0 && Character.isWhitespace(input.charAt(length - 1))) {
+            length--;
+        }
+        return input.substring(0, length);
+    }
+
+    private static boolean endsWithColor(final String input) {
+        return input.length() >= 2 && COLOR_PATTERN.matcher(input.substring(input.length() - 2, input.length())).matches();
+    }
+
+    private static boolean isValidColor(final char color) {
+        return COLOR_PATTERN.matcher(String.valueOf(COLOR_CHAR) + color).matches();
+    }
+
+    // Poseidon end
+
 }
