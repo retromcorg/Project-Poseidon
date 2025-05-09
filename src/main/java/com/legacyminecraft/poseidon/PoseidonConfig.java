@@ -62,7 +62,6 @@ public class PoseidonConfig extends Configuration {
         generateConfigOption("settings.per-day-log-file.enabled", false);
         generateConfigOption("settings.per-day-log-file.latest-log.info", "This setting causes the server to create a latest.log similar to modern Minecraft servers. This can be useful for certain control panels and log file management.");
         generateConfigOption("settings.per-day-log-file.latest-log.enabled", true);
-        generateConfigOption("settings.message.wraptext", true);
 
         //generateConfigOption("settings.fetch-uuids-from", "https://api.mojang.com/profiles/minecraft");
 
@@ -201,6 +200,10 @@ public class PoseidonConfig extends Configuration {
         generateConfigOption("settings.update-checker.info", "This setting allows you to disable the update checker. This is useful if you have a custom build of Poseidon or don't want to be notified of updates.");
         generateConfigOption("settings.update-checker.notify-staff.enabled", true);
         generateConfigOption("settings.update-checker.notify-staff.info", "This setting notifies operators and players with the permission poseidon.update when a new version of Poseidon is available on join.");
+
+        // Text wrapping
+        generateConfigOption("settings.text-wrapping-algorithm.value", "CraftBukkit");
+        generateConfigOption("settings.text-wrapping-algorithm.info", "This setting allows you to choose the algorithm used for line wrapping messages in chat. Possible values are Vanilla, CraftBukkit and Poseidon.");
 
         //Messages
         generateConfigOption("message.kick.banned", "You are banned from this server!");

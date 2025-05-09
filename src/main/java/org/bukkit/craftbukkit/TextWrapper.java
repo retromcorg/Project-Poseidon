@@ -1,5 +1,7 @@
 package org.bukkit.craftbukkit;
 
+import com.legacyminecraft.poseidon.PoseidonConfig;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,143 +31,98 @@ public class TextWrapper {
     public static final int CHAT_STRING_LENGTH = 119; // Poseidon - private -> public
     public static final String allowedChars = net.minecraft.server.FontAllowedCharacters.allowedCharacters; // Poseidon - private -> public
 
+    // Poseidon start - Text wrap rework
+
     public static String[] wrapText(final String input) {
-        String text = sanitizeText(input);
+        if (input == null || input.isEmpty())
+            return new String[0];
+
+        String algorithm = PoseidonConfig.getInstance().getConfigString("settings.text-wrapping-algorithm.value");
+        switch (algorithm.toLowerCase()) {
+            case "vanilla": return wrapTextVanilla(input);
+            case "poseidon": return wrapTextPoseidon(input);
+            default: return wrapTextCraftBukkit(input);
+        }
+    }
+
+    public static String[] wrapTextVanilla(final String input) {
+        if (input == null || input.isEmpty())
+            return new String[0];
+
+        return new String[0];
+    }
+
+    public static String[] wrapTextCraftBukkit(final String input) {
+        if (input == null || input.isEmpty())
+            return new String[0];
 
         final StringBuilder out = new StringBuilder();
-        int lineLength = 0;
+        char colorChar = 'f';
         int lineWidth = 0;
-        int tokenWidth;
-        int tokenLength;
-        // tokens are just individual words in the message
-        String[] tokens = text.split(" ");
-        String temp;
+        int lineLength = 0;
 
-        String lastColorChar = COLOR_CHAR + "f";
-        
-        for (int i = 0; i < tokens.length; i++) {
-            // append space to token unless it is last token
-            if (i == tokens.length - 1) {
-                temp = tokens[i];
+        // Go over the message char by char.
+        for (int i = 0; i < input.length(); i++) {
+            char ch = input.charAt(i);
+
+            // Get the color
+            if (ch == COLOR_CHAR && i < input.length() - 1) {
+                // We might need a linebreak ... so ugly ;(
+                if (lineLength + 2 > CHAT_STRING_LENGTH) {
+                    out.append('\n');
+                    lineLength = 0;
+                    if (colorChar != 'f' && colorChar != 'F') {
+                        out.append(COLOR_CHAR).append(colorChar);
+                        lineLength += 2;
+                    }
+                }
+                colorChar = input.charAt(++i);
+                out.append(COLOR_CHAR).append(colorChar);
+                lineLength += 2;
+                continue;
+            }
+
+            // Figure out if it's allowed
+            int index = allowedChars.indexOf(ch);
+            if (index == -1) {
+                // Invalid character .. skip it.
+                continue;
             } else {
-                temp = tokens[i] + " ";
+                // Sadly needed as the allowedChars string misses the first
+                index += 32;
             }
 
-            // getting the last color char in the token to persist to new line
-            Matcher m = COLOR_PATTERN.matcher(tokens[i]);
-            while (m.find()) {
-                lastColorChar = temp.substring(m.start(), m.end());
-            }
+            // Find the width
+            final int width = characterWidths[index];
 
-            boolean lastCharIsColorCode = false;
-
-            tokenLength = temp.length();
-            lineLength += tokenLength;
-            tokenWidth = widthInPixels(temp);
-            lineWidth += tokenWidth;
-
-            if (tokenLength >= CHAT_STRING_LENGTH || tokenWidth >= CHAT_WINDOW_WIDTH) {
-                // this token is too big for one line so split it
-
-                // reset the line accumulators since we will be taking up the whole line
-                lineWidth = 0;
+            // See if we need a linebreak
+            if (lineLength + 1 > CHAT_STRING_LENGTH || lineWidth + width >= CHAT_WINDOW_WIDTH) {
+                out.append('\n');
                 lineLength = 0;
 
-                for (int j = 0; j < temp.length(); j++) {
-                    // color format checking
-                    if (j < temp.length() - 1 && COLOR_PATTERN.matcher(temp.substring(j, j + 1)).matches()) {
-                        // we have a color format, so increment length by 2 but this will not contribute to width
-                        lineLength += 2;
-                        lastCharIsColorCode = true;
-                        lastColorChar = temp.substring(j, j + 1);
-                    } else {
-                        // no color format, so normal increments
-                        lineWidth += characterWidths[temp.charAt(j)];
-                        lineLength++;
-                        lastCharIsColorCode = false;
-                    }
-
-                    if (lineLength >= CHAT_STRING_LENGTH || lineWidth >= CHAT_WINDOW_WIDTH) {
-                        out.append(TEMP_CHAR);
-
-                        if (lastCharIsColorCode && !lastColorChar.equals(COLOR_CHAR + "f")) {
-                            // we need to move both the color char and the color specifier to the next line
-                            out.append(lastColorChar);
-                            lineLength = 2;
-                        } else {
-                            // not a color format, so just move one char to the next line
-                            j--;
-                            lineLength = 0;
-                        }
-                        lineWidth = 0;
-                        continue;
-                    }
-                    out.append(temp.charAt(j));
+                // Re-apply the last color if it isn't the default
+                if (colorChar != 'f' && colorChar != 'F') {
+                    out.append(COLOR_CHAR).append(colorChar);
+                    lineLength += 2;
                 }
-                continue;
+                lineWidth = width;
+            } else {
+                lineWidth += width;
             }
-
-            // we have a smaller token than the max size so wrap based on token instead of char
-
-            if (lineLength >= CHAT_STRING_LENGTH || lineWidth >= CHAT_WINDOW_WIDTH) {
-                // try again on a new line
-                out.append(TEMP_CHAR);
-                // only include color char if it is not white since default is white
-                if (!lastColorChar.equals(COLOR_CHAR + "f")) {
-                    out.append(lastColorChar);
-                    lineLength = 2;
-                } else {
-                    lineLength = 0;
-                }
-                lineWidth = 0;
-                i--;
-                continue;
-            }
-            out.append(temp);
+            out.append(ch);
+            lineLength++;
         }
 
-        return out.toString().split(String.valueOf(TEMP_CHAR));
+        // Return it split
+        return out.toString().split("\n");
     }
 
-    // Poseidon start - widthInPixels method
+    public static String[] wrapTextPoseidon(final String input) {
+        if (input == null || input.isEmpty())
+            return new String[0];
 
-    /**
-     * Calculates the width of a string in pixels based on Minecraft's character widths.
-     * The maximum width for chat is 320 pixels (Use CHAT_WINDOW_WIDTH).
-     *
-     * @param text The input string.
-     * @return The width of the string in pixels.
-     */
-    public static int widthInPixels(final String text) {
-        if (text == null || text.isEmpty())
-            return 0;
-
-        int output = 0;
-
-        // literally yoinked from above and removed unnecessary components.
-        for (int i = 0; i < text.length(); i++) {
-            char ch = text.charAt(i);
-
-            if (ch == COLOR_CHAR && i < text.length() - 1) {
-                i++;
-                continue;
-            }
-
-            int index = allowedChars.indexOf(ch);
-            if (index == -1)
-                continue;
-
-            index += 32; // compensate for gap in allowed characters
-
-            output += characterWidths[index];
-        }
-
-        return output;
+        return new String[0];
     }
-
-    // Poseidon end
-
-    // Poseidon start - Text wrap rework
 
     private static String sanitizeText(final String input) {
         String text = trimTrailing(input);
@@ -228,6 +185,44 @@ public class TextWrapper {
 
     private static boolean isValidColor(final char color) {
         return COLOR_PATTERN.matcher(String.valueOf(COLOR_CHAR) + color).matches();
+    }
+
+    // Poseidon end
+
+    // Poseidon start - widthInPixels method
+
+    /**
+     * Calculates the width of a string in pixels based on Minecraft's character widths.
+     * The maximum width for chat is 320 pixels (Use CHAT_WINDOW_WIDTH).
+     *
+     * @param input The input string.
+     * @return The width of the string in pixels.
+     */
+    public static int widthInPixels(final String input) {
+        if (input == null || input.isEmpty())
+            return 0;
+
+        int output = 0;
+
+        // literally yoinked from above and removed unnecessary components.
+        for (int i = 0; i < input.length(); i++) {
+            char ch = input.charAt(i);
+
+            if (ch == COLOR_CHAR && i < input.length() - 1) {
+                i++;
+                continue;
+            }
+
+            int index = allowedChars.indexOf(ch);
+            if (index == -1)
+                continue;
+
+            index += 32; // compensate for gap in allowed characters
+
+            output += characterWidths[index];
+        }
+
+        return output;
     }
 
     // Poseidon end
