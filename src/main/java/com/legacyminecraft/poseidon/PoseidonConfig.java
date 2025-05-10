@@ -202,8 +202,8 @@ public class PoseidonConfig extends Configuration {
         generateConfigOption("settings.update-checker.notify-staff.info", "This setting notifies operators and players with the permission poseidon.update when a new version of Poseidon is available on join.");
 
         // Text wrapping
-        generateConfigOption("settings.text-wrapping-algorithm.value", "CraftBukkit");
-        generateConfigOption("settings.text-wrapping-algorithm.info", "This setting allows you to choose the algorithm used for line wrapping messages in chat. Possible values are Vanilla, CraftBukkit and Poseidon.");
+        generateConfigOption("settings.optimize-text-wrapping.enabled", false);
+        generateConfigOption("settings.optimize-text-wrapping.info", "If enabled, an optimized algorithm will be used for line wrapping chat messages.");
 
         //Messages
         generateConfigOption("message.kick.banned", "You are banned from this server!");
