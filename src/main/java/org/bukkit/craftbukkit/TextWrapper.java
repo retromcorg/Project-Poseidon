@@ -2,6 +2,7 @@ package org.bukkit.craftbukkit;
 
 import com.legacyminecraft.poseidon.PoseidonConfig;
 
+import java.util.ArrayList;
 import java.util.regex.Pattern;
 
 public class TextWrapper {
@@ -25,7 +26,6 @@ public class TextWrapper {
     };
     public static final char COLOR_CHAR = '\u00A7'; // Poseidon - private -> public
     public static final Pattern COLOR_PATTERN = Pattern.compile(COLOR_CHAR + "[0-9a-fA-F]"); // Poseidon - Text wrap rework
-    private static final char TEMP_CHAR = '\u03d5'; // Poseidon - Text wrap rework
     public static final int CHAT_WINDOW_WIDTH = 320; // Poseidon - private -> public
     public static final int CHAT_STRING_LENGTH = 119; // Poseidon - private -> public
     public static final String allowedChars = net.minecraft.server.FontAllowedCharacters.allowedCharacters; // Poseidon - private -> public
@@ -109,10 +109,100 @@ public class TextWrapper {
         if (input == null || input.isEmpty())
             return new String[0];
 
-        return new String[0];
+        // Sanitize the text before line wrapping
+        String text = sanitizeText(input);
+        ArrayList<String> lines = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
+        char currentColor = 'f';
+        int lineWidth = 0;
+        int lastWhitespace = -1;
+        char lastWhitespaceColor = 'f';
+
+        for (int i = 0; i < text.length(); i++) {
+            char ch = text.charAt(i);
+
+            // Color logic
+            if (colorAt(text, i)) {
+                // If this condition passes, we need a line break
+                if (sb.length() + 2 >= CHAT_STRING_LENGTH) {
+                    // Go back to the previous character
+                    i--;
+                    if (lastWhitespace != -1) {
+                        // Go back to the last whitespace
+                        i = lastWhitespace;
+                        sb.setLength(lastWhitespace);
+                        lastWhitespace = -1;
+                        currentColor = lastWhitespaceColor;
+                        lastWhitespaceColor = 'f';
+                    }
+
+                    // Add the current line and cut the input text
+                    lines.add(sb.toString());
+                    sb.setLength(0);
+                    lineWidth = 0;
+                    text = text.substring(i + 1);
+                    i = 0;
+
+                    // If the next line would start with a white color, don't append it
+                    if (currentColor == 'f' || currentColor == 'F') {
+                        i = -1;
+                        continue;
+                    }
+                }
+
+                currentColor = text.charAt(i + 1);
+                sb.append(COLOR_CHAR).append(currentColor);
+                i++;
+                continue;
+            }
+
+            int index = allowedChars.indexOf(ch);
+            int width = characterWidths[index + 32];
+
+            // If this condition passes, we need a line break
+            if (sb.length() == CHAT_STRING_LENGTH || lineWidth + width >= CHAT_WINDOW_WIDTH) {
+                // Go back to the previous character
+                i--;
+                if (lastWhitespace != -1) {
+                    // Go back to the last whitespace
+                    i = lastWhitespace;
+                    sb.setLength(lastWhitespace);
+                    lastWhitespace = -1;
+                    currentColor = lastWhitespaceColor;
+                    lastWhitespaceColor = 'f';
+                }
+
+                // Add the current line and cut the input text
+                lines.add(sb.toString());
+                sb.setLength(0);
+                lineWidth = 0;
+                text = text.substring(i + 1);
+                i = -1;
+
+                // If the current color is not white and the next line
+                // does not immediately start with a color, append it
+                if (currentColor != 'f' && currentColor != 'F' && !colorAt(text, 0)) {
+                    sb.append(COLOR_CHAR).append(currentColor);
+                }
+                continue;
+            }
+
+            if (Character.isWhitespace(ch)) {
+                lastWhitespace = sb.length();
+                lastWhitespaceColor = currentColor;
+            }
+
+            sb.append(ch);
+            lineWidth += width;
+        }
+
+        // Add the last line
+        lines.add(sb.toString());
+
+        return lines.toArray(new String[0]);
     }
 
-    private static String sanitizeText(final String input) {
+    public static String sanitizeText(final String input) {
         String text = trimTrailing(input);
 
         // Remove all trailing whitespaces and color codes
@@ -121,42 +211,40 @@ public class TextWrapper {
         }
 
         StringBuilder sb = new StringBuilder();
-        char currentColor = TEMP_CHAR;
+        char prevColor = 'f';
+        char currentColor = 'f';
 
         // Filter out all redundant color codes
         for (int i = 0; i < text.length(); i++) {
             // If there are multiple color codes chained together, we will get the last one
-            while (text.charAt(i) == COLOR_CHAR && i < text.length() - 1) {
-                char color = text.charAt(++i);
-                if (isValidColor(color)) {
-                    currentColor = color;
-                } else {
-                    // The color is invalid, so the chain is over
-                    i--;
-                    break;
-                }
+            while (colorAt(text, i)) {
+                currentColor = text.charAt(++i);
                 i++;
             }
 
-            // If a new color has been found, append it
-            if (currentColor != TEMP_CHAR) {
+            // If a new color was found, place it at the beginning of the next word
+            if (Character.toLowerCase(prevColor) != Character.toLowerCase(currentColor) &&
+                !Character.isWhitespace(text.charAt(i))) {
+
                 sb.append(COLOR_CHAR).append(currentColor);
-                currentColor = TEMP_CHAR;
+                prevColor = currentColor;
             }
 
             sb.append(text.charAt(i));
         }
 
         text = sb.toString();
+        sb.setLength(0);
 
-        // If the text starts with a white color code, remove it
-        if (text.startsWith(COLOR_CHAR + "f") ||
-            text.startsWith(COLOR_CHAR + "F")) {
-
-            text = text.substring(2);
+        // Remove all illegal characters
+        for (int i = 0; i < text.length(); i ++) {
+            char ch = text.charAt(i);
+            if (allowedChars.indexOf(ch) != -1 || colorAt(text, i)) {
+                sb.append(ch);
+            }
         }
 
-        return text;
+        return sb.toString();
     }
 
     private static String trimTrailing(final String input) {
@@ -167,12 +255,13 @@ public class TextWrapper {
         return input.substring(0, length);
     }
 
-    private static boolean endsWithColor(final String input) {
-        return input.length() >= 2 && COLOR_PATTERN.matcher(input.substring(input.length() - 2)).matches();
+    private static boolean colorAt(final String input, int index) {
+        if (index < 0 || index > input.length() - 2) return false;
+        return COLOR_PATTERN.matcher(input.substring(index, index + 2)).matches();
     }
 
-    private static boolean isValidColor(final char color) {
-        return COLOR_PATTERN.matcher(String.valueOf(COLOR_CHAR) + color).matches();
+    private static boolean endsWithColor(final String input) {
+        return input.length() >= 2 && COLOR_PATTERN.matcher(input.substring(input.length() - 2)).matches();
     }
 
     // Poseidon end
