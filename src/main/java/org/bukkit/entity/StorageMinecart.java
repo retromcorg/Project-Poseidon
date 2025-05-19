@@ -1,18 +1,10 @@
 package org.bukkit.entity;
 
-import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 
 /**
  * Represents a storage minecart.
  *
  * @author sk89q
  */
-public interface StorageMinecart extends Minecart {
-
-    /**
-     * Return the inventory object for this StorageMinecart.
-     *
-     * @return The inventory for this Minecart
-     */
-    public Inventory getInventory();
-}
+public interface StorageMinecart extends Minecart, InventoryHolder {} // Poseidon - Backport modern Inventory API

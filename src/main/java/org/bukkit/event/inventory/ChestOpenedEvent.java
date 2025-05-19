@@ -5,6 +5,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 
+/**
+ * @deprecated This event is superseded by the modern Inventory API.
+ * @see InventoryOpenEvent
+ */
+@Deprecated
 public class ChestOpenedEvent extends Event implements Cancellable {
     private boolean cancelled;
     private Player player;

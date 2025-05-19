@@ -462,19 +462,19 @@ public abstract class Event implements Serializable {
         /**
          * Called when a player opens an inventory
          *
-         * @todo: add javadoc see comment
+         * @see org.bukkit.event.inventory.InventoryOpenEvent
          */
         INVENTORY_OPEN(Category.INVENTORY),
         /**
          * Called when a player closes an inventory
          *
-         * @todo: add javadoc see comment
+         * @see org.bukkit.event.inventory.InventoryCloseEvent
          */
         INVENTORY_CLOSE(Category.INVENTORY),
         /**
          * Called when a player clicks on an inventory slot
          *
-         * @todo: add javadoc see comment
+         * @see org.bukkit.event.inventory.InventoryClickEvent
          */
         INVENTORY_CLICK(Category.INVENTORY),
         /**
@@ -501,6 +501,22 @@ public abstract class Event implements Serializable {
          * @see org.bukkit.event.inventory.FurnaceBurnEvent
          */
         FURNACE_BURN(Category.INVENTORY),
+
+        // Poseidon start - Backport modern Inventory API
+        /**
+         * Called when an item is crafted in a crafting grid.
+         *
+         * @see org.bukkit.event.inventory.CraftItemEvent
+         */
+        CRAFT_ITEM(Category.INVENTORY),
+
+        /**
+         * Called when the items in a crafting grid match a recipe.
+         *
+         * @see org.bukkit.event.inventory.PrepareItemCraftEvent
+         */
+        PREPARE_ITEM_CRAFT(Category.INVENTORY),
+        // Poseidon end
 
         /**
          * SERVER EVENTS

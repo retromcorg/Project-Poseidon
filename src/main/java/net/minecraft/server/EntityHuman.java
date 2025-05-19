@@ -147,7 +147,7 @@ public abstract class EntityHuman extends EntityLiving {
         return this.health <= 0 || this.isSleeping();
     }
 
-    protected void y() {
+    public void y() { // Poseidon - Backport modern Inventory API - protected -> public
         this.activeContainer = this.defaultContainer;
     }
 
