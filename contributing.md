@@ -44,8 +44,12 @@ This guide entails Project Poseidon's contribution requirements along with some 
 
 - Imports: Group Bukkit imports under // CraftBukkit start comments
 
-- Comments: Use CraftBukkit markers for changes:
-
+- Comments: Use Poseidon markers for changes:
+````
+  // Poseidon - Short description
+  // Poseidon start - Short description
+  // Poseidon end
+````
 ````
     java
 
@@ -54,17 +58,9 @@ This guide entails Project Poseidon's contribution requirements along with some 
     // CraftBukkit end
 ````
 ## Miscellaneous Guidelines
-- When adding imports to a Minecraft class, they should be organised by alphabetical order, separated and grouped by package.
+- When adding imports to a Minecraft class, any Java standard imports should be below all other imports
 
     ```
-    import java.io.ByteArrayInputStream;
-    import java.io.DataInputStream;
-    import java.io.IOException;
-    import java.util.ArrayList;
-    import java.util.Iterator;
-    import java.util.Random;
-    import java.util.concurrent.Callable;
-
     // CraftBukkit start
     import java.io.UnsupportedEncodingException;
     import java.util.concurrent.ExecutionException;
@@ -87,6 +83,14 @@ This guide entails Project Poseidon's contribution requirements along with some 
     import org.bukkit.event.block.SignChangeEvent;
     import org.bukkit.event.player.AsyncPlayerChatEvent;
     // CraftBukkit end
+  
+    import java.io.ByteArrayInputStream;
+    import java.io.DataInputStream;
+    import java.io.IOException;
+    import java.util.ArrayList;
+    import java.util.Iterator;
+    import java.util.Random;
+    import java.util.concurrent.Callable;
   ```
 - Do not remove unused imports if they are not marked by CraftBukkit comments.
 
@@ -109,7 +113,7 @@ This guide entails Project Poseidon's contribution requirements along with some 
 ````
 ### Development Environment requirements
 
-[JDK 17](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
+[JDK 8](https://www.oracle.com/emea/java/technologies/javase/javase8-archive-downloads.html)
 
 [Maven 3.6+](https://maven.apache.org/)
 
@@ -121,7 +125,7 @@ An IDE of your choice,
 
 ```mvn clean package```
 
-- This will download all dependencies from our [maven repository](https://repository.johnymuffin.com/repository/maven-public/) and build a working jar in the `out` directory
+- This will download all dependencies from our [maven repository](https://repository.johnymuffin.com/repository/maven-public/) and build a working jar in the `target` directory
   of your project.
 
 ### Legal Requirements Code Provenance
@@ -207,7 +211,7 @@ Preserve Fields even if unused.
 
 Discord: https://discord.gg/FwKg676
 
-Using Posideon on your server: https://github.com/RhysB/Project-Poseidon/wiki/Implementing-Project-Poseidon-In-Production
+Using Poseidon on your server: https://github.com/RhysB/Project-Poseidon/wiki/Implementing-Project-Poseidon-In-Production
 
 Official Maven Repository: https://repository.johnymuffin.com/repository/maven-public/
 
