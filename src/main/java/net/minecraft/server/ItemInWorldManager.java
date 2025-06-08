@@ -151,27 +151,33 @@ public class ItemInWorldManager {
     }
 
     public boolean c(int i, int j, int k) {
+        int l = this.world.getTypeId(i, j, k);
+        int i1 = this.world.getData(i, j, k);
+
         // CraftBukkit start
         if (this.player instanceof EntityPlayer) {
             org.bukkit.block.Block block = this.world.getWorld().getBlockAt(i, j, k);
 
-            //Project Poseidon Start - Craft Bukkit backport
-            // Tell client the block is gone immediately then process events
+            // Poseidon start - CraftBukkit backport
+            // Tell the client the block is gone immediately then process events
             if (world.getTileEntity(i, j, k) == null) {
                 ((EntityPlayer) this.player).netServerHandler.sendPacket(new ArtificialPacket53BlockChange(i, j, k, 0,0));
             }
-            //Project Poseidon End
+            // Poseidon end
             BlockBreakEvent event = new BlockBreakEvent(block, (org.bukkit.entity.Player) this.player.getBukkitEntity());
             this.world.getServer().getPluginManager().callEvent(event);
 
             if (event.isCancelled()) {
+                // Poseidon - Inform the client if the event was cancelled
+                ((EntityPlayer) this.player).netServerHandler.sendPacket(new ArtificialPacket53BlockChange(i, j, k, l, i1));
                 return false;
             }
         }
         // CraftBukkit end
 
-        int l = this.world.getTypeId(i, j, k);
-        int i1 = this.world.getData(i, j, k);
+        // Poseidon - moved up
+        //int l = this.world.getTypeId(i, j, k);
+        //int i1 = this.world.getData(i, j, k);
 
         this.world.a(this.player, 2001, i, j, k, l + this.world.getData(i, j, k) * 256);
         boolean flag = this.b(i, j, k);
