@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 public class PoseidonConfig extends Configuration {
     private static PoseidonConfig singleton;
-    private final int configVersion = 5;
+    private final int configVersion = 6;
     private Integer[] treeBlacklistIDs;
 
     public Integer[] getTreeBlacklistIDs() {
@@ -71,12 +71,15 @@ public class PoseidonConfig extends Configuration {
 
         generateConfigOption("settings.uuid-fetcher.get.info", "This setting allows you to change the URL that the server fetches UUIDs from. This is useful if you have a custom UUID server or a proxy server that fetches UUIDs.");
         generateConfigOption("settings.uuid-fetcher.get.value", "https://api.minecraftservices.com/minecraft/profile/lookup/name/{username}");
-        generateConfigOption("settings.uuid-fetcher.get.enforce-case-sensitivity.enabled", true);
-        generateConfigOption("settings.uuid-fetcher.get.enforce-case-sensitivity.info", "The Mojang API is case-insensitive by default meaning usernames with different casing will return the same UUID. This setting checks the case of the username to prevent this issue. If the name is invalid, the player will be kicked.");
+        //generateConfigOption("settings.uuid-fetcher.get.enforce-case-sensitivity.enabled", true);
+        //generateConfigOption("settings.uuid-fetcher.get.enforce-case-sensitivity.info", "The Mojang API is case-insensitive by default meaning usernames with different casing will return the same UUID. This setting checks the case of the username to prevent this issue. If the name is invalid, the player will be kicked.");
 
 
         generateConfigOption("settings.uuid-fetcher.method.value", "POST");
         generateConfigOption("settings.uuid-fetcher.method.info", "This setting allows for POST or GET method for fetching UUIDs. This is useful if you have a custom UUID server, Mojang API is down, or a proxy server that fetches UUIDs.");
+
+        generateConfigOption("settings.uuid-fetcher.enforce-case-sensitivity.enabled", false);
+        generateConfigOption("settings.uuid-fetcher.enforce-case-sensitivity.info", "The Mojang API is case-insensitive by default meaning usernames with different casing will return the same UUID. This setting checks the case of the username to prevent this issue. If the name is invalid, the player will be kicked.");
 
         generateConfigOption("settings.uuid-fetcher.allow-graceful-uuids.value", true);
         generateConfigOption("settings.uuid-fetcher.allow-graceful-uuids.info", "This setting means offline UUIDs are generated for players who don't have a Mojang UUID. This is useful for cracked or semi-cracked servers.");
@@ -341,7 +344,9 @@ public class PoseidonConfig extends Configuration {
         convertToNewAddress("settings.uuid-fetcher.get.enforce-case-sensitivity.enabled", "settings.use-get-for-uuids.case-sensitive.enabled");
         removeDeprecatedConfig("settings.use-get-for-uuids.case-sensitive.info");
 
-
+        // 5-6 Conversion
+        convertToNewAddress("settings.uuid-fetcher.enforce-case-sensitivity.enabled", "settings.uuid-fetcher.get.enforce-case-sensitivity.enabled");
+        removeDeprecatedConfig("settings.uuid-fetcher.get.enforce-case-sensitivity");
     }
 
     //Allow any number of string arguments to be passed to this method

@@ -2,8 +2,8 @@ package com.legacyminecraft.poseidon;
 
 import com.legacyminecraft.poseidon.utility.PerformanceStatistic;
 import com.legacyminecraft.poseidon.utility.PoseidonVersionChecker;
+import com.legacyminecraft.poseidon.uuid.PlayerUUIDManager;
 import com.legacyminecraft.poseidon.watchdog.WatchDogThread;
-import com.projectposeidon.johnymuffin.UUIDManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.NetServerHandler;
 import org.bukkit.Bukkit;
@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
-import java.util.logging.Logger;
 
 public final class PoseidonServer {
     private final MinecraftServer server;
@@ -66,7 +65,7 @@ public final class PoseidonServer {
         getLogger().info("[Poseidon] Starting Project Poseidon Modules!");
 
         PoseidonConfig.getInstance();
-        UUIDManager.getInstance();
+        PlayerUUIDManager.initialize();
 
         initializeUpdateChecker();
 
@@ -120,7 +119,7 @@ public final class PoseidonServer {
       
         getLogger().info("[Poseidon] Stopping Project Poseidon Modules!");
 
-        UUIDManager.getInstance().saveJsonArray();
+        PlayerUUIDManager.saveData();
 
         if (watchDogThread != null) {
             getLogger().info("[Poseidon] Stopping Watchdog!");
