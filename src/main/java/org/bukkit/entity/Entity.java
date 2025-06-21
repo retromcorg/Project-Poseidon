@@ -8,6 +8,7 @@ import org.bukkit.util.Vector;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Represents a base entity in the world
@@ -57,6 +58,18 @@ public interface Entity {
      * @return <code>true</code> if the teleport was successful
      */
     public boolean teleport(Entity destination);
+
+    // Poseidon start
+
+    /**
+     * Loads the chunk at the location asynchronously and teleports the entity when it has loaded.
+     *
+     * @param location location to teleport this entity to
+     * @return <code>true</code> if the teleport was successful
+     */
+    public CompletableFuture<Boolean> teleportAsync(Location location);
+
+    // Poseidon end
 
     /**
      * Returns a list of entities within a bounding box defined by x,y,z centered around player

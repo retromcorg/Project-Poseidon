@@ -14,6 +14,7 @@ import org.bukkit.util.Vector;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public abstract class CraftEntity implements org.bukkit.entity.Entity {
     private static final Map<String, CraftPlayer> players = new MapMaker().softValues().makeMap();
@@ -134,6 +135,12 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
     public boolean teleport(org.bukkit.entity.Entity destination) {
         return teleport(destination.getLocation());
     }
+
+    // Poseidon start
+    public CompletableFuture<Boolean> teleportAsync(Location location) {
+        return getWorld().getChunkAtAsync(location).thenApply(chunk -> teleport(location));
+    }
+    // Poseidon end
 
     public List<org.bukkit.entity.Entity> getNearbyEntities(double x, double y, double z) {
         @SuppressWarnings("unchecked")

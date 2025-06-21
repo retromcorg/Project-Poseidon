@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentMap;
 
 public class CraftWorld implements World {
@@ -88,9 +89,27 @@ public class CraftWorld implements World {
         return this.world.chunkProviderServer.getChunkAt(x, z).bukkitChunk;
     }
 
+    public Chunk getChunkAt(Location location) {
+        return getChunkAt(location.getBlockX() >> 4, location.getBlockZ() >> 4);
+    }
+
     public Chunk getChunkAt(Block block) {
         return getChunkAt(block.getX() >> 4, block.getZ() >> 4);
     }
+
+    // Poseidon start
+    public CompletableFuture<Chunk> getChunkAtAsync(int x, int z) {
+        return this.world.chunkProviderServer.getChunkAtAsync(x, z).thenApply(chunk -> chunk.bukkitChunk);
+    }
+
+    public CompletableFuture<Chunk> getChunkAtAsync(Location location) {
+        return getChunkAtAsync(location.getBlockX() >> 4, location.getBlockZ() >> 4);
+    }
+
+    public CompletableFuture<Chunk> getChunkAtAsync(Block block) {
+        return getChunkAtAsync(block.getX() >> 4, block.getZ() >> 4);
+    }
+    // Poseidon end
 
     public boolean isChunkLoaded(int x, int z) {
         return world.chunkProviderServer.isChunkLoaded(x, z);
@@ -449,10 +468,6 @@ public class CraftWorld implements World {
 
     public int getHighestBlockYAt(Location location) {
         return getHighestBlockYAt(location.getBlockX(), location.getBlockZ());
-    }
-
-    public Chunk getChunkAt(Location location) {
-        return getChunkAt(location.getBlockX() >> 4, location.getBlockZ() >> 4);
     }
 
     public ChunkGenerator getGenerator() {
