@@ -149,6 +149,8 @@ public class PoseidonConfig extends Configuration {
         generateConfigOption("world.settings.block-tree-growth.enabled", true);
         generateConfigOption("world.settings.block-tree-growth.list", "54,63,68");
         generateConfigOption("world.settings.block-tree-growth.info", "This setting allows for server owners to easily block trees growing from automatically destroying certain blocks. The list must be a string with numerical item ids separated by commas.");
+        generateConfigOption("world.settings.async-chunk-loading.enabled", false);
+        generateConfigOption("world.settings.async-chunk-loading.info", "This setting causes chunk region data to be loaded asynchronously.");
         generateConfigOption("world.settings.block-pistons-pushing-furnaces.info", "This workaround prevents pistons from pushing furnaces which prevents a malicious server crash.");
         generateConfigOption("world.settings.block-pistons-pushing-furnaces.enabled", true);
         generateConfigOption("world.settings.pistons.transmutation-fix.enabled", true);

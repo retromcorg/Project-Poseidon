@@ -1,7 +1,6 @@
 package net.minecraft.server;
 
 import com.legacyminecraft.poseidon.PoseidonConfig;
-import org.bukkit.craftbukkit.CraftChunk;
 import org.bukkit.craftbukkit.util.LongHashset;
 import org.bukkit.craftbukkit.util.LongHashtable;
 import org.bukkit.event.world.ChunkLoadEvent;
@@ -11,12 +10,23 @@ import org.bukkit.generator.BlockPopulator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 // CraftBukkit start
 // CraftBukkit end
 
 public class ChunkProviderServer implements IChunkProvider {
+
+    // Poseidon start
+    private static final ExecutorService executor = Executors.newCachedThreadPool();
+    private final LongHashtable<ChunkLoadTask> loadQueue = new LongHashtable<>();
+    private static final Queue<Runnable> postLoadQueue = new ConcurrentLinkedQueue<>();
+    // Poseidon end
 
     // CraftBukkit start
     public LongHashset unloadQueue = new LongHashset();
@@ -51,62 +61,105 @@ public class ChunkProviderServer implements IChunkProvider {
         }
     }
 
+    // Poseidon - moved code to postLoadChunk
     public Chunk getChunkAt(int i, int j) {
-        // CraftBukkit start
         this.unloadQueue.remove(i, j);
-        Chunk chunk = (Chunk) this.chunks.get(i, j);
-        boolean newChunk = false;
-        // CraftBukkit end
+        Chunk chunk = this.chunks.get(i, j);
 
-        if (chunk == null) {
-            chunk = this.loadChunk(i, j);
-            if (chunk == null) {
-                if (this.chunkProvider == null) {
-                    chunk = this.emptyChunk;
-                } else {
-                    chunk = this.chunkProvider.getOrCreateChunk(i, j);
-                }
-                newChunk = true; // CraftBukkit
-            }
+        if (chunk != null) {
+            return chunk;
+        } else {
+            chunk = loadChunk(i, j);
+            return postLoadChunk(chunk, i, j);
+        }
+    }
 
-            this.chunks.put(i, j, chunk); // CraftBukkit
-            this.chunkList.add(chunk);
-            if (chunk != null) {
-                chunk.loadNOP();
-                chunk.addEntities();
-            }
+    // Poseidon start
+    public CompletableFuture<Chunk> getChunkAtAsync(int i, int j) {
+        this.unloadQueue.remove(i, j);
+        Chunk chunk = this.chunks.get(i, j);
 
-            // CraftBukkit start
-            org.bukkit.Server server = this.world.getServer();
-            if (server != null) {
-                /*
-                 * If it's a new world, the first few chunks are generated inside
-                 * the World constructor. We can't reliably alter that, so we have
-                 * no way of creating a CraftWorld/CraftServer at that point.
-                 */
-                server.getPluginManager().callEvent(new ChunkLoadEvent(chunk.bukkitChunk, newChunk));
-            }
-            // CraftBukkit end
+        if (chunk != null) {
+            return CompletableFuture.completedFuture(chunk);
+        } else {
+            return loadChunkAsync(i, j);
+        }
+    }
 
-            if (!chunk.done && this.isChunkLoaded(i + 1, j + 1) && this.isChunkLoaded(i, j + 1) && this.isChunkLoaded(i + 1, j)) {
-                this.getChunkAt(this, i, j);
-            }
-
-            if (this.isChunkLoaded(i - 1, j) && !this.getOrCreateChunk(i - 1, j).done && this.isChunkLoaded(i - 1, j + 1) && this.isChunkLoaded(i, j + 1) && this.isChunkLoaded(i - 1, j)) {
-                this.getChunkAt(this, i - 1, j);
-            }
-
-            if (this.isChunkLoaded(i, j - 1) && !this.getOrCreateChunk(i, j - 1).done && this.isChunkLoaded(i + 1, j - 1) && this.isChunkLoaded(i, j - 1) && this.isChunkLoaded(i + 1, j)) {
-                this.getChunkAt(this, i, j - 1);
-            }
-
-            if (this.isChunkLoaded(i - 1, j - 1) && !this.getOrCreateChunk(i - 1, j - 1).done && this.isChunkLoaded(i - 1, j - 1) && this.isChunkLoaded(i, j - 1) && this.isChunkLoaded(i - 1, j)) {
-                this.getChunkAt(this, i - 1, j - 1);
+    public static void postLoadChunks() {
+        int tasks = postLoadQueue.size();
+        Runnable task;
+        while (tasks-- >= 0 && (task = postLoadQueue.poll()) != null) {
+            try {
+                task.run();
+            } catch (Throwable t) {
+                t.printStackTrace();
             }
         }
+    }
+    // Poseidon end
 
+    private Chunk postLoadChunk(Chunk chunk, int i, int j) {
+        if (this.chunks.containsKey(i, j)) {
+            return this.chunks.get(i, j);
+        }
+
+        boolean newChunk = false;
+        if (chunk == null) {
+            if (this.chunkProvider == null) {
+                chunk = this.emptyChunk;
+            } else {
+                chunk = this.chunkProvider.getOrCreateChunk(i, j);
+            }
+            newChunk = true; // CraftBukkit
+        }
+
+        this.chunks.put(i, j, chunk); // CraftBukkit
+        this.chunkList.add(chunk);
+        if (chunk != null) {
+            chunk.loadNOP();
+            chunk.addEntities();
+        }
+
+        // CraftBukkit start
+        org.bukkit.Server server = this.world.getServer();
+        if (server != null) {
+            /*
+             * If it's a new world, the first few chunks are generated inside
+             * the World constructor. We can't reliably alter that, so we have
+             * no way of creating a CraftWorld/CraftServer at that point.
+             */
+            server.getPluginManager().callEvent(new ChunkLoadEvent(chunk.bukkitChunk, newChunk));
+        }
+        // CraftBukkit end
+
+        if (!chunk.done && this.isChunkLoaded(i + 1, j + 1) && this.isChunkLoaded(i, j + 1) && this.isChunkLoaded(i + 1, j)) {
+            this.getChunkAt(this, i, j);
+        }
+
+        // Poseidon start - getOrCreateChunk -> getChunkIfLoaded
+        if (this.isChunkLoaded(i - 1, j) && !this.getChunkIfLoaded(i - 1, j).done && this.isChunkLoaded(i - 1, j + 1) && this.isChunkLoaded(i, j + 1) && this.isChunkLoaded(i - 1, j)) {
+            this.getChunkAt(this, i - 1, j);
+        }
+
+        if (this.isChunkLoaded(i, j - 1) && !this.getChunkIfLoaded(i, j - 1).done && this.isChunkLoaded(i + 1, j - 1) && this.isChunkLoaded(i, j - 1) && this.isChunkLoaded(i + 1, j)) {
+            this.getChunkAt(this, i, j - 1);
+        }
+
+        if (this.isChunkLoaded(i - 1, j - 1) && !this.getChunkIfLoaded(i - 1, j - 1).done && this.isChunkLoaded(i - 1, j - 1) && this.isChunkLoaded(i, j - 1) && this.isChunkLoaded(i - 1, j)) {
+            this.getChunkAt(this, i - 1, j - 1);
+        }
+        // Poseidon end
+
+        this.loadQueue.remove(i, j); // Poseidon
         return chunk;
     }
+
+    // Poseidon start
+    public Chunk getChunkIfLoaded(int i, int j) {
+        return this.chunks.get(i, j);
+    }
+    // Poseidon end
 
     public Chunk getOrCreateChunk(int i, int j) {
         // CraftBukkit start
@@ -158,6 +211,19 @@ public class ChunkProviderServer implements IChunkProvider {
             }
         }
     }
+
+    // Poseidon start
+    public CompletableFuture<Chunk> loadChunkAsync(int i, int j) {
+        ChunkLoadTask task = this.loadQueue.get(i, j);
+        if (task == null) {
+            task = new ChunkLoadTask(i, j);
+            this.loadQueue.put(i, j, task);
+            executor.execute(task);
+        }
+
+        return task.future;
+    }
+    // Poseidon end
 
     public void saveChunkNOP(Chunk chunk) { // CraftBukkit - private -> public
         if (this.e != null) {
@@ -277,4 +343,26 @@ public class ChunkProviderServer implements IChunkProvider {
     public boolean canSave() {
         return !this.world.canSave;
     }
+
+    // Poseidon start
+    private class ChunkLoadTask implements Runnable {
+
+        private final int x;
+        private final int z;
+        private final CompletableFuture<Chunk> future = new CompletableFuture<>();
+
+        private ChunkLoadTask(int x, int z) {
+            this.x = x;
+            this.z = z;
+        }
+
+        @Override
+        public void run() {
+            Chunk chunk = loadChunk(x, z);
+            postLoadQueue.offer(() -> future.complete(postLoadChunk(chunk, x, z)));
+        }
+
+    }
+    // Poseidon end
+
 }

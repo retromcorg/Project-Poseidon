@@ -564,6 +564,7 @@ public class MinecraftServer implements Runnable, ICommandListener {
         Vec3D.a();
         ++this.ticks;
 
+        ChunkProviderServer.postLoadChunks(); // Poseidon
         ((CraftScheduler) this.server.getScheduler()).mainThreadHeartbeat(this.ticks); // CraftBukkit
 
         //Project Poseidon Start - Tick Update
