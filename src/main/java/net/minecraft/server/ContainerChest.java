@@ -1,14 +1,25 @@
 package net.minecraft.server;
 
+import org.bukkit.craftbukkit.inventory.CraftInventory;
+import org.bukkit.craftbukkit.inventory.CraftInventoryDoubleChest;
+import org.bukkit.craftbukkit.inventory.CraftInventoryPlayer;
+import org.bukkit.craftbukkit.inventory.CraftInventoryView;
+import org.bukkit.entity.HumanEntity;
+
 public class ContainerChest extends Container {
 
-    private IInventory a;
+    public IInventory a; // Poseidon - Backport modern Inventory API - private -> public
     private int b;
+    // Poseidon start - Backport modern Inventory API
+    private CraftInventoryView view = null;
+    private InventoryPlayer player;
+    // Poseidon end
 
     public ContainerChest(IInventory iinventory, IInventory iinventory1) {
         this.a = iinventory1;
         this.b = iinventory1.getSize() / 9;
         int i = (this.b - 4) * 18;
+        this.player = (InventoryPlayer) iinventory; // Poseidon - Backport modern Inventory API
 
         int j;
         int k;
@@ -31,6 +42,7 @@ public class ContainerChest extends Container {
     }
 
     public boolean b(EntityHuman entityhuman) {
+        if (!this.checkReachable) return true; // Poseidon - Backport modern Inventory API
         return this.a.a_(entityhuman);
     }
 
@@ -57,4 +69,21 @@ public class ContainerChest extends Container {
 
         return itemstack;
     }
+
+    // Poseidonn start - Backport modern Inventory API
+    @Override
+    public CraftInventoryView getBukkitView() {
+        if (view != null) return view;
+        CraftInventory inventory;
+        if (a instanceof InventoryPlayer) {
+            inventory = new CraftInventoryPlayer((InventoryPlayer)a);
+        } else if (a instanceof InventoryLargeChest) {
+            inventory = new CraftInventoryDoubleChest((InventoryLargeChest)a);
+        } else {
+            inventory = new CraftInventory(this.a);
+        }
+        view = new CraftInventoryView((HumanEntity) this.player.d.getBukkitEntity(), inventory, this);
+        return view;
+    }
+    // Poseidon end
 }

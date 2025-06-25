@@ -1,18 +1,30 @@
 package net.minecraft.server;
 
+import org.bukkit.craftbukkit.inventory.CraftInventoryCrafting;
+import org.bukkit.craftbukkit.inventory.CraftInventoryView;
+import org.bukkit.entity.HumanEntity;
+
 public class ContainerPlayer extends Container {
 
     public InventoryCrafting craftInventory;
     public IInventory resultInventory;
     public boolean c;
+    // Poseidon start - Backport modern Inventory API
+    private CraftInventoryView view = null;
+    private InventoryPlayer player;
+    // Poseidon end
 
     public ContainerPlayer(InventoryPlayer inventoryplayer) {
         this(inventoryplayer, true);
     }
 
     public ContainerPlayer(InventoryPlayer inventoryplayer, boolean flag) {
+        this.resultInventory = new InventoryCraftResult(); // Poseidon - Backport modern Inventory API
         this.craftInventory = new InventoryCrafting(this, 2, 2);
-        this.resultInventory = new InventoryCraftResult();
+        // Poseidon start - Backport modern Inventory API
+        this.craftInventory.resultInventory = this.resultInventory;
+        this.player = inventoryplayer;
+        // Poseidon end
         this.c = false;
         this.c = flag;
         this.a((Slot) (new SlotResult(inventoryplayer.d, this.craftInventory, this.resultInventory, 0, 144, 36)));
@@ -40,11 +52,12 @@ public class ContainerPlayer extends Container {
             this.a(new Slot(inventoryplayer, i, 8 + i * 18, 142));
         }
 
-        this.a((IInventory) this.craftInventory);
+        //this.a((IInventory) this.craftInventory); // Poseidon - Backport modern Inventory API
     }
 
     public void a(IInventory iinventory) {
         // CraftBukkit start
+        CraftingManager.getInstance().lastCraftView = getBukkitView(); // Poseidon - Backport modern Inventory API
         ItemStack craftResult = CraftingManager.getInstance().craft(this.craftInventory);
         this.resultInventory.setItem(0, craftResult);
         if (super.listeners.size() < 1) {
@@ -106,4 +119,14 @@ public class ContainerPlayer extends Container {
 
         return itemstack;
     }
+
+    // Poseidon start - Backport modern Inventory API
+    @Override
+    public CraftInventoryView getBukkitView() {
+        if (view != null) return view;
+        CraftInventoryCrafting inventory = new CraftInventoryCrafting(this.craftInventory, this.resultInventory);
+        view = new CraftInventoryView((HumanEntity) this.player.d.getBukkitEntity(), inventory, this);
+        return view;
+    }
+    // Poseidon end
 }
