@@ -1,6 +1,5 @@
 package net.minecraft.server;
 
-import com.legacyminecraft.poseidon.PoseidonConfig;
 import org.bukkit.event.block.BlockRedstoneEvent;
 
 import java.util.ArrayList;
@@ -63,7 +62,7 @@ public class BlockRedstoneTorch extends BlockTorch {
     }
 
     public void remove(World world, int i, int j, int k) {
-        if (this.isOn && (!PoseidonConfig.getInstance().getConfigBoolean("world.settings.pistons.transmutation-fix.enabled", true) || world.getTypeId(i, j, k) == this.id || world.getTypeId(i, j, k) == 75)) {
+        if (this.isOn) {
             world.applyPhysics(i, j - 1, k, this.id);
             world.applyPhysics(i, j + 1, k, this.id);
             world.applyPhysics(i - 1, j, k, this.id);
