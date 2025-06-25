@@ -26,10 +26,11 @@ public class ChunkCompressionHandler implements Runnable {
 
     @Override
     public void run() {
-        while (true) {
+        while (!player.netServerHandler.disconnected) {
             try {
-                handlePacket(packetQueue.take());
-            } catch (InterruptedException e) {
+                Packet51MapChunk packet = packetQueue.poll();
+                if (packet == null) continue;
+                handlePacket(packet);
             } catch (Exception e) {
                 e.printStackTrace();
             }

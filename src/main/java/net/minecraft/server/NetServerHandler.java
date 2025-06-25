@@ -2,6 +2,7 @@ package net.minecraft.server;
 
 import com.legacyminecraft.poseidon.Poseidon;
 import com.legacyminecraft.poseidon.event.PlayerSendPacketEvent;
+import com.legacyminecraft.poseidon.util.ChunkCompressionHandler;
 import com.projectposeidon.ConnectionType;
 import com.legacyminecraft.poseidon.PoseidonConfig;
 import org.bukkit.Bukkit;
@@ -67,6 +68,7 @@ public class NetServerHandler extends NetHandler implements ICommandListener {
         networkmanager.a((NetHandler) this);
         this.player = entityplayer;
         entityplayer.netServerHandler = this;
+        entityplayer.compressionHandler = new ChunkCompressionHandler(entityplayer); // Poseidon
 
         // CraftBukkit start
         this.server = minecraftserver.server;

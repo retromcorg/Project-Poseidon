@@ -23,7 +23,7 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
     public double e;
     public List chunkCoordIntPairQueue = new LinkedList();
     public Set playerChunkCoordIntPairs = new HashSet();
-    public final ChunkCompressionHandler compressionHandler; // Poseidon
+    public ChunkCompressionHandler compressionHandler; // Poseidon
     public final List removeQueue = new LinkedList(); // poseidon
     private int bL = -99999999;
     private int bM = 60;
@@ -35,7 +35,6 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
         super(world);
         iteminworldmanager.player = this;
         this.itemInWorldManager = iteminworldmanager;
-        this.compressionHandler = new ChunkCompressionHandler(this); // Poseidon
         ChunkCoordinates chunkcoordinates = world.getSpawn();
         int i = chunkcoordinates.x;
         int j = chunkcoordinates.z;
