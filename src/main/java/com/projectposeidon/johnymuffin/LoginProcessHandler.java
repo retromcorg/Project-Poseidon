@@ -2,12 +2,12 @@ package com.projectposeidon.johnymuffin;
 
 import com.legacyminecraft.poseidon.PoseidonConfig;
 import com.legacyminecraft.poseidon.PoseidonPlugin;
+import com.legacyminecraft.poseidon.uuid.PlayerUUIDManager;
 import com.legacyminecraft.poseidon.uuid.ThreadUUIDFetcher;
 import net.minecraft.server.NetLoginHandler;
 import net.minecraft.server.Packet1Login;
 import net.minecraft.server.ThreadLoginVerifier;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerConnectionInitializationEvent;
@@ -15,7 +15,6 @@ import org.bukkit.event.player.PlayerPreLoginEvent;
 import org.bukkit.plugin.Plugin;
 
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.UUID;
 
@@ -88,14 +87,17 @@ public class LoginProcessHandler {
     }
 
     private void getUserUUID() {
-        //UUID uuid = UUIDManager.getInstance().getUUIDFromUsername(packet1Login.name, true);
         long unixTime = (System.currentTimeMillis() / 1000L);
-        UUID uuid = UUIDManager.getInstance().getUUIDFromUsername(packet1Login.name, true, unixTime);
+        UUID uuid = PlayerUUIDManager.getCachedUUID(packet1Login.name, true);
+        Long expiry = PlayerUUIDManager.getExpiry(uuid);
+        if (expiry == null || unixTime >= expiry)
+            uuid = null;
+
         if (uuid == null) {
             boolean useGetMethod = PoseidonConfig.getInstance().getString("settings.uuid-fetcher.method.value", "POST").equalsIgnoreCase("GET");
             (new ThreadUUIDFetcher(packet1Login, this, useGetMethod)).start();
         } else {
-            System.out.println("[Poseidon] Fetched UUID from Cache for " + packet1Login.name + " - " + uuid.toString());
+            System.out.println("[Poseidon] Fetched UUID from cache for " + packet1Login.name + " - " + uuid);
             connectPlayer(uuid);
         }
 
@@ -112,7 +114,7 @@ public class LoginProcessHandler {
 
 
         long unixTime = (System.currentTimeMillis() / 1000L) + 1382400;
-        UUIDManager.getInstance().receivedUUID(packet1Login.name, uuid, unixTime, onlineMode);
+        PlayerUUIDManager.upsertPlayer(uuid, packet1Login.name, unixTime, onlineMode);
         connectPlayer(uuid);
 
     }
