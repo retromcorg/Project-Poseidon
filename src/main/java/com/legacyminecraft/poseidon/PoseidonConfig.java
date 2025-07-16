@@ -163,6 +163,8 @@ public class PoseidonConfig extends Configuration {
         generateConfigOption("world.settings.speed-hack-check.teleport", true);
         generateConfigOption("world.settings.speed-hack-check.distance", 100.0D);
         generateConfigOption("world.settings.speed-hack-check.info", "This setting allows you to configure the automatic speedhack detection.");
+        generateConfigOption("world.settings.flowing-lava-fix.enabled", true);
+        generateConfigOption("world.settings.flowing-lava-fix.info", "This setting fixes flowing lava not disappearing when the source block is removed.");
         //Mob Spawner Area Limit (8 chunks)
         generateConfigOption("world.settings.mob-spawner-area-limit.enable", true);
         generateConfigOption("world.settings.mob-spawner-area-limit.limit", 150);
