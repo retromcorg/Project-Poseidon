@@ -35,8 +35,8 @@ public class CraftInventoryCrafting extends CraftInventory implements CraftingIn
     public void setContents(ItemStack[] items) {
         int resultLen = resultInventory.getContents().length;
         int len = inventory.getContents().length + resultLen;
-        if (len > items.length) {
-            throw new IllegalArgumentException("Invalid inventory size; expected " + len + " or less");
+        if (len != items.length) {
+            throw new IllegalArgumentException("Invalid inventory size; expected " + len + " and got " + items.length);
         }
         setContents(Arrays.copyOfRange(items, 1, items.length), items[0]);
     }
@@ -65,10 +65,10 @@ public class CraftInventoryCrafting extends CraftInventory implements CraftingIn
     public CraftItemStack getItem(int index) {
         if (index < getResultInventory().getSize()) {
             net.minecraft.server.ItemStack item = getResultInventory().getItem(index);
-            return item == null ? null : new CraftItemStack(item);
+            return new CraftItemStack(item);
         } else {
             net.minecraft.server.ItemStack item = getMatrixInventory().getItem(index - getResultInventory().getSize());
-            return item == null ? null : new CraftItemStack(item);
+            return new CraftItemStack(item);
         }
     }
 
@@ -82,8 +82,7 @@ public class CraftInventoryCrafting extends CraftInventory implements CraftingIn
     }
 
     public ItemStack getResult() {
-        net.minecraft.server.ItemStack item = resultInventory.getItem(0);
-        return item == null ? null : new CraftItemStack(item);
+        return new CraftItemStack(resultInventory.getItem(0));
     }
 
     public ItemStack[] getMatrix() {

@@ -103,7 +103,7 @@ public abstract class InventoryView {
         }
         int slot = rawSlot - numInTop;
         if (getType() == InventoryType.CRAFTING) {
-            if(slot < 4) return 39 - slot;
+            if (slot < 4) return 39 - slot;
             else slot -= 4;
         }
         if (slot >= 27) slot -= 27;

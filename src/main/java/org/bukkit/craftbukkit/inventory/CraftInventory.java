@@ -3,7 +3,6 @@ package org.bukkit.craftbukkit.inventory;
 import net.minecraft.server.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryTransactionEvent;
 import org.bukkit.event.inventory.InventoryTransactionType;
 import org.bukkit.inventory.Inventory;
@@ -12,7 +11,6 @@ import org.bukkit.inventory.InventoryType;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
-import java.util.List;
 
 public class CraftInventory implements Inventory {
     protected IInventory inventory;
@@ -49,21 +47,20 @@ public class CraftInventory implements Inventory {
     }
 
     public void setContents(ItemStack[] items) {
-        if (getInventory().getContents().length < items.length) {
-            throw new IllegalArgumentException("Invalid inventory size; expected " + getInventory().getContents().length + " or less and got " + items.length); // Poseidon - Backport modern Inventory API
+        if (getInventory().getContents().length != items.length) {
+            throw new IllegalArgumentException("Invalid inventory size; expected " + getInventory().getContents().length + " and got " + items.length); // Poseidon
         }
 
         net.minecraft.server.ItemStack[] mcItems = getInventory().getContents();
 
-        // Poseidon start - Backport modern Inventory API
-        for (int i = 0; i < mcItems.length; i++) {
-            if (i >= items.length) {
+        for (int i = 0; i < items.length; i++) {
+            ItemStack item = items[i];
+            if (item == null || item.getTypeId() <= 0) {
                 mcItems[i] = null;
             } else {
-                mcItems[i] = items[i] == null ? null : new net.minecraft.server.ItemStack(items[i].getTypeId(), items[i].getAmount(), items[i].getDurability());
+                mcItems[i] = new net.minecraft.server.ItemStack(item.getTypeId(), item.getAmount(), item.getDurability());
             }
         }
-        // Poseidon end
     }
 
     public void setItem(int index, ItemStack item) {
@@ -71,10 +68,6 @@ public class CraftInventory implements Inventory {
     }
 
     // Poseidon start - Backport modern Inventory API
-    public List<Player> getViewers() {
-        return inventory.getViewers();
-    }
-
     public InventoryType getType() {
         if (inventory instanceof TileEntityDispenser) {
             return InventoryType.DISPENSER;
@@ -94,7 +87,7 @@ public class CraftInventory implements Inventory {
     }
 
     public InventoryHolder getHolder() {
-        return inventory.getOwner();
+        return inventory.getHolder();
     }
     // Poseidon end
 

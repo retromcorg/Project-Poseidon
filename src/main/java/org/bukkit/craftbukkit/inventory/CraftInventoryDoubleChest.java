@@ -39,16 +39,15 @@ public class CraftInventoryDoubleChest extends CraftInventory implements DoubleC
 
     @Override
     public void setContents(ItemStack[] items) {
-        if (getInventory().getContents().length < items.length) {
-            throw new IllegalArgumentException("Invalid inventory size; expected " + getInventory().getContents().length + " or less");
+        if (getInventory().getContents().length != items.length) {
+            throw new IllegalArgumentException("Invalid inventory size; expected " + getInventory().getContents().length + " and got " + items.length);
         }
+
         ItemStack[] leftItems = new ItemStack[left.getSize()];
         ItemStack[] rightItems = new ItemStack[right.getSize()];
-        System.arraycopy(items, 0, leftItems, 0, Math.min(left.getSize(),items.length));
+        System.arraycopy(items, 0, leftItems, 0, left.getSize());
         left.setContents(leftItems);
-        if (items.length >= left.getSize()) {
-            System.arraycopy(items, 0, rightItems, left.getSize(), Math.min(right.getSize(), items.length - left.getSize()));
-            right.setContents(rightItems);
-        }
+        System.arraycopy(items, left.getSize(), rightItems, 0, right.getSize());
+        right.setContents(rightItems);
     }
 }

@@ -1,9 +1,6 @@
 package net.minecraft.server;
 
-import org.bukkit.craftbukkit.entity.CraftPlayer;
-import org.bukkit.craftbukkit.inventory.CraftInventory;
 import org.bukkit.craftbukkit.inventory.CraftInventoryView;
-import org.bukkit.inventory.InventoryView;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -289,18 +286,5 @@ public abstract class Container {
         }
     }
 
-    // Poseidon start - Backport modern Inventory API
-    public CraftInventoryView getBukkitView() {
-        return null;
-    }
-
-    public void transferTo(Container other, CraftPlayer player) {
-        InventoryView source = getBukkitView();
-        InventoryView destination = other.getBukkitView();
-        ((CraftInventory)source.getTopInventory()).getInventory().onClose(player);
-        ((CraftInventory)source.getBottomInventory()).getInventory().onClose(player);
-        ((CraftInventory)destination.getTopInventory()).getInventory().onOpen(player);
-        ((CraftInventory)destination.getBottomInventory()).getInventory().onOpen(player);
-    }
-    // Poseidon end
+    public abstract CraftInventoryView getBukkitView(); // Poseidon - Backport modern Inventory API
 }

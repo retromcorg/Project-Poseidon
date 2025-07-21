@@ -62,8 +62,15 @@ public class CraftInventoryPlayer extends CraftInventory implements PlayerInvent
         setItem(getSize(), boots);
     }
 
-    public ItemStack[] getArmorContents() {
-        return new ItemStack[] { getBoots(), getLeggings(), getChestplate(), getHelmet() };
+    public CraftItemStack[] getArmorContents() {
+        // Poseidon start - Backport modern Inventory API
+        return new CraftItemStack[] {
+                (CraftItemStack) getBoots(),
+                (CraftItemStack) getLeggings(),
+                (CraftItemStack) getChestplate(),
+                (CraftItemStack) getHelmet()
+        };
+        // Poseidon end
     }
 
     public void setArmorContents(ItemStack[] items) {

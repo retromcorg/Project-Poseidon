@@ -5,8 +5,6 @@ import org.bukkit.event.Event;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 
-import java.util.List;
-
 /**
  * Represents a player related inventory event
  */
@@ -25,15 +23,6 @@ public class InventoryEvent extends Event {
      */
     public Inventory getInventory() {
         return transaction.getTopInventory();
-    }
-
-    /**
-     * Returns the list of players viewing the primary (upper) inventory involved in this event
-     *
-     * @return A list of people viewing
-     */
-    public List<Player> getViewers() {
-        return transaction.getTopInventory().getViewers();
     }
 
     /**

@@ -6,7 +6,7 @@ import org.bukkit.entity.HumanEntity;
 
 public class ContainerDispenser extends Container {
 
-    public TileEntityDispenser a; // Poseidon - Backport modern Inventory API - private -> public
+    private TileEntityDispenser a;
     // Poseidon start - Backport modern Inventory API
     private CraftInventoryView view = null;
     private InventoryPlayer player;
@@ -44,9 +44,10 @@ public class ContainerDispenser extends Container {
     // Poseidon start - Backport modern Inventory API
     @Override
     public CraftInventoryView getBukkitView() {
-        if (view != null) return view;
-        CraftInventory inventory = new CraftInventory(a);
-        view = new CraftInventoryView((HumanEntity) this.player.d.getBukkitEntity(), inventory, this);
+        if (view == null) {
+            CraftInventory inventory = new CraftInventory(this.a);
+            view = new CraftInventoryView((HumanEntity) this.player.d.getBukkitEntity(), inventory, this);
+        }
         return view;
     }
     // Poseidon end

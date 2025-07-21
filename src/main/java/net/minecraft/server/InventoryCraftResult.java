@@ -1,10 +1,6 @@
 package net.minecraft.server;
 
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.InventoryHolder;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class InventoryCraftResult implements IInventory {
 
@@ -56,15 +52,7 @@ public class InventoryCraftResult implements IInventory {
     }
 
     // Poseidon - Backport modern Inventory API
-    public List<Player> getViewers() {
-        return new ArrayList<Player>();
-    }
-
-    public void onOpen(Player player) {}
-
-    public void onClose(Player player) {}
-
-    public InventoryHolder getOwner() {
+    public InventoryHolder getHolder() {
         return null;
     }
     // Poseidon end

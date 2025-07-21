@@ -6,7 +6,6 @@ import com.projectposeidon.api.PoseidonUUID;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.ChunkCompressionThread;
 import org.bukkit.craftbukkit.CraftWorld;
-import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason;
@@ -456,10 +455,7 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
         // Poseidon start - Backport modern Inventory API
         Container container = new ContainerWorkbench(this.inventory, this.world, i, j, k);
         InventoryOpenEvent event = CraftEventFactory.callInventoryOpenEvent(this, container);
-        if (event.isCancelled()) {
-            container.transferTo(this.activeContainer, (CraftPlayer) getBukkitEntity());
-            return;
-        }
+        if (event.isCancelled()) return;
         // Poseidon end
 
         this.netServerHandler.sendPacket(new Packet100OpenWindow(this.bO, 1, "Crafting", 9));
@@ -471,19 +467,16 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
     public void a(IInventory iinventory) {
         this.ai();
 
+        // Poseidon start - Backport modern Inventory API
+        Container container = new ContainerChest(this.inventory, iinventory);
+        InventoryOpenEvent event = CraftEventFactory.callInventoryOpenEvent(this, container);
+        if (event.isCancelled()) return;
+        // Poseidon end
+
         // Poseidon start
         ChestOpenedEvent cevent = new ChestOpenedEvent((org.bukkit.entity.Player) this.getBukkitEntity(), iinventory.getContents());
         this.world.getServer().getPluginManager().callEvent(cevent);
         if (cevent.isCancelled()) return;
-        // Poseidon end
-
-        // Poseidon start - Backport modern Inventory API
-        Container container = new ContainerChest(this.inventory, iinventory);
-        InventoryOpenEvent event = CraftEventFactory.callInventoryOpenEvent(this, container);
-        if (event.isCancelled()) {
-            container.transferTo(this.activeContainer, (CraftPlayer) getBukkitEntity());
-            return;
-        }
         // Poseidon end
 
         this.netServerHandler.sendPacket(new Packet100OpenWindow(this.bO, 0, iinventory.getName(), iinventory.getSize()));
@@ -498,10 +491,7 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
         // Poseidon start - Backport modern Inventory API
         Container container = new ContainerFurnace(this.inventory, tileentityfurnace);
         InventoryOpenEvent event = CraftEventFactory.callInventoryOpenEvent(this, container);
-        if (event.isCancelled()) {
-            container.transferTo(this.activeContainer, (CraftPlayer) getBukkitEntity());
-            return;
-        }
+        if (event.isCancelled()) return;
         // Poseidon end
 
         this.netServerHandler.sendPacket(new Packet100OpenWindow(this.bO, 2, tileentityfurnace.getName(), tileentityfurnace.getSize()));
@@ -516,10 +506,7 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
         // Poseidon start - Backport modern Inventory API
         Container container = new ContainerDispenser(this.inventory, tileentitydispenser);
         InventoryOpenEvent event = CraftEventFactory.callInventoryOpenEvent(this, container);
-        if (event.isCancelled()) {
-            container.transferTo(this.activeContainer, (CraftPlayer) getBukkitEntity());
-            return;
-        }
+        if (event.isCancelled()) return;
         // Poseidon end
 
         this.netServerHandler.sendPacket(new Packet100OpenWindow(this.bO, 3, tileentitydispenser.getName(), tileentitydispenser.getSize()));

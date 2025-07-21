@@ -3,12 +3,8 @@ package org.bukkit.craftbukkit.inventory;
 import net.minecraft.server.*;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.entity.CraftHumanEntity;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.InventoryType;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Represents a custom inventory.
@@ -56,7 +52,6 @@ public class CraftInventoryCustom extends CraftInventory {
         private String title;
         private InventoryType type;
         private InventoryHolder owner;
-        private List<Player> viewers;
 
         public MinecraftInventory(InventoryHolder owner, int size) {
             this(owner, "Chest", size);
@@ -70,7 +65,6 @@ public class CraftInventoryCustom extends CraftInventory {
             this.items = new ItemStack[size];
             this.stackSize = stackSize;
             this.title = title;
-            this.viewers = new ArrayList<Player>();
             this.owner = owner;
             this.type = InventoryType.CUSTOM;
         }
@@ -137,19 +131,7 @@ public class CraftInventoryCustom extends CraftInventory {
             return items;
         }
 
-        public List<Player> getViewers() {
-            return viewers;
-        }
-
-        public void onOpen(Player player) {
-            viewers.add(player);
-        }
-
-        public void onClose(Player player) {
-            viewers.remove(player);
-        }
-
-        public InventoryHolder getOwner() {
+        public InventoryHolder getHolder() {
             return owner;
         }
     }

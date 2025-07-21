@@ -27,6 +27,7 @@ public interface HumanEntity extends LivingEntity, AnimalTamer, Permissible, Inv
     /**
      * Returns the inventory view the player is currently viewing. If they do not have
      * an inventory window open, it returns their internal crafting view.
+     *
      * @return The inventory view
      */
     public InventoryView getOpenInventory();
@@ -34,6 +35,7 @@ public interface HumanEntity extends LivingEntity, AnimalTamer, Permissible, Inv
     /**
      * Opens an inventory window with the specified inventory on the top and the player's inventory
      * on the bottom.
+     *
      * @param inventory The inventory to open
      * @return The newly opened inventory view
      */
@@ -41,18 +43,13 @@ public interface HumanEntity extends LivingEntity, AnimalTamer, Permissible, Inv
 
     /**
      * Opens an empty workbench inventory window with the player's inventory on the bottom.
+     *
      * @param location The location to attach it to. If null, the player's location is used.
      * @param force If false, and there is no workbench block at the location, no inventory will be
      * opened and null will be returned.
      * @return The newly opened inventory view, or null if it could not be opened
      */
     public InventoryView openWorkbench(Location location, boolean force);
-
-    /**
-     * Opens an inventory window to the specified inventory view
-     * @param inventory The view to open
-     */
-    public void openInventory(InventoryView inventory);
 
     /**
      * Force-closes the currently open inventory view for this player, if any.
@@ -78,10 +75,10 @@ public interface HumanEntity extends LivingEntity, AnimalTamer, Permissible, Inv
 
     // Poseidon start - Backport modern Inventory API
     /**
-     * Returns the ItemStack currently on your cursor, can be empty.
+     * Returns the ItemStack currently on the cursor, can be empty.
      * Will always be empty if the player currently has no open window.
      *
-     * @return The ItemStack of the item you are currently moving around
+     * @return The ItemStack of the item currently being moved around
      */
     public ItemStack getItemOnCursor();
 

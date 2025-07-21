@@ -7,7 +7,6 @@ import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.inventory.*;
 import org.bukkit.entity.HumanEntity;
-import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.permissions.PermissibleBase;
@@ -95,33 +94,6 @@ public class CraftHumanEntity extends CraftLivingEntity implements HumanEntity {
         return getHandle().activeContainer.getBukkitView();
     }
 
-    public void openInventory(InventoryView inventory) {
-        Container container = ((CraftInventoryView) inventory).getHandle();
-
-        if (!(this instanceof CraftPlayer)) {
-            getHandle().activeContainer = container;
-            return;
-        }
-
-        EntityPlayer player = (EntityPlayer) getHandle();
-
-        if (player.activeContainer != player.defaultContainer) {
-            player.netServerHandler.a(new Packet101CloseWindow(player.activeContainer.windowId));
-        }
-
-        InventoryOpenEvent event = new InventoryOpenEvent(inventory);
-        player.activeContainer.transferTo(container, (CraftPlayer) this);
-        server.getPluginManager().callEvent(event);
-        if (event.isCancelled()) {
-            container.transferTo(player.activeContainer, (CraftPlayer) this);
-            return;
-        }
-
-        player.netServerHandler.sendPacket(new Packet100OpenWindow(container.windowId, 1, "Crafting", 9));
-        player.activeContainer = container;
-        player.activeContainer.a((ICrafting) player);
-    }
-
     public void closeInventory() {
         getHandle().y();
     }
@@ -141,7 +113,7 @@ public class CraftHumanEntity extends CraftLivingEntity implements HumanEntity {
     }
 
     public void setItemOnCursor(ItemStack item) {
-        getHandle().inventory.b(new net.minecraft.server.ItemStack(item.getTypeId(), item.getAmount(), item.getDurability()));
+        getHandle().inventory.b(item == null ? null : new net.minecraft.server.ItemStack(item.getTypeId(), item.getAmount(), item.getDurability()));
         if (getHandle() instanceof EntityPlayer) {
             ((EntityPlayer) getHandle()).z();
         }

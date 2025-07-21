@@ -1,16 +1,11 @@
 package net.minecraft.server;
 
-import org.bukkit.entity.Player;
-
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 public class TileEntityDispenser extends TileEntity implements IInventory {
 
     private ItemStack[] items = new ItemStack[9];
     private Random b = new Random();
-    private List<Player> viewers = new ArrayList<Player>(); // Poseidon - Backport modern Inventory API
 
     // CraftBukkit start
     public ItemStack[] getContents() {
@@ -131,18 +126,4 @@ public class TileEntityDispenser extends TileEntity implements IInventory {
     public boolean a_(EntityHuman entityhuman) {
         return this.world.getTileEntity(this.x, this.y, this.z) != this ? false : entityhuman.e((double) this.x + 0.5D, (double) this.y + 0.5D, (double) this.z + 0.5D) <= 64.0D;
     }
-
-    // Poseidon start - Backport modern Inventory API
-    public List<Player> getViewers() {
-        return viewers;
-    }
-
-    public void onOpen(Player player) {
-        viewers.add(player);
-    }
-
-    public void onClose(Player player) {
-        viewers.remove(player);
-    }
-    // Poseidon end
 }

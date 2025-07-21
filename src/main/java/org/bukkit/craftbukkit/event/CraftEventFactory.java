@@ -9,7 +9,6 @@ import org.bukkit.block.BlockState;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.block.CraftBlock;
-import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.craftbukkit.inventory.CraftInventoryCrafting;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.entity.AnimalTamer;
@@ -278,9 +277,6 @@ public class CraftEventFactory {
             player.netServerHandler.a(new Packet101CloseWindow(player.activeContainer.windowId));
         }
 
-        CraftPlayer craftPlayer = (CraftPlayer) player.getBukkitEntity();
-        player.activeContainer.transferTo(container, craftPlayer);
-
         InventoryOpenEvent event = new InventoryOpenEvent(container.getBukkitView());
         Bukkit.getPluginManager().callEvent(event);
         return event;
@@ -289,15 +285,13 @@ public class CraftEventFactory {
     /**
      * PrepareItemCraftEvent
      */
-    public static ItemStack callPreCraftEvent(InventoryCrafting matrix, ItemStack result, InventoryView lastCraftView) {
+    public static PrepareItemCraftEvent callPrepareItemCraftEvent(InventoryCrafting matrix, ItemStack result, InventoryView lastCraftView) {
         CraftInventoryCrafting inventory = new CraftInventoryCrafting(matrix, matrix.resultInventory);
         inventory.setResult(new CraftItemStack(result));
 
         PrepareItemCraftEvent event = new PrepareItemCraftEvent(inventory, lastCraftView);
         Bukkit.getPluginManager().callEvent(event);
-
-        org.bukkit.inventory.ItemStack item = event.getInventory().getResult();
-        return new ItemStack(item.getTypeId(), item.getAmount(), item.getDurability());
+        return event;
     }
     // Poseidon end
 }

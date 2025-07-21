@@ -1,6 +1,7 @@
 package net.minecraft.server;
 
 import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.inventory.InventoryView;
 
 import java.util.ArrayList;
@@ -177,8 +178,9 @@ public class CraftingManager {
                 // Poseidon start - Backport modern Inventory API
                 inventorycrafting.currentRecipe = craftingrecipe;
                 ItemStack result = craftingrecipe.b(inventorycrafting);
-                result = CraftEventFactory.callPreCraftEvent(inventorycrafting, result, lastCraftView);
-                return result;
+                PrepareItemCraftEvent event = CraftEventFactory.callPrepareItemCraftEvent(inventorycrafting, result, lastCraftView);
+                org.bukkit.inventory.ItemStack item = event.getInventory().getResult();
+                return new ItemStack(item.getTypeId(), item.getAmount(), item.getDurability());
                 // Poseidon end
             }
         }

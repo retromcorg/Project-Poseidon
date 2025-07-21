@@ -96,8 +96,8 @@ public class TileEntity {
         this.h = false;
     }
 
-    // Poseidon - Backport modern Inventory API
-    public InventoryHolder getOwner() {
+    // Poseidon start - Backport modern Inventory API
+    public InventoryHolder getHolder() {
         BlockState state = world.getWorld().getBlockAt(x, y, z).getState();
         if (state instanceof InventoryHolder) return (InventoryHolder) state;
         return null;

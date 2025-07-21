@@ -37,6 +37,6 @@ public class CraftInventoryFurnace extends CraftInventory implements FurnaceInve
 
     @Override
     public Furnace getHolder() {
-        return (Furnace) inventory.getOwner();
+        return (Furnace) inventory.getHolder();
     }
 }

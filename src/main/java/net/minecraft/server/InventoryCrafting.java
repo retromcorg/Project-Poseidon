@@ -1,11 +1,6 @@
 package net.minecraft.server;
 
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.InventoryHolder;
-import org.bukkit.inventory.InventoryType;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class InventoryCrafting implements IInventory {
 
@@ -15,7 +10,6 @@ public class InventoryCrafting implements IInventory {
     // Poseidon start - Backport modern Inventory API
     public IInventory resultInventory;
     public CraftingRecipe currentRecipe;
-    private List<Player> viewers = new ArrayList<Player>();
     // Poseidon end
 
     // CraftBukkit start
@@ -93,23 +87,7 @@ public class InventoryCrafting implements IInventory {
     }
 
     // Poseidon start - Backport modern Inventory API
-    public InventoryType getType() {
-        return items.length == 4 ? InventoryType.CRAFTING : InventoryType.WORKBENCH;
-    }
-
-    public List<Player> getViewers() {
-        return viewers;
-    }
-
-    public void onOpen(Player player) {
-        viewers.add(player);
-    }
-
-    public void onClose(Player player) {
-        viewers.remove(player);
-    }
-
-    public InventoryHolder getOwner() {
+    public InventoryHolder getHolder() {
         return null;
     }
     // Poseidon end

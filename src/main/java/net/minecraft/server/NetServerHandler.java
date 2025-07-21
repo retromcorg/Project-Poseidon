@@ -1089,7 +1089,6 @@ public class NetServerHandler extends NetHandler implements ICommandListener {
         // Poseidon start - Backport modern Inventory API
         InventoryCloseEvent event = new InventoryCloseEvent(this.player.activeContainer.getBukkitView());
         server.getPluginManager().callEvent(event);
-        this.player.activeContainer.transferTo(this.player.defaultContainer, getPlayer());
         // Poseidon end
 
         this.player.A();
@@ -1105,7 +1104,6 @@ public class NetServerHandler extends NetHandler implements ICommandListener {
         if (this.player.dead) return; // CraftBukkit
 
         if (this.player.activeContainer.windowId == packet102windowclick.a && this.player.activeContainer.c(this.player)) {
-
             // Poseidon start - Backport modern Inventory API
             InventoryView inventory = this.player.activeContainer.getBukkitView();
             SlotType type = CraftInventoryView.getSlotType(inventory, packet102windowclick.b);
@@ -1131,15 +1129,11 @@ public class NetServerHandler extends NetHandler implements ICommandListener {
                     break;
                 case ALLOW:
                     org.bukkit.inventory.ItemStack cursor = clickEvent.getView().getCursor();
-                    if (cursor == null) {
-                        this.player.inventory.b((ItemStack) null);
-                    } else {
-                        this.player.inventory.b(new ItemStack(cursor.getTypeId(), cursor.getAmount(), cursor.getDurability()));
-                    }
+                    this.player.inventory.b(cursor == null ? null : new ItemStack(cursor.getTypeId(), cursor.getAmount(), cursor.getDurability()));
                     org.bukkit.inventory.ItemStack item = clickEvent.getCurrentItem();
                     if (item != null) {
                         itemstack = new ItemStack(item.getTypeId(), item.getAmount(), item.getDurability());
-                        if(packet102windowclick.b == -999) {
+                        if (packet102windowclick.b == -999) {
                             this.player.b(itemstack);
                         } else {
                             this.player.activeContainer.b(packet102windowclick.b).c(itemstack);
@@ -1170,8 +1164,9 @@ public class NetServerHandler extends NetHandler implements ICommandListener {
                 this.player.a(this.player.activeContainer, arraylist);
 
                 // Poseidon start - Backport modern Inventory API
-                if(type == SlotType.RESULT && itemstack != null)
+                if (type == SlotType.RESULT && itemstack != null) {
                     this.player.netServerHandler.sendPacket(new Packet103SetSlot(this.player.activeContainer.windowId, 0, itemstack));
+                }
                 // Poseidon end
             }
         }

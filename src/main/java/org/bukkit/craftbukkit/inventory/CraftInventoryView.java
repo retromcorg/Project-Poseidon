@@ -58,13 +58,17 @@ public class CraftInventoryView extends InventoryView {
 
     public static SlotType getSlotType(InventoryView inventory, int slot) {
         SlotType type = SlotType.CONTAINER;
-        if (slot < inventory.getTopInventory().getSize()) {
-            switch(inventory.getType()) {
+        if (slot == -999) {
+            type = SlotType.OUTSIDE;
+        } else if (slot < inventory.getTopInventory().getSize()) {
+            switch (inventory.getType()) {
                 case FURNACE:
                     if (slot == 2) {
                         type = SlotType.RESULT;
-                    } else if(slot == 1) {
+                    } else if (slot == 1) {
                         type = SlotType.FUEL;
+                    } else {
+                        type = SlotType.CRAFTING;
                     }
                     break;
                 case WORKBENCH:
@@ -78,9 +82,7 @@ public class CraftInventoryView extends InventoryView {
                 default:
             }
         } else {
-            if (slot == -999) {
-                type = SlotType.OUTSIDE;
-            } else if (inventory.getType() == InventoryType.CRAFTING && slot < 9) {
+            if (inventory.getType() == InventoryType.CRAFTING && slot < 9) {
                 type = SlotType.ARMOR;
             } else if (slot >= (inventory.countSlots() - 9)) {
                 type = SlotType.QUICKBAR;

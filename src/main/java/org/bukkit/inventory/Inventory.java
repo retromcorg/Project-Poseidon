@@ -1,10 +1,8 @@
 package org.bukkit.inventory;
 
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
 
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * Interface to the various inventories
@@ -78,13 +76,6 @@ public interface Inventory {
     public void setContents(ItemStack[] items);
 
     // Poseidon start - Backport modern Inventory API
-    /**
-     * Returns a list of all players viewing this inventory
-     *
-     * @return A list of players viewing the inventory
-     */
-    public List<Player> getViewers();
-
     /**
      * Returns the type of this inventory
      *

@@ -128,7 +128,8 @@ public class PlayerListener implements Listener {
      * @param event Relevant event details
      * @deprecated Use the events in {@link org.bukkit.event.inventory}.
      */
-    public void onInventoryEvent(PlayerInventoryEvent event) {}
+    @Deprecated
+    public void onInventoryOpen(PlayerInventoryEvent event) {}
 
     /**
      * Called when a player changes their held item

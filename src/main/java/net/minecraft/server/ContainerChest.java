@@ -2,13 +2,12 @@ package net.minecraft.server;
 
 import org.bukkit.craftbukkit.inventory.CraftInventory;
 import org.bukkit.craftbukkit.inventory.CraftInventoryDoubleChest;
-import org.bukkit.craftbukkit.inventory.CraftInventoryPlayer;
 import org.bukkit.craftbukkit.inventory.CraftInventoryView;
 import org.bukkit.entity.HumanEntity;
 
 public class ContainerChest extends Container {
 
-    public IInventory a; // Poseidon - Backport modern Inventory API - private -> public
+    private IInventory a;
     private int b;
     // Poseidon start - Backport modern Inventory API
     private CraftInventoryView view = null;
@@ -70,19 +69,18 @@ public class ContainerChest extends Container {
         return itemstack;
     }
 
-    // Poseidonn start - Backport modern Inventory API
+    // Poseidon start - Backport modern Inventory API
     @Override
     public CraftInventoryView getBukkitView() {
-        if (view != null) return view;
-        CraftInventory inventory;
-        if (a instanceof InventoryPlayer) {
-            inventory = new CraftInventoryPlayer((InventoryPlayer)a);
-        } else if (a instanceof InventoryLargeChest) {
-            inventory = new CraftInventoryDoubleChest((InventoryLargeChest)a);
-        } else {
-            inventory = new CraftInventory(this.a);
+        if (view == null) {
+            CraftInventory inventory;
+            if (this.a instanceof InventoryLargeChest) {
+                inventory = new CraftInventoryDoubleChest((InventoryLargeChest) this.a);
+            } else {
+                inventory = new CraftInventory(this.a);
+            }
+            view = new CraftInventoryView((HumanEntity) this.player.d.getBukkitEntity(), inventory, this);
         }
-        view = new CraftInventoryView((HumanEntity) this.player.d.getBukkitEntity(), inventory, this);
         return view;
     }
     // Poseidon end

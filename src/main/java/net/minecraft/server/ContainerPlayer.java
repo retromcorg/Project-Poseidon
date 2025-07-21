@@ -123,9 +123,10 @@ public class ContainerPlayer extends Container {
     // Poseidon start - Backport modern Inventory API
     @Override
     public CraftInventoryView getBukkitView() {
-        if (view != null) return view;
-        CraftInventoryCrafting inventory = new CraftInventoryCrafting(this.craftInventory, this.resultInventory);
-        view = new CraftInventoryView((HumanEntity) this.player.d.getBukkitEntity(), inventory, this);
+        if (view == null) {
+            CraftInventoryCrafting inventory = new CraftInventoryCrafting(this.craftInventory, this.resultInventory);
+            view = new CraftInventoryView((HumanEntity) this.player.d.getBukkitEntity(), inventory, this);
+        }
         return view;
     }
     // Poseidon end

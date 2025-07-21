@@ -108,9 +108,10 @@ public class ContainerFurnace extends Container {
     // Poseidon start - Backport modern Inventory API
     @Override
     public CraftInventoryView getBukkitView() {
-        if (view != null) return view;
-        CraftInventoryFurnace inventory = new CraftInventoryFurnace(a);
-        view = new CraftInventoryView((HumanEntity) this.player.d.getBukkitEntity(), inventory, this);
+        if (view == null) {
+            CraftInventoryFurnace inventory = new CraftInventoryFurnace(this.a);
+            view = new CraftInventoryView((HumanEntity) this.player.d.getBukkitEntity(), inventory, this);
+        }
         return view;
     }
     // Poseidon end

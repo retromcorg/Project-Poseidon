@@ -22,10 +22,13 @@ public class CraftChest extends CraftBlockState implements Chest {
 
     public Inventory getInventory() {
         // Poseidon start - Backport modern Inventory API
-        int x = getLocation().getBlockX(), y = getLocation().getBlockY(), z = getLocation().hashCode();
+        int x = getX();
+        int y = getY();
+        int z = getZ();
+
         CraftInventory inventory = new CraftInventory(chest);
         if (world.getBlockTypeIdAt(x - 1, y, z) == Material.CHEST.getId()) {
-            CraftInventory left = new CraftInventory((TileEntityChest)world.getHandle().getTileEntity(x - 1, y, z));
+            CraftInventory left = new CraftInventory((TileEntityChest) world.getHandle().getTileEntity(x - 1, y, z));
             inventory = new CraftInventoryDoubleChest(left, inventory);
         }
         if (world.getBlockTypeIdAt(x + 1, y, z) == Material.CHEST.getId()) {
