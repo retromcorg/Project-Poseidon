@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Represents a world, which may contain entities, chunks and blocks
@@ -119,6 +120,53 @@ public interface World {
      * @return The chunk that contains the given block
      */
     public Chunk getChunkAt(Block block);
+
+    // Poseidon start
+
+    /**
+     * Gets a chunk asynchronously for later use.
+     * <p>
+     * If this chunk is already loaded, this method will complete immediately
+     * with the loaded chunk, otherwise it will load the chunk asynchronously.
+     * <p>
+     * Note that the future always completes in the main thread, and as such,
+     * {@link CompletableFuture#get()} should NEVER be called in the main thread.
+     *
+     * @param x X-coordinate of the chunk
+     * @param z Z-coordinate of the chunk
+     * @return a future that will complete when the chunk has loaded
+     */
+    public CompletableFuture<Chunk> getChunkAtAsync(int x, int z);
+
+    /**
+     * Gets a chunk asynchronously for later use.
+     * <p>
+     * If this chunk is already loaded, this method will complete immediately
+     * with the loaded chunk, otherwise it will load the chunk asynchronously.
+     * <p>
+     * Note that the future always completes in the main thread, and as such,
+     * {@link CompletableFuture#get()} should NEVER be called in the main thread.
+     *
+     * @param location location of the chunk
+     * @return a future that will complete when the chunk has loaded
+     */
+    public CompletableFuture<Chunk> getChunkAtAsync(Location location);
+
+    /**
+     * Gets a chunk asynchronously for later use.
+     * <p>
+     * If this chunk is already loaded, this method will complete immediately
+     * with the loaded chunk, otherwise it will load the chunk asynchronously.
+     * <p>
+     * Note that the future always completes in the main thread, and as such,
+     * {@link CompletableFuture#get()} should NEVER be called in the main thread.
+     *
+     * @param block block to get the containing chunk from
+     * @return a future that will complete when the chunk has loaded
+     */
+    public CompletableFuture<Chunk> getChunkAtAsync(Block block);
+
+    // Poseidon end
 
     /**
      * Checks if the specified {@link Chunk} is loaded

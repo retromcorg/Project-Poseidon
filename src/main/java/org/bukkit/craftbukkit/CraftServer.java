@@ -96,7 +96,7 @@ public final class CraftServer implements Server {
         loadPlugins();
         enablePlugins(PluginLoadOrder.STARTUP);
 
-        ChunkCompressionThread.startThread();
+        //ChunkCompressionThread.startThread(); // Poseidon - handled by ChunkCompressionHandler
     }
 
     private void loadConfig() {
