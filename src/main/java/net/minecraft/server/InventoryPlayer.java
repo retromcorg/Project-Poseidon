@@ -1,5 +1,8 @@
 package net.minecraft.server;
 
+import org.bukkit.entity.HumanEntity;
+import org.bukkit.inventory.InventoryHolder;
+
 public class InventoryPlayer implements IInventory {
 
     public ItemStack[] items = new ItemStack[36];
@@ -383,4 +386,10 @@ public class InventoryPlayer implements IInventory {
 
         return false;
     }
+
+    // Poseidon start - Backport modern Inventory API
+    public InventoryHolder getHolder() {
+        return (HumanEntity) d.getBukkitEntity();
+    }
+    // Poseidon end
 }

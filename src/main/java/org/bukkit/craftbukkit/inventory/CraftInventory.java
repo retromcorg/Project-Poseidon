@@ -1,15 +1,18 @@
 package org.bukkit.craftbukkit.inventory;
 
-import net.minecraft.server.IInventory;
+import net.minecraft.server.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.event.inventory.InventoryTransactionEvent;
 import org.bukkit.event.inventory.InventoryTransactionType;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.InventoryType;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 
-public class CraftInventory implements org.bukkit.inventory.Inventory {
+public class CraftInventory implements Inventory {
     protected IInventory inventory;
 
     public CraftInventory(IInventory inventory) {
@@ -63,6 +66,30 @@ public class CraftInventory implements org.bukkit.inventory.Inventory {
     public void setItem(int index, ItemStack item) {
         getInventory().setItem(index, (item == null ? null : new net.minecraft.server.ItemStack(item.getTypeId(), item.getAmount(), item.getDurability())));
     }
+
+    // Poseidon start - Backport modern Inventory API
+    public InventoryType getType() {
+        if (inventory instanceof TileEntityDispenser) {
+            return InventoryType.DISPENSER;
+        } else if (inventory instanceof TileEntityFurnace) {
+            return InventoryType.FURNACE;
+        } else if (inventory instanceof InventoryCrafting) {
+            return inventory.getSize() >= 9 ? InventoryType.WORKBENCH : InventoryType.CRAFTING;
+        } else if (inventory instanceof InventoryPlayer) {
+            return InventoryType.PLAYER;
+        } else if (inventory instanceof InventoryLargeChest) {
+            return InventoryType.LARGE_CHEST;
+        } else if (inventory instanceof CraftInventoryCustom.MinecraftInventory) {
+            return InventoryType.CUSTOM;
+        } else {
+            return InventoryType.CHEST;
+        }
+    }
+
+    public InventoryHolder getHolder() {
+        return inventory.getHolder();
+    }
+    // Poseidon end
 
     public boolean contains(int materialId) {
         for (ItemStack item: getContents()) {

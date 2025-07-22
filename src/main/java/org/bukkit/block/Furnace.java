@@ -1,11 +1,14 @@
 package org.bukkit.block;
 
+import org.bukkit.inventory.FurnaceInventory;
+import org.bukkit.inventory.InventoryHolder;
+
 /**
  * Represents a furnace.
  *
  * @author sk89q
  */
-public interface Furnace extends BlockState, ContainerBlock {
+public interface Furnace extends BlockState, ContainerBlock, InventoryHolder { // Poseidon - Backport modern Inventory API
 
     /**
      * Get burn time.
@@ -34,4 +37,6 @@ public interface Furnace extends BlockState, ContainerBlock {
      * @param cookTime
      */
     public void setCookTime(short cookTime);
+
+    public FurnaceInventory getInventory(); // Poseidon - Backport modern Inventory API
 }

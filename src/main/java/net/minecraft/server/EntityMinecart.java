@@ -3,6 +3,7 @@ package net.minecraft.server;
 import org.bukkit.Location;
 import org.bukkit.entity.Vehicle;
 import org.bukkit.event.vehicle.*;
+import org.bukkit.inventory.InventoryHolder;
 
 import java.util.List;
 
@@ -884,4 +885,12 @@ public class EntityMinecart extends Entity implements IInventory {
     public boolean a_(EntityHuman entityhuman) {
         return this.dead ? false : entityhuman.g(this) <= 64.0D;
     }
+
+    // Poseidon start - Backport modern Inventory API
+    public InventoryHolder getHolder() {
+        org.bukkit.entity.Entity cart = getBukkitEntity();
+        if (cart instanceof InventoryHolder) return (InventoryHolder) cart;
+        return null;
+    }
+    // Poseidon end
 }

@@ -1,10 +1,12 @@
 package net.minecraft.server;
 
+import org.bukkit.inventory.InventoryHolder;
+
 public class InventoryLargeChest implements IInventory {
 
     private String a;
-    private IInventory b;
-    private IInventory c;
+    public IInventory b; // Poseidon - Backport modern Inventory API - private -> public
+    public IInventory c; // Poseidon - Backport modern Inventory API - private -> public
 
     // CraftBukkit start
     public ItemStack[] getContents() {
@@ -58,4 +60,10 @@ public class InventoryLargeChest implements IInventory {
     public boolean a_(EntityHuman entityhuman) {
         return this.b.a_(entityhuman) && this.c.a_(entityhuman);
     }
+
+    // Poseidon start - Backport modern Inventory API
+    public InventoryHolder getHolder() {
+        return this.b.getHolder();
+    }
+    // Poseidon end
 }
