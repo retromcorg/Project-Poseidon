@@ -33,7 +33,7 @@ public class SessionAPI
         {
             boolean checkIP = ip == "127.0.0.1" || ip == "localhost";
             StringBuilder sb = new StringBuilder();
-            sb.append(System.getProperty("minecraft.api.session.host", "https://sessionserver.mojang.com/session") + "/minecraft/hasJoined");
+            sb.append(System.getProperty("minecraft.api.session.host", "https://sessionserver.mojang.com") + "/session/minecraft/hasJoined");
             sb.append("?username=" + username);
             sb.append("&serverId=" + serverId);
             if (checkIP)
