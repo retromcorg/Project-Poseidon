@@ -109,7 +109,7 @@ public final class PoseidonServer {
             public void run() {
                 poseidonVersionChecker.fetchLatestVersion();
             }
-        }, 0, 20 * 60 * 60);
+        }, 0, PoseidonConfig.getInstance().getConfigLong("settings.update-checker.interval.ticks"));
     }
 
     public void shutdownServer() {
