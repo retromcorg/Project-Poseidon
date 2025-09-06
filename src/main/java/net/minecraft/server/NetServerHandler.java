@@ -1,15 +1,14 @@
 package net.minecraft.server;
 
 import com.legacyminecraft.poseidon.Poseidon;
-import com.legacyminecraft.poseidon.PoseidonServer;
 import com.legacyminecraft.poseidon.event.PlayerSendPacketEvent;
+import com.legacyminecraft.poseidon.util.ChunkCompressionHandler;
 import com.projectposeidon.ConnectionType;
 import com.legacyminecraft.poseidon.PoseidonConfig;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.CommandException;
-import org.bukkit.craftbukkit.ChunkCompressionThread;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.TextWrapper;
 import org.bukkit.craftbukkit.block.CraftBlock;
@@ -69,6 +68,7 @@ public class NetServerHandler extends NetHandler implements ICommandListener {
         networkmanager.a((NetHandler) this);
         this.player = entityplayer;
         entityplayer.netServerHandler = this;
+        entityplayer.compressionHandler = new ChunkCompressionHandler(entityplayer); // Poseidon
 
         // CraftBukkit start
         this.server = minecraftserver.server;
@@ -761,9 +761,9 @@ public class NetServerHandler extends NetHandler implements ICommandListener {
                 this.networkManager.queue(new Packet3Chat(line));
             }
             packet = null;
-        } else if (packet.k == true) {
-            // Reroute all low-priority packets through to compression thread.
-            ChunkCompressionThread.sendPacket(this.player, packet);
+        } else if (packet instanceof Packet51MapChunk) {
+            // Poseidon - handled by ChunkCompressionHandler
+            this.player.compressionHandler.queuePacket((Packet51MapChunk) packet);
             packet = null;
         }
         if (packet != null) this.networkManager.queue(packet);

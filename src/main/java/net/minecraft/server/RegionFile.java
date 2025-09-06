@@ -139,12 +139,14 @@ public class RegionFile {
                             if (b0 == 1) {
                                 abyte = new byte[j1 - 1];
                                 this.c.read(abyte);
-                                datainputstream = new DataInputStream(new GZIPInputStream(new ByteArrayInputStream(abyte)));
+                                // Poseidon - wrap in BufferedInputStream
+                                datainputstream = new DataInputStream(new BufferedInputStream(new GZIPInputStream(new ByteArrayInputStream(abyte))));
                                 return datainputstream;
                             } else if (b0 == 2) {
                                 abyte = new byte[j1 - 1];
                                 this.c.read(abyte);
-                                datainputstream = new DataInputStream(new InflaterInputStream(new ByteArrayInputStream(abyte)));
+                                // Poseidon - wrap in BufferedInputStream
+                                datainputstream = new DataInputStream(new BufferedInputStream(new InflaterInputStream(new ByteArrayInputStream(abyte))));
                                 return datainputstream;
                             } else {
                                 this.b("READ", i, j, "unknown version " + b0);
@@ -161,7 +163,8 @@ public class RegionFile {
     }
 
     public DataOutputStream b(int i, int j) {
-        return this.d(i, j) ? null : new DataOutputStream(new DeflaterOutputStream(new ChunkBuffer(this, i, j)));
+        // Poseidon - wrap in BufferedOutputStream
+        return this.d(i, j) ? null : new DataOutputStream(new BufferedOutputStream(new DeflaterOutputStream(new ChunkBuffer(this, i, j))));
     }
 
     protected synchronized void a(int i, int j, byte[] abyte, int k) {
