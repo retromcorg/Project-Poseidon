@@ -1,5 +1,6 @@
 package com.legacyminecraft.poseidon.utility;
 
+import com.legacyminecraft.poseidon.PoseidonConfig;
 import org.bukkit.craftbukkit.CraftServer;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -73,7 +74,8 @@ public class PoseidonVersionChecker {
                 server.getLogger().log(Level.INFO, "[Poseidon] You are currently running version: " + currentVersion);
                 server.getLogger().log(Level.INFO, "[Poseidon] Download the latest version here: " + releaseUrl);
             } else {
-                server.getLogger().log(Level.INFO, "[Poseidon] You are running the latest version (" + currentVersion + ") of Project Poseidon.");
+                if (PoseidonConfig.getInstance().getConfigBoolean("settings.update-checker.notify-if-up-to-date.enabled"))
+                    server.getLogger().log(Level.INFO, "[Poseidon] You are running the latest version (" + currentVersion + ") of Project Poseidon.");
             }
         } catch (Exception e) {
             server.getLogger().log(Level.WARNING, "[Poseidon] Failed to check GitHub for latest version.", e);
