@@ -1,10 +1,16 @@
 package net.minecraft.server;
 
+import org.bukkit.inventory.InventoryHolder;
+
 public class InventoryCrafting implements IInventory {
 
     private ItemStack[] items;
     private int b;
     private Container c;
+    // Poseidon start - Backport modern Inventory API
+    public IInventory resultInventory;
+    public CraftingRecipe currentRecipe;
+    // Poseidon end
 
     // CraftBukkit start
     public ItemStack[] getContents() {
@@ -79,4 +85,10 @@ public class InventoryCrafting implements IInventory {
     public boolean a_(EntityHuman entityhuman) {
         return true;
     }
+
+    // Poseidon start - Backport modern Inventory API
+    public InventoryHolder getHolder() {
+        return null;
+    }
+    // Poseidon end
 }

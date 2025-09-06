@@ -75,6 +75,21 @@ public interface Inventory {
      */
     public void setContents(ItemStack[] items);
 
+    // Poseidon start - Backport modern Inventory API
+    /**
+     * Returns the type of this inventory
+     *
+     * @return The inventory type
+     */
+    public InventoryType getType();
+
+    /**
+     * Gets the block or entity belonging to the open inventory
+     * @return The holder of the inventory; null if it has no holder.
+     */
+    public InventoryHolder getHolder();
+    // Poseidon end
+
     /**
      * Check if the inventory contains any ItemStacks with the given materialId
      *

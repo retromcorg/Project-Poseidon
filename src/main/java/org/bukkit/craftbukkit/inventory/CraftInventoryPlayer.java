@@ -1,6 +1,7 @@
 package org.bukkit.craftbukkit.inventory;
 
 import net.minecraft.server.InventoryPlayer;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
@@ -42,7 +43,7 @@ public class CraftInventoryPlayer extends CraftInventory implements PlayerInvent
     }
 
     public ItemStack getBoots() {
-        return getItem(getSize() + 0);
+        return getItem(getSize());
     }
 
     public void setHelmet(ItemStack helmet) {
@@ -58,17 +59,18 @@ public class CraftInventoryPlayer extends CraftInventory implements PlayerInvent
     }
 
     public void setBoots(ItemStack boots) {
-        setItem(getSize() + 0, boots);
+        setItem(getSize(), boots);
     }
 
     public CraftItemStack[] getArmorContents() {
-        net.minecraft.server.ItemStack[] mcItems = getInventory().getArmorContents();
-        CraftItemStack[] ret = new CraftItemStack[mcItems.length];
-
-        for (int i = 0; i < mcItems.length; i++) {
-            ret[i] = new CraftItemStack(mcItems[i]);
-        }
-        return ret;
+        // Poseidon start - Backport modern Inventory API
+        return new CraftItemStack[] {
+                (CraftItemStack) getBoots(),
+                (CraftItemStack) getLeggings(),
+                (CraftItemStack) getChestplate(),
+                (CraftItemStack) getHelmet()
+        };
+        // Poseidon end
     }
 
     public void setArmorContents(ItemStack[] items) {
@@ -85,4 +87,11 @@ public class CraftInventoryPlayer extends CraftInventory implements PlayerInvent
             }
         }
     }
+
+    // Poseidon start - Backport modern Inventory API
+    @Override
+    public HumanEntity getHolder() {
+        return (HumanEntity) super.getHolder();
+    }
+    // Poseidon end
 }

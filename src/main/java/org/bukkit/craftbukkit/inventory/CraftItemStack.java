@@ -74,7 +74,9 @@ public class CraftItemStack extends ItemStack {
         } else {
             if (item == null) {
                 item = new net.minecraft.server.ItemStack(type, 1, 0);
+                super.setTypeId(type); // Poseidon - Backport modern Inventory API
                 super.setAmount(1);
+                super.setDurability((short) 0); // Poseidon - Backport modern Inventory API
             } else {
                 item.id = type;
                 super.setTypeId(item.id);

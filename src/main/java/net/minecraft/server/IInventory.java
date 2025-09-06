@@ -1,5 +1,7 @@
 package net.minecraft.server;
 
+import org.bukkit.inventory.InventoryHolder;
+
 public interface IInventory {
 
     int getSize();
@@ -19,4 +21,6 @@ public interface IInventory {
     boolean a_(EntityHuman entityhuman);
 
     ItemStack[] getContents(); // CraftBukkit
+
+    InventoryHolder getHolder(); // Poseidon - Backport modern Inventory API
 }
