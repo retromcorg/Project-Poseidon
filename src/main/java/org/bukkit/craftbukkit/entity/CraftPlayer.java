@@ -13,6 +13,7 @@ import org.bukkit.craftbukkit.map.RenderData;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.map.MapView;
+import org.bukkit.plugin.Plugin;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -436,5 +437,15 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
             NetServerHandler nsh = getHandle().netServerHandler;
             nsh.sendPacket(packet);
         }
+    }
+	
+	public void sendBungeeMessage(Plugin source, byte[] message) {
+		if (message.length > 32766) {
+			throw new IllegalArgumentException("Bungee message is too long (" + message.length + " > 32766)");
+		}
+        Packet250BungeePayload packet = new Packet250BungeePayload();
+        packet.length = message.length;
+        packet.data = message;
+        getHandle().netServerHandler.sendPacket(packet);
     }
 }
