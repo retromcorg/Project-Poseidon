@@ -269,7 +269,9 @@ public class ServerConfigurationManager {
             if (location == null) {
                 cworld = (CraftWorld) this.server.server.getWorlds().get(0);
                 chunkcoordinates = cworld.getHandle().getSpawn();
-                location = new Location(cworld, chunkcoordinates.x + 0.5, chunkcoordinates.y, chunkcoordinates.z + 0.5);
+                float yaw = cworld.getHandle().worldData.getYaw(); // Poseidon
+                float pitch = cworld.getHandle().worldData.getPitch(); // Poseidon
+                location = new Location(cworld, chunkcoordinates.x + 0.5, chunkcoordinates.y, chunkcoordinates.z + 0.5, yaw, pitch);
             }
 
             Player respawnPlayer = this.cserver.getPlayer(entityplayer);

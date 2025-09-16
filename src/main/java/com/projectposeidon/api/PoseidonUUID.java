@@ -35,7 +35,6 @@ public final class PoseidonUUID {
      */
     public static UUID getPlayerUUIDFromCache(String username, boolean onlineUUID) {
         return UUIDManager.getInstance().getUUIDFromUsername(username, onlineUUID);
-
     }
 
     /**
@@ -46,11 +45,9 @@ public final class PoseidonUUID {
         return UUIDManager.generateOfflineUUID(username);
     }
 
-    //TODO: Maybe return an enum for if the UUID is an offline
-
     /**
      * @param username Username of a player
-     * @return A boolean of if the player's UUID is known in the cache. Will return true if they have a graceful UUID.
+     * @return A UUIDType enum.
      */
     public static UUIDType getPlayerUUIDCacheStatus(String username) {
         if (getPlayerUUIDFromCache(username, true) != null) {
@@ -64,7 +61,7 @@ public final class PoseidonUUID {
 
     /**
      * @param uuid UUID for a player
-     * @return A corresponding UUID if known, otherwise null
+     * @return A corresponding username if known, otherwise null
      */
     public static String getPlayerUsernameFromUUID(UUID uuid) {
         return UUIDManager.getInstance().getUsernameFromUUID(uuid);

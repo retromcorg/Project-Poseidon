@@ -66,13 +66,20 @@ public class CraftWorld implements World {
 
     public Location getSpawnLocation() {
         ChunkCoordinates spawn = world.getSpawn();
-        return new Location(this, spawn.x, spawn.y, spawn.z);
+        float yaw = world.worldData.getYaw(); // Poseidon
+        float pitch = world.worldData.getPitch(); // Poseidon
+        return new Location(this, spawn.x, spawn.y, spawn.z, yaw, pitch);
     }
 
     public boolean setSpawnLocation(int x, int y, int z) {
+        return setSpawnLocation(x, y, z, 0f, 0f); // Poseidon - moved to overloaded method
+    }
+
+    // Poseidon start
+    public boolean setSpawnLocation(int x, int y, int z, float yaw, float pitch) {
         try {
             Location previousLocation = getSpawnLocation();
-            world.worldData.setSpawn(x, y, z);
+            world.worldData.setSpawn(x, y, z, yaw, pitch);
 
             // Notify anyone who's listening.
             SpawnChangeEvent event = new SpawnChangeEvent(this, previousLocation);
@@ -83,6 +90,8 @@ public class CraftWorld implements World {
             return false;
         }
     }
+
+    // Poseidon end
 
     public Chunk getChunkAt(int x, int z) {
         return this.world.chunkProviderServer.getChunkAt(x, z).bukkitChunk;

@@ -104,12 +104,12 @@ public final class PoseidonServer {
 
         getLogger().info("[Poseidon] Version checker enabled. The server will check for updates every hour.");
         // Run the version checker in a separate thread every hour
-        Bukkit.getScheduler().scheduleSyncRepeatingTask(new PoseidonPlugin(), new Runnable() {
+        Bukkit.getScheduler().scheduleAsyncRepeatingTask(new PoseidonPlugin(), new Runnable() {
             @Override
             public void run() {
                 poseidonVersionChecker.fetchLatestVersion();
             }
-        }, 0, 20 * 60 * 60);
+        }, 0, PoseidonConfig.getInstance().getConfigLong("settings.update-checker.interval.ticks"));
     }
 
     public void shutdownServer() {
@@ -117,7 +117,7 @@ public final class PoseidonServer {
 //            throw new UnsupportedOperationException("Server not initialized");
             return;
         }
-      
+
         getLogger().info("[Poseidon] Stopping Project Poseidon Modules!");
 
         UUIDManager.getInstance().saveJsonArray();

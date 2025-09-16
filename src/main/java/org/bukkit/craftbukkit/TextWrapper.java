@@ -19,10 +19,10 @@ public class TextWrapper {
         8, 7, 7, 8, 7, 8, 8, 8, 7, 8, 8, 7, 9, 9, 6, 7,
         7, 7, 7, 7, 9, 6, 7, 8, 7, 6, 6, 9, 7, 6, 7, 1
     };
-    private static final char COLOR_CHAR = '\u00A7';
-    private static final int CHAT_WINDOW_WIDTH = 320;
-    private static final int CHAT_STRING_LENGTH = 119;
-    private static final String allowedChars = net.minecraft.server.FontAllowedCharacters.allowedCharacters;
+    public static final char COLOR_CHAR = '\u00A7';
+    public static final int CHAT_WINDOW_WIDTH = 320;
+    public static final int CHAT_STRING_LENGTH = 119;
+    public static final String allowedChars = net.minecraft.server.FontAllowedCharacters.allowedCharacters;
 
     public static String[] wrapText(final String text) {
         final StringBuilder out = new StringBuilder();
@@ -84,5 +84,39 @@ public class TextWrapper {
 
         // Return it split
         return out.toString().split("\n");
+    }
+
+    /**
+     * Calculates the width of a string in pixels based on Minecraft's character widths.
+     * The maximum width for chat is 320 pixels (Use CHAT_WINDOW_WIDTH).
+     *
+     * @param string The input string.
+     * @return The width of the string in pixels.
+     */
+    public static int widthInPixels(final String text) {
+        if (text == null || text.isEmpty())
+            return 0;
+
+        int output = 0;
+
+        // literally yoinked from above and removed unnecessary components.
+        for (int i = 0; i < text.length(); i++) {
+            char ch = text.charAt(i);
+
+            if (ch == COLOR_CHAR && i < text.length() - 1) {
+                i++;
+                continue;
+            }
+
+            int index = allowedChars.indexOf(ch);
+            if (index == -1)
+                continue;
+
+            index += 32; // compensate for gap in allowed characters
+
+            output += characterWidths[index];
+        }
+
+        return output;
     }
 }

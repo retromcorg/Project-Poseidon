@@ -192,7 +192,11 @@ public class ItemStack {
 
         ItemStack item = (ItemStack) obj;
 
-        return item.getAmount() == getAmount() && item.getTypeId() == getTypeId();
+        return (
+            item.getAmount() == getAmount() &&
+            item.getTypeId() == getTypeId() &&
+            item.getDurability() == getDurability()
+        );
     }
 
     @Override
@@ -206,6 +210,8 @@ public class ItemStack {
 
         hash = hash * 19 + 7 * getTypeId(); // Overriding hashCode since equals is overridden, it's just
         hash = hash * 7 + 23 * getAmount(); // too bad these are mutable values... Q_Q
+        hash = hash * 13 + 3 * getDurability();
+
         return hash;
     }
 }
