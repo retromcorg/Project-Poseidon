@@ -1,8 +1,10 @@
 package org.bukkit.command;
 
+import com.legacyminecraft.poseidon.Poseidon;
 import com.legacyminecraft.poseidon.PoseidonConfig;
 import com.legacyminecraft.poseidon.commands.PoseidonCommand;
 import com.legacyminecraft.poseidon.commands.TPSCommand;
+
 import org.bukkit.Server;
 import org.bukkit.command.defaults.*;
 
@@ -50,10 +52,11 @@ public class SimpleCommandMap implements CommandMap {
         register("bukkit", new ReloadCommand("reload"));
         register("bukkit", new PluginsCommand("plugins"));
 
-        //Poseidon Command
-        register("poseidon", new PoseidonCommand("poseidon"));
-        if (PoseidonConfig.getInstance().getConfigBoolean("command.tps.enabled"))
+        register("poseidon", new PoseidonCommand("poseidon", Poseidon.getServerStartTime()));
+
+        if (PoseidonConfig.getInstance().getConfigBoolean("command.tps.enabled")) {
             register("poseidon", new TPSCommand("tps"));
+        }
     }
 
     /**
@@ -87,26 +90,34 @@ public class SimpleCommandMap implements CommandMap {
             }
         }
 
-        // Register to us so further updates of the commands label and aliases are postponed until its reregistered
+        // Register to us so further updates of the commands label and aliases are
+        // postponed until its reregistered
         command.register(this);
 
         return registeredPassedLabel;
     }
 
     /**
-     * Registers a command with the given name is possible, otherwise uses fallbackPrefix to create a unique name if its not an alias
-     * @param name the name of the command, without the '/'-prefix.
-     * @param fallbackPrefix a prefix which is prepended to the command with a ':' one or more times to make the command unique
-     * @param command the command to register
-     * @return true if command was registered with the passed in label, false otherwise.
-     * If isAlias was true a return of false indicates no command was registerd
-     * If isAlias was false a return of false indicates the fallbackPrefix was used one or more times to create a unique name for the command
+     * Registers a command with the given name is possible, otherwise uses
+     * fallbackPrefix to create a unique name if its not an alias
+     * 
+     * @param name           the name of the command, without the '/'-prefix.
+     * @param fallbackPrefix a prefix which is prepended to the command with a ':'
+     *                       one or more times to make the command unique
+     * @param command        the command to register
+     * @return true if command was registered with the passed in label, false
+     *         otherwise.
+     *         If isAlias was true a return of false indicates no command was
+     *         registerd
+     *         If isAlias was false a return of false indicates the fallbackPrefix
+     *         was used one or more times to create a unique name for the command
      */
     private synchronized boolean register(String label, String fallbackPrefix, Command command, boolean isAlias) {
         String lowerLabel = label.trim().toLowerCase();
 
         if (isAlias && knownCommands.containsKey(lowerLabel)) {
-            // Request is for an alias and it conflicts with a existing command or previous alias ignore it
+            // Request is for an alias and it conflicts with a existing command or previous
+            // alias ignore it
             // Note: This will mean it gets removed from the commands list of active aliases
             return false;
         }
@@ -114,7 +125,8 @@ public class SimpleCommandMap implements CommandMap {
         String lowerPrefix = fallbackPrefix.trim().toLowerCase();
         boolean registerdPassedLabel = true;
 
-        // If the command exists but is an alias we overwrite it, otherwise we rename it based on the fallbackPrefix
+        // If the command exists but is an alias we overwrite it, otherwise we rename it
+        // based on the fallbackPrefix
         while (knownCommands.containsKey(lowerLabel) && !aliases.contains(lowerLabel)) {
             lowerLabel = lowerPrefix + ":" + lowerLabel;
             registerdPassedLabel = false;
@@ -123,7 +135,8 @@ public class SimpleCommandMap implements CommandMap {
         if (isAlias) {
             aliases.add(lowerLabel);
         } else {
-            // Ensure lowerLabel isn't listed as a alias anymore and update the commands registered name
+            // Ensure lowerLabel isn't listed as a alias anymore and update the commands
+            // registered name
             aliases.remove(lowerLabel);
             command.setLabel(lowerLabel);
         }
@@ -162,7 +175,8 @@ public class SimpleCommandMap implements CommandMap {
         }
 
         try {
-            // Note: we don't return the result of target.execute as thats success / failure, we return handled (true) or not handled (false)
+            // Note: we don't return the result of target.execute as thats success /
+            // failure, we return handled (true) or not handled (false)
             target.execute(sender, sentCommandLabel, Arrays_copyOfRange(args, 1, args.length));
         } catch (CommandException ex) {
             throw ex;
@@ -208,14 +222,16 @@ public class SimpleCommandMap implements CommandMap {
             // We register these as commands so they have absolute priority.
 
             if (targets.size() > 0) {
-                knownCommands.put(alias.toLowerCase(), new MultipleCommandAlias(alias.toLowerCase(), targets.toArray(new Command[0])));
+                knownCommands.put(alias.toLowerCase(),
+                        new MultipleCommandAlias(alias.toLowerCase(), targets.toArray(new Command[0])));
             } else {
                 knownCommands.remove(alias.toLowerCase());
             }
 
             if (bad.length() > 0) {
                 bad = bad.substring(0, bad.length() - 2);
-                server.getLogger().warning("The following command(s) could not be aliased under '" + alias + "' because they do not exist: " + bad);
+                server.getLogger().warning("The following command(s) could not be aliased under '" + alias
+                        + "' because they do not exist: " + bad);
             }
         }
     }

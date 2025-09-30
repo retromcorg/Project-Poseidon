@@ -1,13 +1,13 @@
 package com.legacyminecraft.poseidon;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Server;
 import org.bukkit.craftbukkit.CraftServer;
 
 import java.util.LinkedList;
 
 public final class Poseidon {
     private static PoseidonServer server;
+    private static final long startTime = System.currentTimeMillis();
 
     /**
      * Returns a list of the server's TPS (Ticks Per Second) records for performance monitoring.
@@ -27,9 +27,15 @@ public final class Poseidon {
         if (Poseidon.server != null) {
             throw new UnsupportedOperationException("Cannot redefine singleton Server");
         }
-
         Poseidon.server = server;
     }
 
-
+    /**
+     * Returns the timestamp (in ms) when the server was started.
+     *
+     * @return long start time in epoch ms
+     */
+    public static long getServerStartTime() {
+        return startTime;
+    }
 }
