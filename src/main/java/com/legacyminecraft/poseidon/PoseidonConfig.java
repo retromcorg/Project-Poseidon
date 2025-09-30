@@ -218,10 +218,12 @@ public class PoseidonConfig extends Configuration {
         generateConfigOption("message.player.leave", "\u00A7e%player% left the game.");
         generateConfigOption("message.update.available", "\u00A7dA newer version of Poseidon is available: %newversion%");
 
-        //Optional Poseidon Commands
+        // Optional Poseidon Commands
         generateConfigOption("command.info", "This section allows you to enable or disable optional Poseidon commands. This is useful if you have a plugin that conflicts with a Poseidon command.");
         generateConfigOption("command.tps.info", "Enables the /tps command to show the server's TPS for various intervals.");
         generateConfigOption("command.tps.enabled", true);
+        generateConfigOption("command.uptime.info", "Enables the /uptime command to show how long the server has been running.");
+        generateConfigOption("command.uptime.enabled", true);
 
         //UberBukkit
         generateConfigOption("fix.optimize-sponges.enabled", true);

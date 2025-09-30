@@ -227,8 +227,11 @@ hs_err_pid*
 .classpath
 .settings/
 
-# Remvoe server stuff from path
+# Remove server stuff from path
 /server/
+
+# Remove any scripts that were made during development
+/*.sh
 
 # Maven target files
 /target

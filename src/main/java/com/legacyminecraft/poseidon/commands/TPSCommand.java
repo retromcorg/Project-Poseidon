@@ -3,15 +3,15 @@ package com.legacyminecraft.poseidon.commands;
 import com.legacyminecraft.poseidon.Poseidon;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.defaults.VanillaCommand;
 
-import java.util.LinkedList;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.Map;
 
 public class TPSCommand extends Command {
 
     private final LinkedHashMap<String, Integer> intervals = new LinkedHashMap<>();
+    private final long startTime;
 
     public TPSCommand(String name) {
         super(name);
@@ -19,13 +19,14 @@ public class TPSCommand extends Command {
         this.usageMessage = "/tps";
         this.setPermission("poseidon.command.tps");
 
-        // Define the intervals for TPS calculation
         intervals.put("5s", 5);
         intervals.put("30s", 30);
         intervals.put("1m", 60);
         intervals.put("5m", 300);
         intervals.put("10m", 600);
         intervals.put("15m", 900);
+
+        this.startTime = System.currentTimeMillis();
     }
 
     @Override
@@ -33,20 +34,30 @@ public class TPSCommand extends Command {
         if (!testPermission(sender)) return true;
 
         LinkedList<Double> tpsRecords = Poseidon.getTpsRecords();
-        StringBuilder message = new StringBuilder("§bServer TPS: ");
+        long uptimeSeconds = (System.currentTimeMillis() - startTime) / 1000;
 
-        // Calculate and format TPS for each interval dynamically
+        StringBuilder message = new StringBuilder("§bServer TPS: [");
+        boolean first = true;
+
         for (Map.Entry<String, Integer> entry : intervals.entrySet()) {
-            double averageTps = calculateAverage(tpsRecords, entry.getValue());
-            message.append(formatTps(averageTps)).append(" (").append(entry.getKey()).append("), ");
+            int requiredSeconds = entry.getValue();
+
+            if (uptimeSeconds < requiredSeconds) continue;
+
+            double avg = calculateAverage(tpsRecords, requiredSeconds);
+            if (!first) message.append("§7, ");
+            message.append(entry.getKey()).append(": ").append(formatTps(avg));
+            first = false;
         }
 
-        // Remove the trailing comma and space
-        if (message.length() > 0) {
-            message.setLength(message.length() - 2);
+        message.append("§b]");
+
+        if (first) {
+            sender.sendMessage("§eServer is still starting up. Not enough uptime to calculate TPS averages yet.");
+        } else {
+            sender.sendMessage(message.toString());
         }
 
-        sender.sendMessage(message.toString());
         return true;
     }
 
@@ -62,14 +73,7 @@ public class TPSCommand extends Command {
     }
 
     private String formatTps(double tps) {
-        String colorCode;
-        if (tps >= 19) {
-            colorCode = "§a";
-        } else if (tps >= 15) {
-            colorCode = "§e";
-        } else {
-            colorCode = "§c";
-        }
-        return colorCode + String.format("%.2f", tps);
+        String color = (tps >= 19) ? "§a" : (tps >= 15) ? "§e" : "§c";
+        return color + String.format("%.2f", Math.min(tps, 20.0));
     }
 }
