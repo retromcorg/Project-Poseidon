@@ -74,7 +74,10 @@ public class PoseidonCommand extends Command {
                 if (uuid == null) {
                     sender.sendMessage(ChatColor.GRAY + "Unable to locate the UUID of the player called: " + ChatColor.WHITE + args[1] + ChatColor.GRAY + ". Please remember usernames are cap sensitive");
                 } else {
-                    sender.sendMessage(ChatColor.GRAY + "Username: " + args[1]);
+
+                    String latestUsername = PoseidonUUID.getPlayerUsernameFromUUID(uuid);
+
+                    sender.sendMessage(ChatColor.GRAY + "Username: " + latestUsername);
                     sender.sendMessage(ChatColor.GRAY + "UUID: " + uuid.toString());
                     UUIDType uuidType = PoseidonUUID.getPlayerUUIDCacheStatus(args[1]);
                     if (uuidType.equals(UUIDType.ONLINE)) {
