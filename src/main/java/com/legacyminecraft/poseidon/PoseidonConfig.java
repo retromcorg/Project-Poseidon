@@ -163,6 +163,8 @@ public class PoseidonConfig extends Configuration {
         generateConfigOption("world.settings.speed-hack-check.teleport", true);
         generateConfigOption("world.settings.speed-hack-check.distance", 100.0D);
         generateConfigOption("world.settings.speed-hack-check.info", "This setting allows you to configure the automatic speedhack detection.");
+        generateConfigOption("world.settings.flowing-lava-fix.enabled", true);
+        generateConfigOption("world.settings.flowing-lava-fix.info", "This setting fixes flowing lava not disappearing when the source block is removed.");
         //Mob Spawner Area Limit (8 chunks)
         generateConfigOption("world.settings.mob-spawner-area-limit.enable", true);
         generateConfigOption("world.settings.mob-spawner-area-limit.limit", 150);
@@ -200,6 +202,10 @@ public class PoseidonConfig extends Configuration {
         generateConfigOption("settings.update-checker.info", "This setting allows you to disable the update checker. This is useful if you have a custom build of Poseidon or don't want to be notified of updates.");
         generateConfigOption("settings.update-checker.notify-staff.enabled", true);
         generateConfigOption("settings.update-checker.notify-staff.info", "This setting notifies operators and players with the permission poseidon.update when a new version of Poseidon is available on join.");
+        generateConfigOption("settings.update-checker.notify-if-up-to-date.enabled", false);
+        generateConfigOption("settings.update-checker.notify-if-up-to-date.info", "This setting controls if the update checker will print a message in console if the server is up to date.");
+        generateConfigOption("settings.update-checker.interval.ticks", 20 * 60 * 60);
+        generateConfigOption("settings.update-checker.interval.info", "Controls how often the update checker will query the latest Poseidon version");
 
         //Messages
         generateConfigOption("message.kick.banned", "You are banned from this server!");

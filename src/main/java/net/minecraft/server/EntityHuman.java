@@ -61,8 +61,10 @@ public abstract class EntityHuman extends EntityLiving {
         this.activeContainer = this.defaultContainer;
         this.height = 1.62F;
         ChunkCoordinates chunkcoordinates = world.getSpawn();
+        float yaw = world.worldData.getYaw(); // Poseidon
+        float pitch = world.worldData.getPitch(); // Poseidon
 
-        this.setPositionRotation((double) chunkcoordinates.x + 0.5D, (double) (chunkcoordinates.y + 1), (double) chunkcoordinates.z + 0.5D, 0.0F, 0.0F);
+        this.setPositionRotation((double) chunkcoordinates.x + 0.5D, (double) (chunkcoordinates.y + 1), (double) chunkcoordinates.z + 0.5D, yaw, pitch);
         this.health = 20;
         this.U = "humanoid";
         this.T = 180.0F;
