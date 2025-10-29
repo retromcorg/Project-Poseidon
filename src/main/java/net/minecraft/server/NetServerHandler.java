@@ -763,7 +763,7 @@ public class NetServerHandler extends NetHandler implements ICommandListener {
                 this.networkManager.queue(new Packet3Chat(line));
             }
             packet = null;
-        } else if (packet instanceof Packet250BungeePayload && !this.bungeeMode) { // Poseidon
+        } else if (packet instanceof Packet249BungeePayload && !this.bungeeMode) { // Poseidon
             packet = null;
         } else if (packet.k == true) {
             // Reroute all low-priority packets through to compression thread.
@@ -1211,11 +1211,14 @@ public class NetServerHandler extends NetHandler implements ICommandListener {
         return true;
     }
 
-    // Poseidon - This is ONLY FOR BUNGEECORD!
+    // Poseidon start - BungeeCord message packet
     @Override
-    public void handleBungeePayload(Packet250BungeePayload packet) {
+    public void handleBungeePayload(Packet249BungeePayload packet) {
         if (this.bungeeMode) {
             this.server.getPluginManager().callEvent(new PlayerBungeeMessageEvent(server.getPlayer(this.player), packet.data));
+        } else {
+            super.handleBungeePayload(packet);
         }
     }
+    // Poseidon end
 }

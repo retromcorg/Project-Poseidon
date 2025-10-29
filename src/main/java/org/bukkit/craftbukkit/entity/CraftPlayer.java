@@ -439,13 +439,15 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
         }
     }
 	
+    // Poseidon start
 	public void sendBungeeMessage(Plugin source, byte[] message) {
 		if (message.length > 32766) {
 			throw new IllegalArgumentException("Bungee message is too long (" + message.length + " > 32766)");
 		}
-        Packet250BungeePayload packet = new Packet250BungeePayload();
+        Packet249BungeePayload packet = new Packet249BungeePayload();
         packet.length = message.length;
         packet.data = message;
         getHandle().netServerHandler.sendPacket(packet);
     }
+    // Poseidon end
 }
