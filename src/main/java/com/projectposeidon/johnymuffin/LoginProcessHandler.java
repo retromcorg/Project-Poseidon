@@ -110,32 +110,91 @@ public class LoginProcessHandler {
             }
         }
 
+        // Connect the player based on their mode
+        if(onlineMode) {
+            // Handle saving the UUID for online mode user here
+            long unixTime = (System.currentTimeMillis() / 1000L) + 1382400;
+            UUIDManager.getInstance().receivedUUID(packet1Login.name, uuid, unixTime, onlineMode);
 
-        long unixTime = (System.currentTimeMillis() / 1000L) + 1382400;
-        UUIDManager.getInstance().receivedUUID(packet1Login.name, uuid, unixTime, onlineMode);
+            connectPlayerPremium(uuid);
+        } else {
+            // Handle saving the UUID for cracked user inside connectPlayerCracked method as it may need to be modified
+
+            connectPlayerCracked(uuid);
+        }
+
+    }
+
+    public void connectPlayerPremium(UUID uuid) {
         connectPlayer(uuid);
+    }
 
+    public void connectPlayerCracked(UUID uuid) {
+        // Append . to the start of the username if not already present and generate offline UUID based on that
+
+        String username = this.packet1Login.name;
+
+        if (Boolean.valueOf(String.valueOf(PoseidonConfig.getInstance().getConfigOption("settings.check-username-validity.enabled", true))) && !isUsernameValid()) {
+            //Username is invalid, and is a cracked user
+            return;
+        }
+
+        boolean prefixDot = PoseidonConfig.getInstance().getConfigBoolean("settings.cracked-username-prefix.enabled", false);
+
+        if(prefixDot) {
+            if (!username.startsWith(".")) {
+                System.out.println("[Poseidon] Adding . prefix to cracked user " + username + "'s username");
+                username = "." + username;
+            }
+
+            // Rename the player to have the . prefix
+            this.packet1Login.name = username;
+            netLoginHandler.updateUsername(username);
+        }
+
+        UUID offlineUUID = UUIDManager.generateOfflineUUID(username);
+        // Add new UUID entry for cracked user
+        long expiresOn = (System.currentTimeMillis() / 1000L) + 1382400;
+        UUIDManager.getInstance().receivedUUID(username, offlineUUID, expiresOn, false);
+
+        connectPlayer(offlineUUID);
     }
 
     //This function is only run if the user is cracked
     public boolean isUsernameValid() {
         String username = this.packet1Login.name;
-        if (username.isEmpty()) {
-            cancelLoginProcess("Sorry, you don't have a username, messing with MC?????");
-            return false;
-        }
-        String regex = String.valueOf(PoseidonConfig.getInstance().getConfigOption("settings.check-username-validity.regex", "[a-zA-Z0-9_?]*"));
+
+        // Ensure the username length is valid
         int minimumLength = Integer.valueOf(String.valueOf(PoseidonConfig.getInstance().getConfigOption("settings.check-username-validity.min-length", 3)));
         int maximumLength = Integer.valueOf(String.valueOf(PoseidonConfig.getInstance().getConfigOption("settings.check-username-validity.max-length", 16)));
 
-        if (username.length() > maximumLength) {
-            cancelLoginProcess("Sorry, your username is too long. The maximum length is: " + maximumLength);
-            return false;
-        }
         if (username.length() < minimumLength) {
             cancelLoginProcess("Sorry, your username is too short. The minimum length is: " + minimumLength);
             return false;
         }
+
+        // Remove the . prefix for validation if it exists and the server is configured to use it.
+        boolean prefixDot = PoseidonConfig.getInstance().getConfigBoolean("settings.cracked-username-prefix.enabled", false);
+        boolean dotAdded = false;
+        if(prefixDot) {
+            if (username.startsWith(".")) {
+                username = username.substring(1);
+                dotAdded = true;
+            }
+        }
+
+        if (username.length() > maximumLength) {
+            cancelLoginProcess("Sorry, your username is too long. The maximum length is: " + (dotAdded ? (maximumLength - 1) : maximumLength)); // Adjust max length if dot was automatically added
+            return false;
+        }
+
+        if (username.isEmpty()) {
+            cancelLoginProcess("Sorry, you don't have a username, messing with MC?????");
+            return false;
+        }
+
+        String regex = String.valueOf(PoseidonConfig.getInstance().getConfigOption("settings.check-username-validity.regex", "[a-zA-Z0-9_?]*"));
+
         if (!username.matches(regex)) {
             cancelLoginProcess("Sorry, your username is invalid, allowed characters: " + regex);
             return false;

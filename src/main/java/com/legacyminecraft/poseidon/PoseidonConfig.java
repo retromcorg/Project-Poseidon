@@ -81,6 +81,10 @@ public class PoseidonConfig extends Configuration {
         generateConfigOption("settings.uuid-fetcher.allow-graceful-uuids.value", true);
         generateConfigOption("settings.uuid-fetcher.allow-graceful-uuids.info", "This setting means offline UUIDs are generated for players who don't have a Mojang UUID. This is useful for cracked or semi-cracked servers.");
 
+        // Setting to automatically add a . prefix to cracked account usernames
+        generateConfigOption("settings.cracked-username-prefix.enabled", false);
+        generateConfigOption("settings.cracked-username-prefix.info", "This setting automatically adds a . prefix to cracked account usernames to prevent username conflicts with premium accounts.");
+
         generateConfigOption("settings.remove-join-leave-debug", true);
         generateConfigOption("settings.enable-tpc-nodelay", false);
 
@@ -192,7 +196,7 @@ public class PoseidonConfig extends Configuration {
         //Offline Username Check
         generateConfigOption("settings.check-username-validity.enabled", true);
         generateConfigOption("settings.check-username-validity.info", "If enabled, verifies the validity of a usernames of cracked players.");
-        generateConfigOption("settings.check-username-validity.regex", "[a-zA-Z0-9_?]*");
+        generateConfigOption("settings.check-username-validity.regex", "[a-zA-Z0-9_.]*");
         generateConfigOption("settings.check-username-validity.max-length", 16);
         generateConfigOption("settings.check-username-validity.min-length", 3);
         generateConfigOption("emergency.debug.regenerate-corrupt-chunks.enable", false);
