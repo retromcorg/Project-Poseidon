@@ -1,8 +1,11 @@
 package org.bukkit.command;
 
+//Poseidon start
 import com.legacyminecraft.poseidon.PoseidonConfig;
 import com.legacyminecraft.poseidon.commands.PoseidonCommand;
+import com.legacyminecraft.poseidon.commands.ResolveCommand;
 import com.legacyminecraft.poseidon.commands.TPSCommand;
+//Poseidon end
 import org.bukkit.Server;
 import org.bukkit.command.defaults.*;
 
@@ -50,10 +53,12 @@ public class SimpleCommandMap implements CommandMap {
         register("bukkit", new ReloadCommand("reload"));
         register("bukkit", new PluginsCommand("plugins"));
 
-        //Poseidon Command
+        //Poseidon Command Start
         register("poseidon", new PoseidonCommand("poseidon"));
+        register("poseidon", new ResolveCommand("resolve"));
         if (PoseidonConfig.getInstance().getConfigBoolean("command.tps.enabled"))
             register("poseidon", new TPSCommand("tps"));
+        //Poseidon Command End
     }
 
     /**
