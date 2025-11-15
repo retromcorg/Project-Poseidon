@@ -27,6 +27,13 @@ public class PoseidonCommand extends Command {
 
     @Override
     public boolean execute(CommandSender sender, String currentAlias, String[] args) {
+
+        if (args.length >= 1 && args[0].equalsIgnoreCase("resolve")) {
+            String[] subArgs = Arrays.copyOfRange(args, 1, args.length);
+            ResolveCommand resolver = new ResolveCommand("resolve");
+            return resolver.execute(sender, "resolve", subArgs);
+        }
+
         if (args.length == 0) {
             String appName = Poseidon.getServer().getAppName();
             String releaseVersion = Poseidon.getServer().getReleaseVersion();

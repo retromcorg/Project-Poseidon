@@ -55,7 +55,6 @@ public class SimpleCommandMap implements CommandMap {
 
         //Poseidon Command Start
         register("poseidon", new PoseidonCommand("poseidon"));
-        register("poseidon", new ResolveCommand("resolve"));
         if (PoseidonConfig.getInstance().getConfigBoolean("command.tps.enabled"))
             register("poseidon", new TPSCommand("tps"));
         //Poseidon Command End

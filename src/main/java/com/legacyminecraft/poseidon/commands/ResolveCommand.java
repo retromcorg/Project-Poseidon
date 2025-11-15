@@ -17,7 +17,7 @@ public class ResolveCommand extends Command {
     public ResolveCommand(String name) {
         super(name);
         this.description = "Find out what plugin a command belongs to";
-        this.usageMessage = "/resolve <command>";
+        this.usageMessage = "/poseidon resolve <command>";
         this.setPermission("poseidon.command.resolve");
     }
 
@@ -26,7 +26,7 @@ public class ResolveCommand extends Command {
         if (!testPermission(sender)) return true;
 
         if (args.length == 0) {
-            sender.sendMessage(ChatColor.RED + "Usage: /resolve <command>");
+            sender.sendMessage(ChatColor.RED + "Usage: /poseidon resolve <command>");
             return true;
         }
 
