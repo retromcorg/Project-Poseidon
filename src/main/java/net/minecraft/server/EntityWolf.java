@@ -1,5 +1,8 @@
 package net.minecraft.server;
 
+// Poseidon Start
+import com.projectposeidon.api.PoseidonUUID;
+// Poseidon end
 import org.bukkit.craftbukkit.entity.CraftEntity;
 import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -9,6 +12,9 @@ import org.bukkit.event.entity.EntityTargetEvent;
 
 import java.util.Iterator;
 import java.util.List;
+// Poseidon Start
+import java.util.UUID;
+// Poseidon end
 
 // CraftBukkit start
 // CraftBukkit end
@@ -22,6 +28,9 @@ public class EntityWolf extends EntityAnimal {
     private boolean g;
     private float h;
     private float i;
+    // Poseidon Start
+    private UUID ownerUUID; // UUID support for owners
+    // Poseidon end
 
     public EntityWolf(World world) {
         super(world);
@@ -42,28 +51,63 @@ public class EntityWolf extends EntityAnimal {
         return false;
     }
 
+    public void a(NBTTagCompound nbttagcompound) {
+        super.a(nbttagcompound);
+        this.setAngry(nbttagcompound.m("Angry"));
+        this.setSitting(nbttagcompound.m("Sitting"));
+        //Poseidon start
+        String ownerName = nbttagcompound.getString("Owner");
+        //Poseidon end
+
+        //Poseidon start
+        if (ownerName.length() > 0) {
+            this.setOwnerName(ownerName);
+            //Poseidon end
+            this.setTamed(true);
+        }
+
+        // Poseidon Start
+        if (nbttagcompound.hasKey("OwnerUUID")) {
+            try {
+                this.ownerUUID = UUID.fromString(nbttagcompound.getString("OwnerUUID"));
+            } catch (IllegalArgumentException ignored) {
+                this.ownerUUID = null;
+            }
+        }
+
+        // Migration from username to UUID if UUID is missing but name exists
+        if (this.ownerUUID == null && ownerName != null && !ownerName.isEmpty()) {
+            UUID cachedUUID = PoseidonUUID.getPlayerUUIDFromCache(ownerName, true);
+            if (cachedUUID != null) {
+                this.ownerUUID = cachedUUID;
+//                System.out.println("[DEBUG] Migrated wolf owner from name '" + ownerName + "' to UUID " + cachedUUID);
+//            } else {
+//                System.out.println("[DEBUG] Could not migrate wolf owner '" + ownerName + "': UUID not in cache.");
+            }
+        }
+    }
+
+    @Override
     public void b(NBTTagCompound nbttagcompound) {
         super.b(nbttagcompound);
         nbttagcompound.a("Angry", this.isAngry());
         nbttagcompound.a("Sitting", this.isSitting());
+
+        // Migrate old string-based owner name if needed when saving
         if (this.getOwnerName() == null) {
             nbttagcompound.setString("Owner", "");
         } else {
             nbttagcompound.setString("Owner", this.getOwnerName());
         }
-    }
 
-    public void a(NBTTagCompound nbttagcompound) {
-        super.a(nbttagcompound);
-        this.setAngry(nbttagcompound.m("Angry"));
-        this.setSitting(nbttagcompound.m("Sitting"));
-        String s = nbttagcompound.getString("Owner");
-
-        if (s.length() > 0) {
-            this.setOwnerName(s);
-            this.setTamed(true);
+        if (this.ownerUUID != null) {
+            nbttagcompound.setString("OwnerUUID", this.ownerUUID.toString());
+//            System.out.println("[DEBUG] Saved ownerUUID to NBT: " + this.ownerUUID);
+//        } else {
+//            System.out.println("[DEBUG] ownerUUID is null during save");
         }
     }
+    // Poseidon end
 
     protected boolean h_() {
         return !this.isTamed();
@@ -299,7 +343,9 @@ public class EntityWolf extends EntityAnimal {
                     }
                 }
             } else if (entity != this && entity != null) {
-                if (this.isTamed() && entity instanceof EntityHuman && ((EntityHuman) entity).name.equalsIgnoreCase(this.getOwnerName())) {
+                //Poseidon start
+                if (this.isTamed() && entity instanceof EntityHuman && this.isOwner((EntityHuman) entity)) {
+                    //Poseidon end
                     return true;
                 }
 
@@ -367,6 +413,11 @@ public class EntityWolf extends EntityAnimal {
                         this.setSitting(true);
                         this.health = 20;
                         this.setOwnerName(entityhuman.name);
+                        // Poseidon start
+                        this.ownerUUID = entityhuman.getUniqueId(); // Set UUID on tame
+
+//                        System.out.println("[DEBUG] Wolf tamed by: " + entityhuman.name + " (UUID: " + entityhuman.getUniqueId() + ")");
+                        // Poseidon end
                         this.a(true);
                         this.world.a(this, (byte) 7);
                     } else {
@@ -392,7 +443,9 @@ public class EntityWolf extends EntityAnimal {
                 }
             }
 
-            if (entityhuman.name.equalsIgnoreCase(this.getOwnerName())) {
+            //Poseidon start
+            if (this.isOwner(entityhuman)) {
+                //Poseidon end
                 if (!this.world.isStatic) {
                     this.setSitting(!this.isSitting());
                     this.aC = false;
@@ -462,6 +515,19 @@ public class EntityWolf extends EntityAnimal {
         }
     }
 
+    //Poseidon start
+    public boolean isOwner(EntityHuman entityhuman) {
+        return entityhuman.getUniqueId().equals(this.ownerUUID);
+    }
+
+    public UUID getOwnerUUID() {
+        return this.ownerUUID;
+    }
+
+    public void setOwnerUUID(UUID uuid) {
+        this.ownerUUID = uuid;
+    }
+    //Poseidon end
     public boolean isTamed() {
         return (this.datawatcher.a(16) & 4) != 0;
     }
@@ -470,9 +536,21 @@ public class EntityWolf extends EntityAnimal {
         byte b0 = this.datawatcher.a(16);
 
         if (flag) {
-            this.datawatcher.watch(16, Byte.valueOf((byte) (b0 | 4)));
+            //Poseidon start
+            this.datawatcher.watch(16, (byte)(b0 | 4));
         } else {
-            this.datawatcher.watch(16, Byte.valueOf((byte) (b0 & -5)));
+            this.datawatcher.watch(16, (byte)(b0 & ~4));
         }
+        //Poseidon end
     }
+
+    //Poseidon start
+    private UUID resolveUUIDFromName(String playerName) {
+        org.bukkit.entity.Player player = org.bukkit.Bukkit.getPlayerExact(playerName);
+        if (player != null) {
+            return player.getUniqueId();
+        }
+        return null;
+    }
+    //Poseidon end
 }
