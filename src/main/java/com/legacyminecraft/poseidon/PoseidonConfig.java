@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 public class PoseidonConfig extends Configuration {
     private static PoseidonConfig singleton;
-    private final int configVersion = 5;
+    private final int configVersion = 6;
     private Integer[] treeBlacklistIDs;
 
     public Integer[] getTreeBlacklistIDs() {
@@ -80,6 +80,9 @@ public class PoseidonConfig extends Configuration {
 
         generateConfigOption("settings.uuid-fetcher.allow-graceful-uuids.value", true);
         generateConfigOption("settings.uuid-fetcher.allow-graceful-uuids.info", "This setting means offline UUIDs are generated for players who don't have a Mojang UUID. This is useful for cracked or semi-cracked servers.");
+
+        generateConfigOption("settings.uuid-fetcher.always-use-graceful-uuids.enabled", false);
+        generateConfigOption("settings.uuid-fetcher.always-use-graceful-uuids.info", "Will always use offline UUIDs. Useful if you need the server to run completely offline.");
 
         // Setting to automatically add a . prefix to cracked account usernames
         generateConfigOption("settings.cracked-username-prefix.enabled", false);
@@ -351,7 +354,8 @@ public class PoseidonConfig extends Configuration {
         convertToNewAddress("settings.uuid-fetcher.get.enforce-case-sensitivity.enabled", "settings.use-get-for-uuids.case-sensitive.enabled");
         removeDeprecatedConfig("settings.use-get-for-uuids.case-sensitive.info");
 
-
+        // 5-6 Conversion
+        this.setProperty("settings.uuid-fetcher.always-use-graceful-uuids.enabled", false);
     }
 
     //Allow any number of string arguments to be passed to this method
