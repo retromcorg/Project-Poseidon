@@ -28,7 +28,12 @@ public class ThreadUUIDFetcher extends Thread {
     }
 
     public void run() {
-        if (useGetMethod) {
+        if (PoseidonConfig.getInstance().getBoolean("settings.uuid-fetcher.always-use-graceful-uuids.enabled", false)) {
+            System.out.println("[Poseidon] Skipping UUID fetching since always-use-graceful-uuids is enabled, " + loginPacket.name + " will use offline UUID.");
+            UUID offlineUUID = generateOfflineUUID(loginPacket.name);
+            loginProcessHandler.userUUIDReceived(offlineUUID, false);
+            return;
+        } else if (useGetMethod) {
             getMethod();
         } else {
             postMethod();
