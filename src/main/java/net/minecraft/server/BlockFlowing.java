@@ -1,5 +1,6 @@
 package net.minecraft.server;
 
+import com.legacyminecraft.poseidon.PoseidonConfig;
 import org.bukkit.block.BlockFace;
 import org.bukkit.event.block.BlockFromToEvent;
 
@@ -76,7 +77,12 @@ public class BlockFlowing extends BlockFluids {
             }
 
             if (this.material == Material.LAVA && l < 8 && i1 < 8 && i1 > l && random.nextInt(4) != 0) {
-                i1 = l;
+                // Poseidon start - Fix flowing lava not disappearing
+                boolean fixFlowingLava = PoseidonConfig.getInstance().getConfigBoolean("world.settings.flowing-lava-fix.enabled", true);
+                if (!fixFlowingLava) {
+                    i1 = l;
+                }
+                // Poseidon end
                 flag = false;
             }
 

@@ -27,6 +27,13 @@ public class PoseidonCommand extends Command {
 
     @Override
     public boolean execute(CommandSender sender, String currentAlias, String[] args) {
+
+        if (args.length >= 1 && args[0].equalsIgnoreCase("resolve")) {
+            String[] subArgs = Arrays.copyOfRange(args, 1, args.length);
+            ResolveCommand resolver = new ResolveCommand("resolve");
+            return resolver.execute(sender, "resolve", subArgs);
+        }
+
         if (args.length == 0) {
             String appName = Poseidon.getServer().getAppName();
             String releaseVersion = Poseidon.getServer().getReleaseVersion();
@@ -74,7 +81,10 @@ public class PoseidonCommand extends Command {
                 if (uuid == null) {
                     sender.sendMessage(ChatColor.GRAY + "Unable to locate the UUID of the player called: " + ChatColor.WHITE + args[1] + ChatColor.GRAY + ". Please remember usernames are cap sensitive");
                 } else {
-                    sender.sendMessage(ChatColor.GRAY + "Username: " + args[1]);
+
+                    String latestUsername = PoseidonUUID.getPlayerUsernameFromUUID(uuid);
+
+                    sender.sendMessage(ChatColor.GRAY + "Username: " + latestUsername);
                     sender.sendMessage(ChatColor.GRAY + "UUID: " + uuid.toString());
                     UUIDType uuidType = PoseidonUUID.getPlayerUUIDCacheStatus(args[1]);
                     if (uuidType.equals(UUIDType.ONLINE)) {

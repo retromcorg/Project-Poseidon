@@ -1,5 +1,7 @@
 package org.bukkit.craftbukkit.scheduler;
 
+import com.legacyminecraft.poseidon.Poseidon;
+import com.legacyminecraft.poseidon.utility.PerformanceStatistic;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitScheduler;
@@ -106,7 +108,24 @@ public class CraftScheduler implements BukkitScheduler, Runnable {
         Thread t = new Thread(this);
         t.start();
 
+        // Project Poseidon - Start - Synchronous task performance reporting
+        this.taskPerformanceEnabled = Poseidon.getServer().getConfig().getConfigBoolean("settings.performance-monitoring.task-reporting.enabled");
+        this.printOnSlowTask = Poseidon.getServer().getConfig().getConfigBoolean("settings.performance-monitoring.task-reporting.print-on-slow-tasks.enabled");
+        this.printOnSlowTaskThreshold = Poseidon.getServer().getConfig().getConfigInteger("settings.performance-monitoring.task-reporting.print-on-slow-tasks.value");
+
+        this.taskPerformance = Poseidon.getServer().getTaskPerformance();
+        // Project Poseidon - End - Synchronous task performance reporting
     }
+
+    // Project Poseidon - Start - Synchronous task performance reporting
+    private final boolean taskPerformanceEnabled; // Project Poseidon
+    private final Map<String, PerformanceStatistic> taskPerformance; // Project Poseidon
+
+    private final boolean printOnSlowTask;
+    private final int printOnSlowTaskThreshold;
+
+    // Project Poseidon - End - Synchronous task performance reporting
+
 
     // If the main thread cannot obtain the lock, it doesn't wait
     public void mainThreadHeartbeat(long currentTick) {
@@ -125,8 +144,31 @@ public class CraftScheduler implements BukkitScheduler, Runnable {
                 long breakTime = System.currentTimeMillis() + 35; // max time spent in loop = 35ms
                 while (!syncedTasks.isEmpty() && System.currentTimeMillis() <= breakTime) {
                     CraftTask task = syncedTasks.removeFirst();
+                    long startTime = System.currentTimeMillis(); // Poseidon - Synchronous task performance reporting
                     try {
                         task.getTask().run();
+
+                        // Poseidon - Start - Synchronous task performance reporting
+                        if(taskPerformanceEnabled) {
+                            long duration = System.currentTimeMillis() - startTime;  // Calculate duration in milliseconds
+
+                            String taskKey = (task == null || task.getOwner() == null || task.getOwner().getDescription() == null || task.getOwner().getDescription().getName() == null)
+                                    ? "Unknown"
+                                    : task.getOwner().getDescription().getName();
+
+                            taskPerformance.computeIfAbsent(taskKey, k -> new PerformanceStatistic()).update(duration);
+
+                            // If task took longer than the threshold, print the performance statistics for the listener
+                            if (printOnSlowTask && duration > printOnSlowTaskThreshold) {
+                                server.getLogger().log(Level.WARNING, String.format(
+                                        "[Poseidon] Synchronous task from plugin %s took %d milliseconds. Statistics: %s",
+                                        taskKey,
+                                        duration,
+                                        taskPerformance.get(taskKey).printStats()
+                                ));
+                            }
+                        }
+                        // Poseidon - End - Synchronous task performance reporting
                     } catch (Throwable t) {
                         // Bad plugin!
                         logger.log(Level.WARNING, "Task of '" + task.getOwner().getDescription().getName() + "' generated an exception", t);

@@ -1,188 +1,200 @@
 package com.projectposeidon.johnymuffin;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import com.legacyminecraft.poseidon.PoseidonConfig;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.UUID;
+import java.lang.reflect.Type;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class UUIDManager {
     private static UUIDManager singleton;
-    private JSONArray UUIDJsonArray;
+    private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    private final File cacheFile = new File("uuidcache.json");
+
+    private final Map<String, List<UUIDEntry>> usernameCache = new ConcurrentHashMap<>();
+    private final Map<UUID, List<UUIDEntry>> uuidCache = new ConcurrentHashMap<>();
+
+    private List<UUIDEntry> uuidCacheList;
 
     private UUIDManager() {
-        File configFile = new File("uuidcache.json");
-        //Check if uuidcache.json exists
-        if (!configFile.exists()) {
-            try (FileWriter file = new FileWriter("uuidcache.json")) {
+        if (!cacheFile.exists()) {
+            try (FileWriter writer = new FileWriter(cacheFile)) {
                 System.out.println("[Poseidon] Generating uuidcache.json for Project Poseidon");
-                UUIDJsonArray = new JSONArray();
-                file.write(UUIDJsonArray.toJSONString());
-                file.flush();
-
+                uuidCacheList = new ArrayList<>();
+                gson.toJson(uuidCacheList, writer);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        try {
-            System.out.println("[Poseidon] Reading uuidcache.json for Project Poseidon");
-            JSONParser parser = new JSONParser();
-            UUIDJsonArray = (JSONArray) parser.parse(new FileReader("uuidcache.json"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ParseException e) {
-            System.out.println("[Poseidon] The UUIDCache is corrupt or unreadable, resetting");
-            UUIDJsonArray = new JSONArray();
-            saveJsonArray();
 
-            //e.printStackTrace();
+        try (FileReader reader = new FileReader(cacheFile)) {
+            System.out.println("[Poseidon] Reading uuidcache.json for Project Poseidon");
+            Type listType = new TypeToken<List<UUIDEntry>>() {}.getType();
+            uuidCacheList = gson.fromJson(reader, listType);
+            if (uuidCacheList == null) uuidCacheList = new ArrayList<>();
         } catch (Exception e) {
-            System.out.println("[Poseidon] Error reading uuidcache.json, changing to memory only cache: " + e + ": " + e.getMessage());
-            UUIDJsonArray = new JSONArray();
+            System.out.println("[Poseidon] UUID cache corrupt or unreadable, resetting: " + e);
+            uuidCacheList = new ArrayList<>();
+            saveJsonArray();
         }
 
+        rebuildCaches();
+    }
 
+    public static UUIDManager getInstance() {
+        if (singleton == null) {
+            singleton = new UUIDManager();
+        }
+        return singleton;
+    }
+
+
+    private void rebuildCaches() {
+        usernameCache.clear();
+        uuidCache.clear();
+
+        for (UUIDEntry entry : uuidCacheList) {
+            usernameCache.computeIfAbsent(entry.name.toLowerCase(), k -> new ArrayList<>()).add(entry);
+            uuidCache.computeIfAbsent(entry.uuid, k -> new ArrayList<>()).add(entry);
+        }
+    }
+
+    private void addToCaches(UUIDEntry entry) {
+        usernameCache.computeIfAbsent(entry.name.toLowerCase(), k -> new ArrayList<>()).add(entry);
+        uuidCache.computeIfAbsent(entry.uuid, k -> new ArrayList<>()).add(entry);
+    }
+
+    private void removeFromCaches(UUIDEntry entry) {
+        List<UUIDEntry> userEntries = usernameCache.get(entry.name.toLowerCase());
+        if (userEntries != null) userEntries.remove(entry);
+        List<UUIDEntry> uuidEntries = uuidCache.get(entry.uuid);
+        if (uuidEntries != null) uuidEntries.remove(entry);
+    }
+
+    public static UUID generateOfflineUUID(String username) {
+        // TODO: Update to modern system: UUID.nameUUIDFromBytes(("OfflinePlayer:" + username).getBytes(StandardCharsets.UTF_8));
+        return UUID.nameUUIDFromBytes(username.getBytes());
     }
 
     public UUID getUUIDGraceful(String username) {
         UUID uuid = getUUIDFromUsername(username, true);
-        if (uuid == null) {
-            uuid = generateOfflineUUID(username);
-        }
-        return uuid;
+        return uuid != null ? uuid : generateOfflineUUID(username);
     }
-
-
-    public static UUID generateOfflineUUID(String username) {
-        //TODO we should look at using the modern system: UUID offlineUUID = UUID.nameUUIDFromBytes(("OfflinePlayer:" + <playerName>).getBytes(Charsets.UTF_8));
-        return UUID.nameUUIDFromBytes(username.getBytes());
-    }
-
 
     public void saveJsonArray() {
-        try (FileWriter file = new FileWriter("uuidcache.json")) {
-            System.out.println("[Poseidon] Saving UUID Cache");
-            file.write(UUIDJsonArray.toJSONString());
-            file.flush();
+        try (FileWriter writer = new FileWriter(cacheFile)) {
+            gson.toJson(uuidCacheList, writer);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public void receivedUUID(String username, UUID uuid, Long expiry, boolean online) {
-        //Check if the UUID is already in the cache, if so update the expiry
-        for (int i = 0; i < UUIDJsonArray.size(); i++) {
-            JSONObject tmp = (JSONObject) UUIDJsonArray.get(i);
-            if (tmp.get("name").equals(username) && UUID.fromString((String) tmp.get("uuid")).equals(uuid) && tmp.get("onlineUUID").equals(online)) {
-                tmp.replace("expiresOn", expiry);
-                UUIDJsonArray.set(i, tmp);
+        // Check existing entry
+        List<UUIDEntry> entries = usernameCache.getOrDefault(username.toLowerCase(), Collections.emptyList());
+        for (UUIDEntry entry : entries) {
+            if (entry.uuid.equals(uuid) && entry.onlineUUID == online) {
+                entry.expiresOn = expiry;
                 return;
             }
         }
+
         removeInstancesOfUsername(username);
         removeInstancesOfUUID(uuid);
-        addUser(username, uuid, expiry, online);
 
-
+        UUIDEntry newEntry = new UUIDEntry(username, uuid, expiry, online);
+        uuidCacheList.add(newEntry);
+        addToCaches(newEntry);
     }
 
-
-    private void addUser(String username, UUID uuid, Long expiry, boolean online) {
-        JSONObject tmp = new JSONObject();
-        tmp.put("name", username);
-        tmp.put("uuid", uuid.toString());
-        tmp.put("expiresOn", expiry);
-        tmp.put("onlineUUID", online);
-        UUIDJsonArray.add(tmp);
-    }
 
     public UUID getUUIDFromUsername(String username) {
-        for (int i = 0; i < UUIDJsonArray.size(); i++) {
-            JSONObject tmp = (JSONObject) UUIDJsonArray.get(i);
-            if (tmp.get("name").equals(username)) {
-                return UUID.fromString((String) tmp.get("uuid"));
-            }
+        List<UUIDEntry> entries = usernameCache.get(username.toLowerCase());
+        if (entries != null && !entries.isEmpty()) {
+            return entries.get(0).uuid;
         }
         return null;
     }
-
 
     public UUID getUUIDFromUsername(String username, boolean online) {
-        for (int i = 0; i < UUIDJsonArray.size(); i++) {
-            JSONObject tmp = (JSONObject) UUIDJsonArray.get(i);
-            if (tmp.get("name").equals(username) && tmp.get("onlineUUID").equals(online)) {
-                return UUID.fromString((String) tmp.get("uuid"));
+        List<UUIDEntry> entries = usernameCache.get(username.toLowerCase());
+        if (entries != null) {
+            for (UUIDEntry entry : entries) {
+                if (entry.onlineUUID == online) {
+                    return entry.uuid;
+                }
             }
         }
         return null;
     }
 
-    public UUID getUUIDFromUsername(String username, boolean online, Long afterUnix) {
-        for (int i = 0; i < UUIDJsonArray.size(); i++) {
-            JSONObject tmp = (JSONObject) UUIDJsonArray.get(i);
-            Long expire = Long.valueOf(String.valueOf(tmp.get("expiresOn")));
-            if (tmp.get("name").equals(username) && tmp.get("onlineUUID").equals(online) && expire > afterUnix) {
-                return UUID.fromString((String) tmp.get("uuid"));
+    public UUID getUUIDFromUsername(String username, boolean online, long afterUnix) {
+        List<UUIDEntry> entries = usernameCache.get(username.toLowerCase());
+        if (entries != null) {
+            for (UUIDEntry entry : entries) {
+                if (entry.onlineUUID == online && entry.expiresOn > afterUnix) {
+                    return entry.uuid;
+                }
             }
         }
         return null;
     }
 
     public String getUsernameFromUUID(UUID uuid) {
-        // Get most recent username from UUID
-        String username = null;
-        long expiry = -1;
-        for (int i = 0; i < UUIDJsonArray.size(); i++) {
-            JSONObject playerEntry = (JSONObject) UUIDJsonArray.get(i);
-            UUID entryUUID = UUID.fromString(String.valueOf(playerEntry.get("uuid")));
-            long expiresOn = Long.valueOf(String.valueOf(playerEntry.get("expiresOn")));
-            if (entryUUID.equals(uuid) && expiresOn >= expiry) {
-                expiry = expiresOn;
-                username = String.valueOf(playerEntry.get("name"));
+        List<UUIDEntry> entries = uuidCache.get(uuid);
+        if (entries == null || entries.isEmpty()) return null;
+
+        UUIDEntry newest = entries.get(0);
+        for (UUIDEntry entry : entries) {
+            if (entry.expiresOn > newest.expiresOn) {
+                newest = entry;
             }
         }
-        return username;
+        return newest.name;
     }
 
     private void removeInstancesOfUsername(String username) {
-        for (int i = 0; i < UUIDJsonArray.size(); i++) {
-            JSONObject tmp = (JSONObject) UUIDJsonArray.get(i);
-            if (tmp.get("name").equals(username)) {
-                UUIDJsonArray.remove(i);
+        List<UUIDEntry> entries = usernameCache.get(username.toLowerCase());
+        if (entries != null) {
+            for (UUIDEntry entry : new ArrayList<>(entries)) {
+                uuidCacheList.remove(entry);
+                removeFromCaches(entry);
             }
         }
     }
 
     private void removeInstancesOfUUID(UUID uuid) {
-        for (int i = 0; i < UUIDJsonArray.size(); i++) {
-            JSONObject tmp = (JSONObject) UUIDJsonArray.get(i);
-            if (UUID.fromString((String) tmp.get("uuid")).equals(uuid)) {
-                if ((boolean) PoseidonConfig.getInstance().getConfigOption("settings.delete-duplicate-uuids")) {
-                    //Remove the duplicate UUID
-                    UUIDJsonArray.remove(i);
-                    //Decrement i to account for the removed element
-                    i--;
-                } else {
-                    //This allows for plugins to use a old username and find UUID.
-                    tmp.replace("expiresOn", 1);
-                    UUIDJsonArray.set(i, tmp);
-                }
+        List<UUIDEntry> entries = uuidCache.get(uuid);
+        if (entries == null) return;
+
+        for (UUIDEntry entry : new ArrayList<>(entries)) {
+            if ((boolean) PoseidonConfig.getInstance().getConfigOption("settings.delete-duplicate-uuids")) {
+                uuidCacheList.remove(entry);
+                removeFromCaches(entry);
+            } else {
+                entry.expiresOn = 1L; // mark as outdated
             }
         }
     }
 
+    protected class UUIDEntry {
+        public String name;
+        public UUID uuid;
+        public long expiresOn;
+        public boolean onlineUUID;
 
-    public static UUIDManager getInstance() {
-        if (UUIDManager.singleton == null) {
-            UUIDManager.singleton = new UUIDManager();
+        public UUIDEntry(String name, UUID uuid, long expiresOn, boolean onlineUUID) {
+            this.name = name;
+            this.uuid = uuid;
+            this.expiresOn = expiresOn;
+            this.onlineUUID = onlineUUID;
         }
-        return UUIDManager.singleton;
     }
-
 }

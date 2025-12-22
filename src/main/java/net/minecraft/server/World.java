@@ -177,9 +177,23 @@ public class World implements IBlockAccess {
             }
         }
 
+        // Poseidon - Fix OOM in naive custom world generators
+        int attempts = 0;
+
         for (j = 0; !this.canSpawn(i, j); j += this.random.nextInt(64) - this.random.nextInt(64)) {
             i += this.random.nextInt(64) - this.random.nextInt(64);
+            attempts += 1;
+
+            if (attempts > 1024) {
+                i = 0;
+                j = 0;
+
+                System.out.println("[Poseidon] The generator for the world \"" + this.worldData.name + "\" did not generate a safe spawn location in 1024 attempts. If this world's generator is handled by a plugin, please inform them that they can solve this problem by overriding the \"canSpawn\" method with code more suited to their world type, or to define a fixed spawn location.");
+
+                break;
+            }
         }
+
         // CraftBukkit end
 
         this.worldData.setSpawn(i, b0, j);
@@ -1706,7 +1720,7 @@ public class World implements IBlockAccess {
             boolean flag = false;
 
             if (this.allowMonsters && this.spawnMonsters >= 1) {
-                flag = SpawnerCreature.a(this, this.players);
+                flag = SpawnerCreature.spawnSleepThreats(this, this.players);
             }
 
             if (!flag) {

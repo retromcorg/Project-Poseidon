@@ -81,6 +81,13 @@ public class PoseidonConfig extends Configuration {
         generateConfigOption("settings.uuid-fetcher.allow-graceful-uuids.value", true);
         generateConfigOption("settings.uuid-fetcher.allow-graceful-uuids.info", "This setting means offline UUIDs are generated for players who don't have a Mojang UUID. This is useful for cracked or semi-cracked servers.");
 
+        generateConfigOption("settings.uuid-fetcher.always-use-graceful-uuids.enabled", false);
+        generateConfigOption("settings.uuid-fetcher.always-use-graceful-uuids.info", "Will always use offline UUIDs. Useful if you need the server to run completely offline.");
+
+        // Setting to automatically add a . prefix to cracked account usernames
+        generateConfigOption("settings.cracked-username-prefix.enabled", false);
+        generateConfigOption("settings.cracked-username-prefix.info", "This setting automatically adds a . prefix to cracked account usernames to prevent username conflicts with premium accounts.");
+
         generateConfigOption("settings.remove-join-leave-debug", true);
         generateConfigOption("settings.enable-tpc-nodelay", false);
 
@@ -108,6 +115,23 @@ public class PoseidonConfig extends Configuration {
         generateConfigOption("settings.watchdog.debug-timeout.enabled", false);
         generateConfigOption("settings.watchdog.debug-timeout.value", 30);
         generateConfigOption("settings.watchdog.debug-timeout.info", "debug-timeout can be used to print a stack trace at a lower interval then the main timeout allowing admins to locate blocking tasks that cause hangs over a certain duration. Only enable this if you have experienced temporary hangs/server freezes.");
+
+        // Performance Monitoring
+        generateConfigOption("settings.performance-monitoring.listener-reporting.info", "This setting will cause the server to record listener execution times.");
+        generateConfigOption("settings.performance-monitoring.listener-reporting.enabled", true);
+        generateConfigOption("settings.performance-monitoring.listener-reporting.print-statistics-on-shutdown.info", "Prints the listener statistics to the console on server shutdown.");
+        generateConfigOption("settings.performance-monitoring.listener-reporting.print-statistics-on-shutdown.enabled", false);
+        generateConfigOption("settings.performance-monitoring.listener-reporting.print-on-slow-listeners.info", "Print to console when a listener takes longer than the specified time in milliseconds. It isn't recommended to set this any lower then 10ms to prevent console spam.");
+        generateConfigOption("settings.performance-monitoring.listener-reporting.print-on-slow-listeners.enabled", true);
+        generateConfigOption("settings.performance-monitoring.listener-reporting.print-on-slow-listeners.value", 100); // Default to two Minecraft tick
+
+        generateConfigOption("settings.performance-monitoring.task-reporting.info", "This setting will cause the server to record synchronous task execution times.");
+        generateConfigOption("settings.performance-monitoring.task-reporting.enabled", true);
+        generateConfigOption("settings.performance-monitoring.task-reporting.print-statistics-on-shutdown.info", "Prints the task statistics to the console on server shutdown.");
+        generateConfigOption("settings.performance-monitoring.task-reporting.print-statistics-on-shutdown.enabled", false);
+        generateConfigOption("settings.performance-monitoring.task-reporting.print-on-slow-tasks.info", "Print to console when a task takes longer than the specified time in milliseconds. It isn't recommended to set this any lower then 10ms to prevent console spam.");
+        generateConfigOption("settings.performance-monitoring.task-reporting.print-on-slow-tasks.enabled", true);
+        generateConfigOption("settings.performance-monitoring.task-reporting.print-on-slow-tasks.value", 100); // Default to two Minecraft tick
 
         //Packet Events
         generateConfigOption("settings.packet-events.enabled", false);
@@ -146,6 +170,8 @@ public class PoseidonConfig extends Configuration {
         generateConfigOption("world.settings.speed-hack-check.teleport", true);
         generateConfigOption("world.settings.speed-hack-check.distance", 100.0D);
         generateConfigOption("world.settings.speed-hack-check.info", "This setting allows you to configure the automatic speedhack detection.");
+        generateConfigOption("world.settings.flowing-lava-fix.enabled", true);
+        generateConfigOption("world.settings.flowing-lava-fix.info", "This setting fixes flowing lava not disappearing when the source block is removed.");
         //Mob Spawner Area Limit (8 chunks)
         generateConfigOption("world.settings.mob-spawner-area-limit.enable", true);
         generateConfigOption("world.settings.mob-spawner-area-limit.limit", 150);
@@ -173,7 +199,7 @@ public class PoseidonConfig extends Configuration {
         //Offline Username Check
         generateConfigOption("settings.check-username-validity.enabled", true);
         generateConfigOption("settings.check-username-validity.info", "If enabled, verifies the validity of a usernames of cracked players.");
-        generateConfigOption("settings.check-username-validity.regex", "[a-zA-Z0-9_?]*");
+        generateConfigOption("settings.check-username-validity.regex", "[a-zA-Z0-9_.]*");
         generateConfigOption("settings.check-username-validity.max-length", 16);
         generateConfigOption("settings.check-username-validity.min-length", 3);
         generateConfigOption("emergency.debug.regenerate-corrupt-chunks.enable", false);
@@ -183,6 +209,10 @@ public class PoseidonConfig extends Configuration {
         generateConfigOption("settings.update-checker.info", "This setting allows you to disable the update checker. This is useful if you have a custom build of Poseidon or don't want to be notified of updates.");
         generateConfigOption("settings.update-checker.notify-staff.enabled", true);
         generateConfigOption("settings.update-checker.notify-staff.info", "This setting notifies operators and players with the permission poseidon.update when a new version of Poseidon is available on join.");
+        generateConfigOption("settings.update-checker.notify-if-up-to-date.enabled", false);
+        generateConfigOption("settings.update-checker.notify-if-up-to-date.info", "This setting controls if the update checker will print a message in console if the server is up to date.");
+        generateConfigOption("settings.update-checker.interval.ticks", 20 * 60 * 60);
+        generateConfigOption("settings.update-checker.interval.info", "Controls how often the update checker will query the latest Poseidon version");
 
         //Messages
         generateConfigOption("message.kick.banned", "You are banned from this server!");
@@ -323,8 +353,6 @@ public class PoseidonConfig extends Configuration {
         convertToNewAddress("settings.uuid-fetcher.allow-graceful-uuids.value", "settings.allow-graceful-uuids");
         convertToNewAddress("settings.uuid-fetcher.get.enforce-case-sensitivity.enabled", "settings.use-get-for-uuids.case-sensitive.enabled");
         removeDeprecatedConfig("settings.use-get-for-uuids.case-sensitive.info");
-
-
     }
 
     //Allow any number of string arguments to be passed to this method

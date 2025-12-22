@@ -4,6 +4,7 @@ import com.legacyminecraft.poseidon.Poseidon;
 import com.legacyminecraft.poseidon.PoseidonConfig;
 import com.legacyminecraft.poseidon.PoseidonPlugin;
 import com.legacyminecraft.poseidon.util.ServerLogRotator;
+import com.legacyminecraft.poseidon.utility.PerformanceStatistic;
 import com.legacyminecraft.poseidon.utility.PoseidonVersionChecker;
 import com.projectposeidon.johnymuffin.UUIDManager;
 import com.legacyminecraft.poseidon.watchdog.WatchDogThread;
@@ -384,6 +385,74 @@ public class MinecraftServer implements Runnable, ICommandListener {
             this.saveChunks();
         }
         // CraftBukkit end
+
+        // Poseidon Start
+        Map<String, PerformanceStatistic> listenerStatistics = new HashMap<>();
+
+        // Only get the Listener Statistics if the Poseidon Server is not null. Prevents null pointer exceptions.
+        if (Poseidon.getServer() != null && Poseidon.getServer().getConfig().getConfigBoolean("settings.performance-monitoring.listener-reporting.print-statistics-on-shutdown.enabled")) {
+            listenerStatistics = Poseidon.getServer().getSortedListenerPerformance();
+        }
+
+        // Check if the statistics map is not empty
+        if (listenerStatistics != null && !listenerStatistics.isEmpty()) {
+            log.info("[Poseidon] Listener statistics from this session:");
+
+            // Iterate over each listener and log their statistics
+            for (Map.Entry<String, PerformanceStatistic> entry : listenerStatistics.entrySet()) {
+                String listener = entry.getKey();
+                PerformanceStatistic stats = entry.getValue();
+
+                if (stats.getMaxExecutionTime() == 0) {
+                    continue;
+                }
+
+                if (stats != null) {
+                    log.info(String.format("[Poseidon] Listener: %s - Processed %d events, Total Execution Time: %d ms, Avg Time: %d ms",
+                            listener,
+                            stats.getEventCount(),
+                            stats.getTotalExecutionTime(),
+                            stats.getAverageExecutionTime()));
+                } else {
+                    log.warning("[Poseidon] No statistics available for listener: " + listener);
+                }
+            }
+        }
+
+
+        // Check if the statistics map is not empty
+
+        Map<String, PerformanceStatistic> taskStatistics = new HashMap<>();
+
+        // Only get the Task Statistics if the Poseidon Server is not null. Prevents null pointer exceptions.
+        if (Poseidon.getServer() != null && Poseidon.getServer().getConfig().getConfigBoolean("settings.performance-monitoring.listener-reporting.print-statistics-on-shutdown.enabled")) {
+            taskStatistics = Poseidon.getServer().getSortedTaskPerformance();
+        }
+
+        if (taskStatistics != null && !taskStatistics.isEmpty()) {
+            log.info("[Poseidon] Synchronous task statistics from this session:");
+
+            // Iterate over each task and log their statistics
+            for (Map.Entry<String, PerformanceStatistic> entry : taskStatistics.entrySet()) {
+                String task = entry.getKey();
+                PerformanceStatistic stats = entry.getValue();
+
+                if (stats.getMaxExecutionTime() == 0) {
+                    continue;
+                }
+
+                if (stats != null) {
+                    log.info(String.format("[Poseidon] Task: %s - Processed %d events, Total Execution Time: %d ms, Avg Time: %d ms",
+                            task,
+                            stats.getEventCount(),
+                            stats.getTotalExecutionTime(),
+                            stats.getAverageExecutionTime()));
+                } else {
+                    log.warning("[Poseidon] No statistics available for task: " + task);
+                }
+            }
+        }
+        // Poseidon End
     }
 
     public void a() {

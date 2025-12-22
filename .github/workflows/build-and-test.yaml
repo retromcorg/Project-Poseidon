@@ -95,7 +95,7 @@ jobs:
 
       # Step 8: Upload artifact
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.repository.name }}-artifact
           path: target/*.jar
