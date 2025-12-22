@@ -6,87 +6,102 @@ on:
       - main
       - master
 
+permissions:
+  contents: write
+
 jobs:
-  build:
+  build-and-release:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the repository
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Step 2: Set up JDK 1.8
-      - name: Set up JDK 1.8
-        uses: actions/setup-java@v2
+      - name: Set up JDK 8
+        uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: 8
+          distribution: temurin
+          java-version: "8"
+          cache: maven
 
-      # Step 3: Get the version from pom.xml
-      - name: Get the version from pom.xml
+      - name: Get Maven project version
         id: get_version
-        run: echo "PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
+        run: echo "PROJECT_VERSION=$(mvn -q -DforceStdout help:evaluate -Dexpression=project.version)" >> "$GITHUB_ENV"
 
-      # Step 4: Fail if snapshot version
       - name: Fail if snapshot version
         run: |
-          if [[ $PROJECT_VERSION == *"-SNAPSHOT"* ]]; then
-            echo "Snapshot versions are not releasable"
-            exit 0
+          if [[ "$PROJECT_VERSION" == *"-SNAPSHOT"* ]]; then
+            echo "Snapshot versions are not releasable: $PROJECT_VERSION"
+            exit 1
           fi
 
-      # Step 5: Generate custom release version
       - name: Generate Release Version
-        id: release_version
         run: |
           DATE=$(date +'%y%m%d-%H%M')
-          SHA=$(echo $GITHUB_SHA | cut -c1-7)
+          SHA=$(echo "$GITHUB_SHA" | cut -c1-7)
           RELEASE_VERSION="${PROJECT_VERSION}-${DATE}-${SHA}"
-          echo "RELEASE_VERSION=$RELEASE_VERSION" >> $GITHUB_ENV
+          echo "RELEASE_VERSION=$RELEASE_VERSION" >> "$GITHUB_ENV"
+          echo "Release version: $RELEASE_VERSION"
 
-      # Step 6: Create version.properties file
-      - name: Create version.properties file
+      - name: Set Maven version to Release Version (no commit)
+        run: |
+          mvn -B versions:set -DnewVersion="${RELEASE_VERSION}" -DgenerateBackupPoms=false
+
+      - name: Create version.properties
         run: |
           mkdir -p src/main/resources
-          
-          # Application Information
-          APP_NAME=$(mvn help:evaluate -Dexpression=project.name -q -DforceStdout)          
 
-          # Core Metadata
-          echo "version=${{ env.RELEASE_VERSION }}" >> src/main/resources/version.properties
-          echo "build_timestamp=$(date --utc +'%Y-%m-%dT%H:%M:%SZ')" >> src/main/resources/version.properties
-          echo "git_branch=${{ github.ref_name }}" >> src/main/resources/version.properties
-          echo "git_commit=${GITHUB_SHA}" >> src/main/resources/version.properties
-          
-          echo "app_name=${APP_NAME}" >> src/main/resources/version.properties
-          echo "release_version=${{ env.RELEASE_VERSION }}" >> src/main/resources/version.properties
-          echo "maven_version=${{ env.PROJECT_VERSION }}" >> src/main/resources/version.properties
-          
-          # Build Type
-          if [[ "${{ github.ref }}" == "refs/heads/master" || "${{ github.ref }}" == "refs/heads/main" ]]; then
-            BUILD_TYPE="production"
-          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            BUILD_TYPE="pull_request"
-          else
-            BUILD_TYPE="development"
-          fi
-          echo "build_type=${BUILD_TYPE}" >> src/main/resources/version.properties
-          
-          # CI/CD Metadata
-          echo "workflow_name=${{ github.workflow }}" >> src/main/resources/version.properties
-          echo "workflow_run_id=${{ github.run_id }}" >> src/main/resources/version.properties
-          echo "workflow_run_number=${{ github.run_number }}" >> src/main/resources/version.properties
-          
-          # Team or Author Information
-          echo "build_author=${{ github.actor }}" >> src/main/resources/version.properties
+          APP_NAME=$(mvn -q -DforceStdout help:evaluate -Dexpression=project.name)
 
-      # Step 7: Build with Maven
-      - name: Build with Maven
-        run: mvn clean package
+          {
+            echo "version=${RELEASE_VERSION}"
+            echo "build_timestamp=$(date --utc +'%Y-%m-%dT%H:%M:%SZ')"
+            echo "git_branch=${GITHUB_REF_NAME}"
+            echo "git_commit=${GITHUB_SHA}"
+            echo "app_name=${APP_NAME}"
+            echo "release_version=${RELEASE_VERSION}"
+            echo "maven_version=${RELEASE_VERSION}"
 
-      # Step 8: Create GitHub Release
+            if [[ "$GITHUB_REF" == "refs/heads/master" || "$GITHUB_REF" == "refs/heads/main" ]]; then
+              BUILD_TYPE="production"
+            else
+              BUILD_TYPE="development"
+            fi
+            echo "build_type=${BUILD_TYPE}"
+
+            echo "workflow_name=${GITHUB_WORKFLOW}"
+            echo "workflow_run_id=${GITHUB_RUN_ID}"
+            echo "workflow_run_number=${GITHUB_RUN_NUMBER}"
+            echo "build_author=${GITHUB_ACTOR}"
+          } > src/main/resources/version.properties
+
+      - name: Write Maven settings.xml for Nexus auth
+        run: |
+          mkdir -p ~/.m2
+          cat > ~/.m2/settings.xml << 'EOF'
+          <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+            <servers>
+              <server>
+                <id>johnymuffin-nexus</id>
+                <username>${env.NEXUS_USERNAME}</username>
+                <password>${env.NEXUS_PASSWORD}</password>
+              </server>
+            </servers>
+          </settings>
+          EOF
+        env:
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+
+      - name: Build & Deploy to Nexus
+        run: mvn -B -DskipTests clean deploy
+        env:
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+
       - name: Create GitHub Release
-        if: ${{ !endsWith(env.PROJECT_VERSION, '-SNAPSHOT') }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_VERSION }}

@@ -52,6 +52,20 @@
             </snapshots>
         </repository>
     </repositories>
+
+    <distributionManagement>
+        <repository>
+            <id>johnymuffin-nexus</id>
+            <url>https://repository.johnymuffin.com/repository/maven-releases/</url>
+        </repository>
+
+        <snapshotRepository>
+            <id>johnymuffin-nexus</id>
+            <url>https://repository.johnymuffin.com/repository/maven-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+
     <dependencies>
         <!--        <dependency>-->
         <!--            <groupId>org.bukkit</groupId>-->
