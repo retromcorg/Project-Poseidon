@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 public class PoseidonConfig extends Configuration {
     private static PoseidonConfig singleton;
-    private final int configVersion = 6;
+    private final int configVersion = 5;
     private Integer[] treeBlacklistIDs;
 
     public Integer[] getTreeBlacklistIDs() {
@@ -353,9 +353,6 @@ public class PoseidonConfig extends Configuration {
         convertToNewAddress("settings.uuid-fetcher.allow-graceful-uuids.value", "settings.allow-graceful-uuids");
         convertToNewAddress("settings.uuid-fetcher.get.enforce-case-sensitivity.enabled", "settings.use-get-for-uuids.case-sensitive.enabled");
         removeDeprecatedConfig("settings.use-get-for-uuids.case-sensitive.info");
-
-        // 5-6 Conversion
-        this.setProperty("settings.uuid-fetcher.always-use-graceful-uuids.enabled", false);
     }
 
     //Allow any number of string arguments to be passed to this method
