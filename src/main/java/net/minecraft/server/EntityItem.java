@@ -28,7 +28,7 @@ public class EntityItem extends Entity {
         }
         // CraftBukkit end
         // Project Poseidon start - kill ourselves if the item is null
-        if (this.itemStack.id < 0 || Item.byId[this.itemStack.id] == null) {
+        if (this.itemStack.id < 0 ||  this.itemStack.id >= Item.byId.length || Item.byId[this.itemStack.id] == null) {
             this.die();
             MinecraftException e = new MinecraftException("Unknown item id " + this.itemStack.id);
             Bukkit.getLogger().log(Level.WARNING, "Created the EntityItem object with an unknown item: " + this.itemStack, e);
@@ -61,7 +61,7 @@ public class EntityItem extends Entity {
         this.lastTick = currentTick;
         // CraftBukkit end
         // Project Poseidon start - kill ourselves if the item is null
-        if (this.itemStack.id < 0 || Item.byId[this.itemStack.id] == null) {
+        if (this.itemStack.id < 0 || this.itemStack.id >= Item.byId.length || Item.byId[this.itemStack.id] == null) {
             this.b = 6000_174; //TODO: Configurable lifetime of the EntityItem
             this.die();
         }
