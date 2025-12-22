@@ -45,6 +45,30 @@ Historical builds can be found on the [Glass Launcher Jenkins](https://jenkins.g
 
 Please note, download the artifact (JAR) without original in the name, eg. `project-poseidon-1.1.8.jar`.
 
+## Maven Repository & Plugin Development
+
+### Maven Repository
+Project Poseidon releases are published to the Legacy Minecraft Maven repository:
+
+- **Repository:** https://repository.johnymuffin.com/
+- **Browse Poseidon artifacts:**  
+  https://repository.johnymuffin.com/#browse/browse:maven-releases:com%2Flegacyminecraft%2Fposeidon%2Fposeidon-craftbukkit
+
+This repository can be used to depend on Poseidon artifacts directly in your build tooling (e.g. Maven or Gradle) when developing plugins.
+
+### Plugin Development Examples
+Examples demonstrating how to develop plugins for Poseidon using **Maven** and **GitHub Actions** can be found here:
+
+- **Poseidon Plugin Template:**  
+  https://github.com/retromcorg/Poseidon-Plugin-Template
+
+The template includes:
+- A preconfigured Maven project
+- GitHub Actions CI configuration
+- Correct repository and dependency setup for Poseidon plugin development
+- Example code including player listeners and a config system
+
+
 ## Licensing
 CraftBukkit and Bukkit are licensed under GNU General Public License v3.0<br>
 Any future commits to this repository will remain under the same GNU General Public License v3.0<br>
