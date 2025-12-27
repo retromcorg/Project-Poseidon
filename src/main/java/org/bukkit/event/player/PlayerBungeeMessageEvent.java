@@ -4,7 +4,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 /**
- * Thrown when a player recieves a BungeeCord message
+ * Thrown when a client sends a BungeeCord message
  */
 public class PlayerBungeeMessageEvent extends PlayerEvent {
     private byte[] data;

@@ -52,7 +52,7 @@ public class NetServerHandler extends NetHandler implements ICommandListener {
     private int rawConnectionType = 0; //Project Poseidon - Create Variable
     private boolean receivedKeepAlive = false;
     private boolean firePacketEvents;
-    private boolean bungeeMode;
+    private boolean bungeeMode; // Poseidon
     
     private final String msgPlayerLeave;
 
@@ -763,8 +763,10 @@ public class NetServerHandler extends NetHandler implements ICommandListener {
                 this.networkManager.queue(new Packet3Chat(line));
             }
             packet = null;
-        } else if (packet instanceof Packet249BungeePayload && !this.bungeeMode) { // Poseidon
+            // Poseidon start
+        } else if (packet instanceof Packet249BungeePayload && !this.bungeeMode) {
             packet = null;
+            // Poseidon end
         } else if (packet.k == true) {
             // Reroute all low-priority packets through to compression thread.
             ChunkCompressionThread.sendPacket(this.player, packet);

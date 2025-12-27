@@ -245,7 +245,7 @@ public abstract class Packet {
 
         // Poseidon start - custom packets
         a(249, true, true, Packet249BungeePayload.class);
-        packetClassToIdMap.put(ArtificialPacket53BlockChange.class, 53); //Poseidon - Artificial Block Change Packet
+        packetClassToIdMap.put(ArtificialPacket53BlockChange.class, 53);
         // Poseidon end
         
         e = new HashMap();
