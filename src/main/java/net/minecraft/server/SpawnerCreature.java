@@ -11,136 +11,141 @@ import java.util.Set;
 
 public final class SpawnerCreature {
 
-    private static Set b = new HashSet();
-    protected static final Class[] a = new Class[] { EntitySpider.class, EntityZombie.class, EntitySkeleton.class};
+    /**
+     * Chunks around players that are eligible for natural spawns this tick.
+     */
+    private static final Set<ChunkCoordIntPair> candidateChunks = new HashSet<>();
 
-    public SpawnerCreature() {}
+    /**
+     * Mob classes used when attempting to spawn a monster near a sleeping player.
+     */
+    private static final Class[] SLEEP_SPAWNER_MOBS = new Class[]{EntitySpider.class, EntityZombie.class, EntitySkeleton.class};
 
-    protected static ChunkPosition a(World world, int i, int j) {
-        int k = i + world.random.nextInt(16);
-        int l = world.random.nextInt(128);
-        int i1 = j + world.random.nextInt(16);
-
-        return new ChunkPosition(k, l, i1);
+    public SpawnerCreature() {
     }
 
-    public static final int spawnEntities(World world, boolean flag, boolean flag1) {
-        if (!flag && !flag1) {
+    public static int spawnEntities(World world, boolean allowHostiles, boolean allowPeaceful) {
+        if (!allowHostiles && !allowPeaceful) {
             return 0;
-        } else {
-            b.clear();
+        }
 
-            int i;
-            int j;
+        candidateChunks.clear();
 
-            for (i = 0; i < world.players.size(); ++i) {
-                EntityHuman entityhuman = (EntityHuman) world.players.get(i);
-                int k = MathHelper.floor(entityhuman.locX / 16.0D);
+        // Build candidate chunk set around each player (square of radius 8 chunks)
+        for (int p = 0; p < world.players.size(); ++p) {
+            EntityHuman player = (EntityHuman) world.players.get(p);
+            int playerChunkX = MathHelper.floor(player.locX / 16.0D);
+            int playerChunkZ = MathHelper.floor(player.locZ / 16.0D);
+            final int radius = 8;
 
-                j = MathHelper.floor(entityhuman.locZ / 16.0D);
-                byte b0 = 8;
-
-                for (int l = -b0; l <= b0; ++l) {
-                    for (int i1 = -b0; i1 <= b0; ++i1) {
-                        b.add(new ChunkCoordIntPair(l + k, i1 + j));
-                    }
+            for (int dx = -radius; dx <= radius; ++dx) {
+                for (int dz = -radius; dz <= radius; ++dz) {
+                    candidateChunks.add(new ChunkCoordIntPair(playerChunkX + dx, playerChunkZ + dz));
                 }
             }
+        }
 
-            i = 0;
-            ChunkCoordinates chunkcoordinates = world.getSpawn();
-            EnumCreatureType[] aenumcreaturetype = EnumCreatureType.values();
+        int spawnedTotal = 0;
+        ChunkCoordinates worldSpawn = world.getSpawn();
+        EnumCreatureType[] creatureTypes = EnumCreatureType.values();
 
-            j = aenumcreaturetype.length;
+        for (EnumCreatureType type : creatureTypes) {
 
-            for (int j1 = 0; j1 < j; ++j1) {
-                EnumCreatureType enumcreaturetype = aenumcreaturetype[j1];
+            // Skip if the type doesn't match peaceful/hostile toggles
+            if ((type.isPeaceful() && !allowPeaceful) || (!type.isPeaceful() && !allowHostiles)) {
+                continue;
+            }
 
-                if ((!enumcreaturetype.d() || flag1) && (enumcreaturetype.d() || flag) && world.a(enumcreaturetype.a()) <= enumcreaturetype.b() * b.size() / 256) {
-                    Iterator iterator = b.iterator();
+            // Skip if the global density cap is exceeded
+            if (world.a(type.getBaseClass()) > type.getMaxCount() * candidateChunks.size() / 256) {
+                continue;
+            }
 
-                    label113:
-                    while (iterator.hasNext()) {
-                        ChunkCoordIntPair chunkcoordintpair = (ChunkCoordIntPair) iterator.next();
-                        BiomeBase biomebase = world.getWorldChunkManager().a(chunkcoordintpair);
-                        List list = biomebase.a(enumcreaturetype);
+            Iterator<ChunkCoordIntPair> it = candidateChunks.iterator();
 
-                        if (list != null && !list.isEmpty()) {
-                            int k1 = 0;
+            // Walk all candidate chunks for this creature type
+            chunksLoop:
+            while (it.hasNext()) {
+                ChunkCoordIntPair chunkPos = it.next();
+                BiomeBase biome = world.getWorldChunkManager().a(chunkPos);
+                List<BiomeMeta> spawnEntries = biome.a(type); // weighted list of mobs for the biome+type
 
-                            BiomeMeta biomemeta;
+                if (spawnEntries == null || spawnEntries.isEmpty()) {
+                    continue;
+                }
 
-                            for (Iterator iterator1 = list.iterator(); iterator1.hasNext(); k1 += biomemeta.b) {
-                                biomemeta = (BiomeMeta) iterator1.next();
-                            }
+                // Pick BiomeMeta via weight
+                int totalWeight = 0;
+                for (BiomeMeta entry : spawnEntries) totalWeight += entry.b;
 
-                            int l1 = world.random.nextInt(k1);
+                int rnd = world.random.nextInt(totalWeight);
+                BiomeMeta chosen = spawnEntries.get(0);
+                for (BiomeMeta entry : spawnEntries) {
+                    rnd -= entry.b;
+                    if (rnd < 0) {
+                        chosen = entry;
+                        break;
+                    }
+                }
 
-                            biomemeta = (BiomeMeta) list.get(0);
-                            Iterator iterator2 = list.iterator();
+                // Pick a random position inside the chunk area
+                ChunkPosition pos = pickRandomBlockInChunkArea(world, chunkPos.x * 16, chunkPos.z * 16);
+                int baseX = pos.x;
+                int baseY = pos.y;
+                int baseZ = pos.z;
 
-                            while (iterator2.hasNext()) {
-                                BiomeMeta biomemeta1 = (BiomeMeta) iterator2.next();
+                if (!world.e(baseX, baseY, baseZ) && world.getMaterial(baseX, baseY, baseZ) == type.getSpawnMaterial()) {
+                    int groupSpawned = 0;
 
-                                l1 -= biomemeta1.b;
-                                if (l1 < 0) {
-                                    biomemeta = biomemeta1;
-                                    break;
-                                }
-                            }
+                    // Up to 3 group attempts
+                    for (int groupAttempt = 0; groupAttempt < 3; ++groupAttempt) {
+                        int x = baseX;
+                        int y = baseY;
+                        int z = baseZ;
+                        final byte spread = 6;
 
-                            ChunkPosition chunkposition = a(world, chunkcoordintpair.x * 16, chunkcoordintpair.z * 16);
-                            int i2 = chunkposition.x;
-                            int j2 = chunkposition.y;
-                            int k2 = chunkposition.z;
+                        // Try up to 4 mobs per group, with small random offsets
+                        for (int tries = 0; tries < 4; ++tries) {
+                            x += world.random.nextInt(spread) - world.random.nextInt(spread);
+                            y += world.random.nextInt(1) - world.random.nextInt(1);
+                            z += world.random.nextInt(spread) - world.random.nextInt(spread);
 
-                            if (!world.e(i2, j2, k2) && world.getMaterial(i2, j2, k2) == enumcreaturetype.c()) {
-                                int l2 = 0;
+                            if (canSpawnHere(type, world, x, y, z)) {
+                                float fx = x + 0.5F;
+                                float fy = y;
+                                float fz = z + 0.5F;
 
-                                for (int i3 = 0; i3 < 3; ++i3) {
-                                    int j3 = i2;
-                                    int k3 = j2;
-                                    int l3 = k2;
-                                    byte b1 = 6;
+                                // Keep spawns away from other players (24 block radius)
+                                if (world.a(fx, fy, fz, 24.0D) == null) {
+                                    float dx = fx - worldSpawn.x;
+                                    float dy = fy - worldSpawn.y;
+                                    float dz = fz - worldSpawn.z;
+                                    float dist2 = dx * dx + dy * dy + dz * dz;
 
-                                    for (int i4 = 0; i4 < 4; ++i4) {
-                                        j3 += world.random.nextInt(b1) - world.random.nextInt(b1);
-                                        k3 += world.random.nextInt(1) - world.random.nextInt(1);
-                                        l3 += world.random.nextInt(b1) - world.random.nextInt(b1);
-                                        if (a(enumcreaturetype, world, j3, k3, l3)) {
-                                            float f = (float) j3 + 0.5F;
-                                            float f1 = (float) k3;
-                                            float f2 = (float) l3 + 0.5F;
+                                    // Don’t spawn too close to world spawn (>= 24 blocks -> 24^2 = 576)
+                                    if (dist2 >= 576.0F) {
+                                        EntityLiving mob;
 
-                                            if (world.a((double) f, (double) f1, (double) f2, 24.0D) == null) {
-                                                float f3 = f - (float) chunkcoordinates.x;
-                                                float f4 = f1 - (float) chunkcoordinates.y;
-                                                float f5 = f2 - (float) chunkcoordinates.z;
-                                                float f6 = f3 * f3 + f4 * f4 + f5 * f5;
+                                        try {
+                                            mob = (EntityLiving) chosen.a.getConstructor(World.class).newInstance(world);
+                                        } catch (Exception ex) {
+                                            ex.printStackTrace();
+                                            return spawnedTotal;
+                                        }
 
-                                                if (f6 >= 576.0F) {
-                                                    EntityLiving entityliving;
+                                        mob.setPositionRotation(fx, fy, fz, world.random.nextFloat() * 360.0F, 0.0F);
 
-                                                    try {
-                                                        entityliving = (EntityLiving) biomemeta.a.getConstructor(new Class[] { World.class}).newInstance(new Object[] { world});
-                                                    } catch (Exception exception) {
-                                                        exception.printStackTrace();
-                                                        return i;
-                                                    }
+                                        // d() = canSpawn() check
+                                        if (mob.d()) {
+                                            ++groupSpawned;
+                                            world.addEntity(mob, SpawnReason.NATURAL);
+                                            applyPostSpawnExtras(mob, world, fx, fy, fz);
 
-                                                    entityliving.setPositionRotation((double) f, (double) f1, (double) f2, world.random.nextFloat() * 360.0F, 0.0F);
-                                                    if (entityliving.d()) {
-                                                        ++l2;
-                                                        // CraftBukkit - added a reason for spawning this creature
-                                                        world.addEntity(entityliving, SpawnReason.NATURAL);
-                                                        a(entityliving, world, f, f1, f2);
-                                                        if (l2 >= entityliving.l()) {
-                                                            continue label113;
-                                                        }
-                                                    }
-
-                                                    i += l2;
-                                                }
+                                            // l() = getMaxGroup() clamp for this entity
+                                            if (groupSpawned >= mob.l()) {
+                                                // Move to next chunk if we filled a group here
+                                                spawnedTotal += groupSpawned;
+                                                continue chunksLoop;
                                             }
                                         }
                                     }
@@ -148,18 +153,42 @@ public final class SpawnerCreature {
                             }
                         }
                     }
+
+                    spawnedTotal += groupSpawned;
                 }
             }
 
-            return i;
+        }
+
+        return spawnedTotal;
+    }
+
+
+    protected static ChunkPosition pickRandomBlockInChunkArea(World world, int i, int j) {
+        int k = i + world.random.nextInt(16);
+        int l = world.random.nextInt(128);
+        int i1 = j + world.random.nextInt(16);
+
+        return new ChunkPosition(k, l, i1);
+    }
+
+    /**
+     * Block/material + headroom checks to determine if an entity type can spawn at (x,y,z).
+     */
+    private static boolean canSpawnHere(EnumCreatureType type, World world, int x, int y, int z) {
+        if (type.getSpawnMaterial() == Material.WATER) {
+            // Water creatures: must be in liquid, with air above
+            return world.getMaterial(x, y, z).isLiquid() && !world.e(x, y + 1, z);
+        } else {
+            // Land creatures: solid block below, current block + head clear, and not liquid
+            return world.e(x, y - 1, z)
+                    && !world.e(x, y, z)
+                    && !world.getMaterial(x, y, z).isLiquid()
+                    && !world.e(x, y + 1, z);
         }
     }
 
-    private static boolean a(EnumCreatureType enumcreaturetype, World world, int i, int j, int k) {
-        return enumcreaturetype.c() == Material.WATER ? world.getMaterial(i, j, k).isLiquid() && !world.e(i, j + 1, k) : world.e(i, j - 1, k) && !world.e(i, j, k) && !world.getMaterial(i, j, k).isLiquid() && !world.e(i, j + 1, k);
-    }
-
-    private static void a(EntityLiving entityliving, World world, float f, float f1, float f2) {
+    private static void applyPostSpawnExtras(EntityLiving entityliving, World world, float f, float f1, float f2) {
         if (entityliving instanceof EntitySpider && world.random.nextInt(100) == 0) {
             EntitySkeleton entityskeleton = new EntitySkeleton(world);
 
@@ -172,85 +201,115 @@ public final class SpawnerCreature {
         }
     }
 
-    public static boolean a(World world, List list) {
-        boolean flag = false;
+    public static boolean spawnSleepThreats(World world, List<EntityHuman> listPlayers) {
+        boolean anySpawned = false;
         Pathfinder pathfinder = new Pathfinder(world);
-        Iterator iterator = list.iterator();
 
-        while (iterator.hasNext()) {
-            EntityHuman entityhuman = (EntityHuman) iterator.next();
-            Class[] aclass = a;
+        for (Object o : listPlayers) {
+            EntityHuman player = (EntityHuman) o;
+            Class<?>[] candidates = SLEEP_SPAWNER_MOBS;
 
-            if (aclass != null && aclass.length != 0) {
-                boolean flag1 = false;
+            if (candidates == null || candidates.length == 0) continue;
 
-                for (int i = 0; i < 20 && !flag1; ++i) {
-                    int j = MathHelper.floor(entityhuman.locX) + world.random.nextInt(32) - world.random.nextInt(32);
-                    int k = MathHelper.floor(entityhuman.locZ) + world.random.nextInt(32) - world.random.nextInt(32);
-                    int l = MathHelper.floor(entityhuman.locY) + world.random.nextInt(16) - world.random.nextInt(16);
+            boolean spawnedNearThisPlayer = false;
 
-                    if (l < 1) {
-                        l = 1;
-                    } else if (l > 128) {
-                        l = 128;
-                    }
+            // Up to 20 attempts per player
+            for (int attempt = 0; attempt < 20 && !spawnedNearThisPlayer; ++attempt) {
+                int x = MathHelper.floor(player.locX) + world.random.nextInt(32) - world.random.nextInt(32);
+                int z = MathHelper.floor(player.locZ) + world.random.nextInt(32) - world.random.nextInt(32);
+                int y = MathHelper.floor(player.locY) + world.random.nextInt(16) - world.random.nextInt(16);
 
-                    int i1 = world.random.nextInt(aclass.length);
+                if (y < 1) y = 1;
+                else if (y > 128) y = 128;
 
-                    int j1;
+                // Find solid ground
+                int groundY;
+                for (groundY = y; groundY > 2 && !world.e(x, groundY - 1, z); --groundY) { /* descend */ }
 
-                    for (j1 = l; j1 > 2 && !world.e(j, j1 - 1, k); --j1) {
-                        ;
-                    }
+                // Nudge upward until a valid spawn block is found (or give up)
+                while (!canSpawnHere(EnumCreatureType.MONSTER, world, x, groundY, z) && groundY < y + 16 && groundY < 128) {
+                    ++groundY;
+                }
 
-                    while (!a(EnumCreatureType.MONSTER, world, j, j1, k) && j1 < l + 16 && j1 < 128) {
-                        ++j1;
-                    }
+                if (groundY >= y + 16 || groundY >= 128) {
+                    continue;
+                }
 
-                    if (j1 < l + 16 && j1 < 128) {
-                        float f = (float) j + 0.5F;
-                        float f1 = (float) j1;
-                        float f2 = (float) k + 0.5F;
+                float fx = x + 0.5F;
+                float fy = groundY;
+                float fz = z + 0.5F;
 
-                        EntityLiving entityliving;
+                // Pick a random monster type from SLEEP_MONSTERS
+                int pick = world.random.nextInt(candidates.length);
+                EntityLiving mob;
+                try {
+                    mob = (EntityLiving) candidates[pick].getConstructor(World.class).newInstance(world);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    return anySpawned;
+                }
 
-                        try {
-                            entityliving = (EntityLiving) aclass[i1].getConstructor(new Class[] { World.class}).newInstance(new Object[] { world});
-                        } catch (Exception exception) {
-                            exception.printStackTrace();
-                            return flag;
-                        }
+                mob.setPositionRotation(fx, fy, fz, world.random.nextFloat() * 360.0F, 0.0F);
 
-                        entityliving.setPositionRotation((double) f, (double) f1, (double) f2, world.random.nextFloat() * 360.0F, 0.0F);
-                        if (entityliving.d()) {
-                            PathEntity pathentity = pathfinder.a(entityliving, entityhuman, 32.0F);
+                if (mob.d()) {
+                    // Must be able to path to the player
+                    PathEntity path = pathfinder.a(mob, player, 32.0F);
+                    if (path != null && path.a > 1) {
+                        PathPoint firstStep = path.c();
+                        if (Math.abs(firstStep.a - player.locX) < 1.5D
+                                && Math.abs(firstStep.c - player.locZ) < 1.5D
+                                && Math.abs(firstStep.b - player.locY) < 1.5D) {
 
-                            if (pathentity != null && pathentity.a > 1) {
-                                PathPoint pathpoint = pathentity.c();
+                            // Try bed-safe placement; fall back to current choice
+                            ChunkCoordinates bed = BlockBed.f(world,
+                                    MathHelper.floor(player.locX),
+                                    MathHelper.floor(player.locY),
+                                    MathHelper.floor(player.locZ), 1);
 
-                                if (Math.abs((double) pathpoint.a - entityhuman.locX) < 1.5D && Math.abs((double) pathpoint.c - entityhuman.locZ) < 1.5D && Math.abs((double) pathpoint.b - entityhuman.locY) < 1.5D) {
-                                    ChunkCoordinates chunkcoordinates = BlockBed.f(world, MathHelper.floor(entityhuman.locX), MathHelper.floor(entityhuman.locY), MathHelper.floor(entityhuman.locZ), 1);
+                            if (bed == null) bed = new ChunkCoordinates(x, groundY + 1, z);
 
-                                    if (chunkcoordinates == null) {
-                                        chunkcoordinates = new ChunkCoordinates(j, j1 + 1, k);
-                                    }
+                            mob.setPositionRotation(bed.x + 0.5F, bed.y, bed.z + 0.5F, 0.0F, 0.0F);
+                            world.addEntity(mob, SpawnReason.BED);
+                            applyPostSpawnExtras(mob, world, bed.x + 0.5F, bed.y, bed.z + 0.5F);
 
-                                    entityliving.setPositionRotation((double) ((float) chunkcoordinates.x + 0.5F), (double) chunkcoordinates.y, (double) ((float) chunkcoordinates.z + 0.5F), 0.0F, 0.0F);
-                                    // CraftBukkit - added a reason for spawning this creature
-                                    world.addEntity(entityliving, SpawnReason.BED);
-                                    a(entityliving, world, (float) chunkcoordinates.x + 0.5F, (float) chunkcoordinates.y, (float) chunkcoordinates.z + 0.5F);
-                                    entityhuman.a(true, false, false);
-                                    entityliving.Q();
-                                    flag = true;
-                                    flag1 = true;
-                                }
-                            }
+                            // Wake the player (vanilla flags)
+                            player.a(true, false, false);
+                            mob.Q(); // finalize spawn behaviors
+
+                            anySpawned = true;
+                            spawnedNearThisPlayer = true;
                         }
                     }
                 }
             }
         }
 
-        return flag;
+        return anySpawned;
     }
+
+    /* ------------------------------------------------------------
+     * Compatibility
+     * ------------------------------------------------------------ */
+
+    // Old: protected static ChunkPosition a(World, int, int)
+    protected static ChunkPosition a(World world, int i, int j) {
+        return pickRandomBlockInChunkArea(world, i, j);
+    }
+
+    // Old: private static boolean a(EnumCreatureType, World, int, int, int)
+    private static boolean a(EnumCreatureType type, World world, int x, int y, int z) {
+        return canSpawnHere(type, world, x, y, z);
+    }
+
+    // Old: private static void a(EntityLiving, World, float, float, float)
+    private static void a(EntityLiving entity, World world, float x, float y, float z) {
+        applyPostSpawnExtras(entity, world, x, y, z);
+    }
+
+    // Old: public static boolean a(World, List)
+    public static boolean a(World world, List list) {
+        return spawnSleepThreats(world, list);
+
+    }
+
 }

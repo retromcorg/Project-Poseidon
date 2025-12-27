@@ -1,10 +1,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.bukkit</groupId>
-    <artifactId>project-poseidon</artifactId>
+
+    <groupId>com.legacyminecraft.poseidon</groupId>
+    <artifactId>poseidon-craftbukkit</artifactId>
+    <version>1.1.11-SNAPSHOT</version>
+
     <packaging>jar</packaging>
-    <version>1.1.10</version>
+
     <name>Project Poseidon</name>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -52,6 +55,20 @@
             </snapshots>
         </repository>
     </repositories>
+
+    <distributionManagement>
+        <repository>
+            <id>johnymuffin-nexus</id>
+            <url>https://repository.johnymuffin.com/repository/maven-releases/</url>
+        </repository>
+
+        <snapshotRepository>
+            <id>johnymuffin-nexus</id>
+            <url>https://repository.johnymuffin.com/repository/maven-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+
     <dependencies>
         <!--        <dependency>-->
         <!--            <groupId>org.bukkit</groupId>-->

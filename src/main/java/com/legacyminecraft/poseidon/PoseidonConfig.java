@@ -81,6 +81,9 @@ public class PoseidonConfig extends Configuration {
         generateConfigOption("settings.uuid-fetcher.allow-graceful-uuids.value", true);
         generateConfigOption("settings.uuid-fetcher.allow-graceful-uuids.info", "This setting means offline UUIDs are generated for players who don't have a Mojang UUID. This is useful for cracked or semi-cracked servers.");
 
+        generateConfigOption("settings.uuid-fetcher.always-use-graceful-uuids.enabled", false);
+        generateConfigOption("settings.uuid-fetcher.always-use-graceful-uuids.info", "Will always use offline UUIDs. Useful if you need the server to run completely offline.");
+
         // Setting to automatically add a . prefix to cracked account usernames
         generateConfigOption("settings.cracked-username-prefix.enabled", false);
         generateConfigOption("settings.cracked-username-prefix.info", "This setting automatically adds a . prefix to cracked account usernames to prevent username conflicts with premium accounts.");
@@ -350,8 +353,6 @@ public class PoseidonConfig extends Configuration {
         convertToNewAddress("settings.uuid-fetcher.allow-graceful-uuids.value", "settings.allow-graceful-uuids");
         convertToNewAddress("settings.uuid-fetcher.get.enforce-case-sensitivity.enabled", "settings.use-get-for-uuids.case-sensitive.enabled");
         removeDeprecatedConfig("settings.use-get-for-uuids.case-sensitive.info");
-
-
     }
 
     //Allow any number of string arguments to be passed to this method
