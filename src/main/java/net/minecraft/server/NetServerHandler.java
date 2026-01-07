@@ -52,6 +52,7 @@ public class NetServerHandler extends NetHandler implements ICommandListener {
     private int rawConnectionType = 0; //Project Poseidon - Create Variable
     private boolean receivedKeepAlive = false;
     private boolean firePacketEvents;
+    private boolean bungeeMode; // Poseidon
     
     private final String msgPlayerLeave;
 
@@ -73,6 +74,7 @@ public class NetServerHandler extends NetHandler implements ICommandListener {
         // CraftBukkit start
         this.server = minecraftserver.server;
         this.firePacketEvents = PoseidonConfig.getInstance().getBoolean("settings.packet-events.enabled", false); //Poseidon
+        this.bungeeMode = PoseidonConfig.getInstance().getBoolean("settings.bungeecord.bungee-mode.enable", false); // Poseidon
         this.msgPlayerLeave = PoseidonConfig.getInstance().getConfigString("message.player.leave");
     }
 
@@ -761,6 +763,10 @@ public class NetServerHandler extends NetHandler implements ICommandListener {
                 this.networkManager.queue(new Packet3Chat(line));
             }
             packet = null;
+            // Poseidon start
+        } else if (packet instanceof Packet249BungeePayload && !this.bungeeMode) {
+            packet = null;
+            // Poseidon end
         } else if (packet.k == true) {
             // Reroute all low-priority packets through to compression thread.
             ChunkCompressionThread.sendPacket(this.player, packet);
@@ -1206,4 +1212,15 @@ public class NetServerHandler extends NetHandler implements ICommandListener {
     public boolean c() {
         return true;
     }
+
+    // Poseidon start - BungeeCord message packet
+    @Override
+    public void handleBungeePayload(Packet249BungeePayload packet) {
+        if (this.bungeeMode) {
+            this.server.getPluginManager().callEvent(new PlayerBungeeMessageEvent(server.getPlayer(this.player), packet.data));
+        } else {
+            super.handleBungeePayload(packet);
+        }
+    }
+    // Poseidon end
 }
