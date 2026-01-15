@@ -15,6 +15,9 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 
 import java.util.Iterator;
 import java.util.List;
+//Poseidon start
+import java.util.UUID;
+//Poseidon end
 
 // CraftBukkit start
 // CraftBukkit end
@@ -43,6 +46,9 @@ public abstract class EntityHuman extends EntityLiving {
     public boolean fauxSleeping;
     public String spawnWorld = "";
     // CraftBukkit end
+    // Poseidon start
+    protected UUID uniqueId;
+    // Poseidon end
     public ChunkCoordinates A;
     public int sleepTicks; // CraftBukkit - private -> public
     public float B;
@@ -913,4 +919,13 @@ public abstract class EntityHuman extends EntityLiving {
             this.E = true;
         }
     }
+
+    //Poseidon start
+    public UUID getUniqueId() {
+        if (this.uniqueId == null) {
+            this.uniqueId = UUID.nameUUIDFromBytes(this.name.getBytes());
+        }
+        return this.uniqueId;
+    }
+    //Poseidon end
 }
