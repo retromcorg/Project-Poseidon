@@ -1,9 +1,18 @@
 package net.minecraft.server;
 
+import com.legacyminecraft.poseidon.PoseidonConfig;
+import com.legacyminecraft.poseidon.level.ChunkCompressionType;
+import net.jpountz.lz4.LZ4BlockInputStream;
+import net.jpountz.lz4.LZ4BlockOutputStream;
+import org.tukaani.xz.LZMA2Options;
+import org.tukaani.xz.XZInputStream;
+import org.tukaani.xz.XZOutputStream;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 import java.util.zip.InflaterInputStream;
 
 public class RegionFile {
@@ -16,8 +25,15 @@ public class RegionFile {
     private ArrayList f;
     private int g;
     private long h = 0L;
+    // Poseidon - Server chunk compression type.
+    private static ChunkCompressionType chunkCompressionType;
 
     public RegionFile(File file1) {
+        if(chunkCompressionType == null) {
+            String typeString = PoseidonConfig.getInstance().getConfigString("world.settings.compression.level");
+            chunkCompressionType = ChunkCompressionType.fromName(typeString);
+        }
+
         this.b = file1;
         this.b("REGION LOAD " + this.b);
         this.g = 0;
@@ -89,7 +105,13 @@ public class RegionFile {
         return i;
     }
 
-    private void a(String s) {}
+    private void a(String s) {
+        // Poseidon start - Allow printing region debug information. Useful for developers (and nerds).
+        if(PoseidonConfig.getInstance().getConfigBoolean("developer.region-transaction-logs.enable", false)) {
+            MinecraftServer.log.info(s);
+        }
+        // Poseidon end
+    }
 
     private void b(String s) {
         this.a(s + "\n");
@@ -132,24 +154,31 @@ public class RegionFile {
                             this.b("READ", i, j, "invalid length: " + j1 + " > 4096 * " + i1);
                             return null;
                         } else {
+                            // Poseidon start - More compression formats
                             byte b0 = this.c.readByte();
-                            byte[] abyte;
-                            DataInputStream datainputstream;
+                            byte[] abyte = new byte[j1 - 1];
+                            this.c.read(abyte);
 
-                            if (b0 == 1) {
-                                abyte = new byte[j1 - 1];
-                                this.c.read(abyte);
-                                datainputstream = new DataInputStream(new GZIPInputStream(new ByteArrayInputStream(abyte)));
-                                return datainputstream;
-                            } else if (b0 == 2) {
-                                abyte = new byte[j1 - 1];
-                                this.c.read(abyte);
-                                datainputstream = new DataInputStream(new InflaterInputStream(new ByteArrayInputStream(abyte)));
-                                return datainputstream;
+                            DataInputStream datainputstream;
+                            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(abyte);
+
+                            if (b0 == ChunkCompressionType.NONE.getId()) {
+                                datainputstream = new DataInputStream(byteArrayInputStream);
+                            } else if (b0 == ChunkCompressionType.GZIP.getId()) {
+                                datainputstream = new DataInputStream(new GZIPInputStream(byteArrayInputStream));
+                            } else if (b0 == ChunkCompressionType.DEFLATE.getId()) {
+                                datainputstream = new DataInputStream(new InflaterInputStream(byteArrayInputStream));
+                            } else if (b0 == ChunkCompressionType.LZ4.getId()) {
+                                datainputstream = new DataInputStream(new LZ4BlockInputStream(byteArrayInputStream));
+                            } else if (b0 == ChunkCompressionType.XZ.getId()) {
+                                datainputstream = new DataInputStream(new XZInputStream(byteArrayInputStream));
                             } else {
                                 this.b("READ", i, j, "unknown version " + b0);
                                 return null;
                             }
+
+                            return datainputstream;
+                            // Poseidon end
                         }
                     }
                 }
@@ -161,7 +190,33 @@ public class RegionFile {
     }
 
     public DataOutputStream b(int i, int j) {
-        return this.d(i, j) ? null : new DataOutputStream(new DeflaterOutputStream(new ChunkBuffer(this, i, j)));
+        // Poseidon start - Allow saving in more formats
+        if(this.d(i, j)) { // Check if chunk is in bounds.
+            return null;
+        } else {
+            ChunkBuffer chunkBuffer = new ChunkBuffer(this, i, j);
+
+            try {
+                switch (chunkCompressionType) {
+                    case NONE:
+                        return new DataOutputStream(chunkBuffer);
+                    case GZIP:
+                        return new DataOutputStream(new GZIPOutputStream(chunkBuffer));
+                    case DEFLATE:
+                        return new DataOutputStream(new DeflaterOutputStream(chunkBuffer));
+                    case LZ4:
+                        return new DataOutputStream(new LZ4BlockOutputStream(chunkBuffer));
+                    case XZ:
+                        return new DataOutputStream(new XZOutputStream(chunkBuffer, new LZMA2Options(1)));
+                    default:
+                        return null;
+                }
+            } catch (IOException ex) {
+                return null;
+            }
+
+        }
+        // Poseidon end
     }
 
     protected synchronized void a(int i, int j, byte[] abyte, int k) {
@@ -244,7 +299,9 @@ public class RegionFile {
         this.b(" " + i);
         this.c.seek((long) (i * 4096));
         this.c.writeInt(j + 1);
-        this.c.writeByte(2);
+        // Poseidon start - Write correct compression format to file.
+        this.c.writeByte(chunkCompressionType.getId());
+        // Poseidon end
         this.c.write(abyte, 0, j);
     }
 
