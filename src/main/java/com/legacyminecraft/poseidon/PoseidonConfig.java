@@ -192,6 +192,9 @@ public class PoseidonConfig extends Configuration {
         generateConfigOption("settings.bungeecord.bungee-mode.kick-message", "You must connect through BungeeCord to join this server!");
         generateConfigOption("settings.bungeecord.bungee-mode.info", "Only allows connections via BungeeCord to join. Includes optional custom kick message for players not using BungeeCord.");
 
+        //HAProxy
+        generateConfigOption("settings.haproxy-protocol", false);
+
         //Modded Jar Support
         generateConfigOption("settings.support.modloader.enable", false);
         generateConfigOption("settings.support.modloader.info", "EXPERIMENTAL support for ModloaderMP.");
