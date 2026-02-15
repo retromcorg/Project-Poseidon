@@ -29,8 +29,8 @@ import java.util.concurrent.ConcurrentMap;
 public class CraftWorld implements World {
     private final WorldServer world;
     private Environment environment;
-    private final CraftServer server = (CraftServer)Bukkit.getServer();
 //    private ConcurrentMap<Integer, CraftChunk> unloadedChunks = new MapMaker().weakValues().makeMap();
+    private final CraftServer server = (CraftServer)Bukkit.getServer();
     private final ChunkGenerator generator;
     private final List<BlockPopulator> populators = new ArrayList<BlockPopulator>();
 
