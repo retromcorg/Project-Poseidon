@@ -1,5 +1,6 @@
 package net.minecraft.server;
 
+import com.legacyminecraft.poseidon.PoseidonConfig;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.BlockState;
@@ -452,6 +453,11 @@ public class World implements IBlockAccess {
             Block block = Block.byId[this.getTypeId(i, j, k)];
 
             if (block != null) {
+                // Poseidon start
+                if (block instanceof BlockFurnace && PoseidonConfig.getInstance().getBoolean("world.settings.block-pistons-pushing-furnaces.enabled", true)) {
+                    System.out.println("[Poseidon] A piston furnace crash attempt occurred at " + i + " " + j + " " + k + " in " + this.getWorld().getName());
+                    return;
+                }
                 // CraftBukkit start
                 CraftWorld world = ((WorldServer) this).getWorld();
                 if (world != null) {
