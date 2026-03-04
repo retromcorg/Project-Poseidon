@@ -1,4 +1,4 @@
-package xyz.webmc.utils;
+package com.legacyminecraft.poseidon.util;
 
 import java.io.EOFException;
 import java.io.IOException;

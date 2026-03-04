@@ -7,7 +7,7 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.HashMap;
 
-import xyz.webmc.utils.HAProxyV2;
+import com.legacyminecraft.poseidon.util.HAProxyV2;
 
 class NetworkAcceptThread extends Thread {
 
