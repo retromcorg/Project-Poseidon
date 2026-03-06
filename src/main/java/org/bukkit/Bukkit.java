@@ -110,6 +110,8 @@ public final class Bukkit {
         return server.getPlayer(name);
     }
 
+    public static Player getPlayer(UUID uuid) {return server.getPlayer(uuid);}
+
     public static List<Player> matchPlayer(String name) {
         return server.matchPlayer(name);
     }
