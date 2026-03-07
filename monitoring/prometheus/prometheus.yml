@@ -1,0 +1,19 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  - job_name: project-poseidon
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - poseidon:9464
+        labels:
+          source: docker-compose
+          server: local-beta-server
+      - targets:
+          - host.docker.internal:9464
+          - 172.17.0.1:9464
+        labels:
+          source: host-network-fallback
+          server: local-beta-server
