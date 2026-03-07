@@ -1,4 +1,4 @@
-global:
+global: # Locally these values are fine but we tipically increase this to 30s if it get's heavy on the server
   scrape_interval: 5s
   evaluation_interval: 5s
 

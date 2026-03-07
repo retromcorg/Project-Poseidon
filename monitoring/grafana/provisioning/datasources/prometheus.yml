@@ -7,4 +7,4 @@ datasources:
     access: proxy
     url: http://prometheus:9090
     isDefault: true
-    editable: true
+    editable: true # We can probably set this to false in prod to prevent mishaps
