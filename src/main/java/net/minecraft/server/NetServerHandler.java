@@ -26,6 +26,7 @@ import org.bukkit.event.player.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 // CraftBukkit start
@@ -757,7 +758,11 @@ public class NetServerHandler extends NetHandler implements ICommandListener {
             this.player.compassTarget = new Location(this.getPlayer().getWorld(), packet6.x, packet6.y, packet6.z);
         } else if (packet instanceof Packet3Chat) {
             String message = ((Packet3Chat) packet).message;
-            for (final String line : TextWrapper.wrapText(message)) {
+            for (String line : TextWrapper.wrapText(message)) {
+                if (line.length() > 119) {
+                    server.getLogger().log(Level.WARNING, line + " is longer than the max of 119!");
+                    line = line.substring(0, 119);
+                }
                 this.networkManager.queue(new Packet3Chat(line));
             }
             packet = null;
