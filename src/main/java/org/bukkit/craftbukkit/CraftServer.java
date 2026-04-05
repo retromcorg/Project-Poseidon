@@ -5,10 +5,8 @@ import com.avaje.ebean.config.ServerConfig;
 import com.avaje.ebean.config.dbplatform.SQLitePlatform;
 import com.avaje.ebeaninternal.server.lib.sql.TransactionIsolation;
 import com.legacyminecraft.poseidon.Poseidon;
-import com.legacyminecraft.poseidon.PoseidonConfig;
-import com.legacyminecraft.poseidon.PoseidonPlugin;
 import com.legacyminecraft.poseidon.PoseidonServer;
-import com.legacyminecraft.poseidon.utility.PoseidonVersionChecker;
+import com.legacyminecraft.poseidon.util.UUIDPlayerList;
 import jline.ConsoleReader;
 import net.minecraft.server.*;
 import org.bukkit.Bukkit;
@@ -833,8 +831,14 @@ public final class CraftServer implements Server {
     public Set<OfflinePlayer> getBannedPlayers() {
         Set<OfflinePlayer> result = new HashSet<OfflinePlayer>();
 
-        for (Object name : server.banByName) {
-            result.add(getOfflinePlayer((String) name));
+        if (server.isUUIDListMode()) {
+            for (UUIDPlayerList.PlayerListEntry entry : server.getBansByUUID().entries()) {
+                result.add(getOfflinePlayer(entry.name));
+            }
+        } else {
+            for (Object name : server.banByName) {
+                result.add(getOfflinePlayer((String) name));
+            }
         }
 
         return result;
@@ -849,8 +853,14 @@ public final class CraftServer implements Server {
     public Set<OfflinePlayer> getWhitelistedPlayers() {
         Set<OfflinePlayer> result = new HashSet<OfflinePlayer>();
 
-        for (Object name : server.e()) {
-            result.add(getOfflinePlayer((String) name));
+        if (server.isUUIDListMode()) {
+            for (UUIDPlayerList.PlayerListEntry entry : server.getWhitelistByUUID().entries()) {
+                result.add(getOfflinePlayer(entry.name));
+            }
+        } else {
+            for (Object name : server.e()) {
+                result.add(getOfflinePlayer((String) name));
+            }
         }
 
         return result;
