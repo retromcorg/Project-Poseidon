@@ -1,0 +1,12 @@
+apiVersion: 1
+
+providers:
+  - name: Project-Poseidon
+    orgId: 1
+    folder: Project Poseidon
+    type: file
+    disableDeletion: false
+    editable: true
+    updateIntervalSeconds: 10 # This can and probably should be changed to prevent people from leaving the dashboard open and continously querying grafana server
+    options:
+      path: /var/lib/grafana/dashboards
