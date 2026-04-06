@@ -3,6 +3,8 @@ package org.bukkit.plugin;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MapMaker;
 import com.legacyminecraft.poseidon.Poseidon;
+import com.legacyminecraft.poseidon.dependency.PluginDependency;
+import com.legacyminecraft.poseidon.dependency.PluginDependencyResolver;
 import com.legacyminecraft.poseidon.event.PoseidonCustomListener;
 import com.legacyminecraft.poseidon.utility.PerformanceStatistic;
 import org.bukkit.Server;
@@ -23,6 +25,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Handles all plugin management from the Server
@@ -150,7 +153,43 @@ public final class SimplePluginManager implements PluginManager {
         boolean allFailed = false;
         boolean finalPass = false;
 
-        LinkedList<File> filesList = new LinkedList(Arrays.asList(files));
+//        LinkedList<File> filesList = new LinkedList(Arrays.asList(files));
+        // Poseidon start
+        if (files == null || files.length == 0) {
+            return new Plugin[0];
+        }
+
+        LinkedList<File> filesList;
+        LinkedList<File> unresolvedFilesList = new LinkedList<>(Arrays.asList(files));
+        Collections.sort(unresolvedFilesList);
+
+        try {
+            List<PluginDependency> resolvedFilenames = PluginDependencyResolver.resolve(
+                unresolvedFilesList
+                    .stream()
+                    .map(file -> {
+                        try {
+                            return PluginDependency.of(file);
+                        } catch (InvalidPluginException ex) {
+                            server.getLogger().log(Level.SEVERE, "Could not check dependency of '" + file.getPath() + "' in folder '" + directory.getPath() + "': ", ex.getCause());
+                        }
+
+                        return null;
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList())
+            );
+
+            filesList = resolvedFilenames
+                .stream()
+                .map(PluginDependency::getFile)
+                .collect(Collectors.toCollection(LinkedList::new));
+        } catch (InvalidPluginException ex) {
+            server.getLogger().log(Level.SEVERE, "Could not check plugin dependencies in folder '" + directory.getPath() + "': ", ex.getCause());
+
+            return new Plugin[0];
+        }
+        // Poseidon end
 
         if (!(server.getUpdateFolder().equals(""))) {
             updateDirectory = new File(directory, server.getUpdateFolder());
