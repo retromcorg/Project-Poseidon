@@ -167,6 +167,19 @@ public final class SimplePluginManager implements PluginManager {
             List<PluginDependency> resolvedFilenames = PluginDependencyResolver.resolve(
                 unresolvedFilesList
                     .stream()
+                    .filter(file -> {
+                        if (file.isDirectory()) return false;
+
+                        for (Pattern filter: fileAssociations.keySet()) {
+                            Matcher match = filter.matcher(file.getName());
+
+                            if (match.find()) {
+                                return true;
+                            }
+                        }
+
+                        return false;
+                    })
                     .map(file -> {
                         try {
                             return PluginDependency.of(file);
