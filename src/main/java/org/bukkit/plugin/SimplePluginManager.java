@@ -2,6 +2,7 @@ package org.bukkit.plugin;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MapMaker;
+import com.legacyminecraft.poseidon.PluginLoadPlanner;
 import com.legacyminecraft.poseidon.Poseidon;
 import com.legacyminecraft.poseidon.event.PoseidonCustomListener;
 import com.legacyminecraft.poseidon.utility.PerformanceStatistic;
@@ -39,6 +40,7 @@ public final class SimplePluginManager implements PluginManager {
     private final Map<Boolean, Set<Permission>> defaultPerms = new LinkedHashMap<Boolean, Set<Permission>>();
     private final Map<String, Map<Permissible, Boolean>> permSubs = new HashMap<String, Map<Permissible, Boolean>>();
     private final Map<Boolean, Map<Permissible, Boolean>> defSubs = new HashMap<Boolean, Map<Permissible, Boolean>>();
+    private final List<Plugin> enableOrder = new ArrayList<Plugin>();
     private final Comparator<RegisteredListener> comparer = new Comparator<RegisteredListener>() {
         public int compare(RegisteredListener i, RegisteredListener j) {
             int result = i.getPriority().compareTo(j.getPriority());
@@ -147,51 +149,24 @@ public final class SimplePluginManager implements PluginManager {
         List<Plugin> result = new ArrayList<Plugin>();
         File[] files = directory.listFiles();
 
-        boolean allFailed = false;
-        boolean finalPass = false;
-
-        LinkedList<File> filesList = new LinkedList(Arrays.asList(files));
-
         if (!(server.getUpdateFolder().equals(""))) {
             updateDirectory = new File(directory, server.getUpdateFolder());
         }
 
-        while (!allFailed || finalPass) {
-            allFailed = true;
-            Iterator<File> itr = filesList.iterator();
+        PluginLoadPlanner planner = new PluginLoadPlanner(server, fileAssociations.keySet(), updateDirectory);
 
-            while (itr.hasNext()) {
-                File file = itr.next();
-                Plugin plugin = null;
-
-                try {
-                    plugin = loadPlugin(file, finalPass);
-                    itr.remove();
-                } catch (UnknownDependencyException ex) {
-                    if (finalPass) {
-                        server.getLogger().log(Level.SEVERE, "Could not load '" + file.getPath() + "' in folder '" + directory.getPath() + "': " + ex.getMessage(), ex);
-                        itr.remove();
-                    } else {
-                        plugin = null;
-                    }
-                } catch (InvalidPluginException ex) {
-                    server.getLogger().log(Level.SEVERE, "Could not load '" + file.getPath() + "' in folder '" + directory.getPath() + "': ", ex.getCause());
-                    itr.remove();
-                } catch (InvalidDescriptionException ex) {
-                    server.getLogger().log(Level.SEVERE, "Could not load '" + file.getPath() + "' in folder '" + directory.getPath() + "': " + ex.getMessage(), ex);
-                    itr.remove();
-                }
-
+        for (PluginLoadPlanner.PlannedPlugin plannedPlugin : planner.plan(directory, files)) {
+            try {
+                Plugin plugin = loadPlugin(plannedPlugin.file, plannedPlugin.ignoreSoftDependencies);
                 if (plugin != null) {
                     result.add(plugin);
-                    allFailed = false;
-                    finalPass = false;
                 }
-            }
-            if (finalPass) {
-                break;
-            } else if (allFailed) {
-                finalPass = true;
+            } catch (UnknownDependencyException ex) {
+                server.getLogger().log(Level.SEVERE, "Could not load '" + plannedPlugin.file.getPath() + "' in folder '" + directory.getPath() + "': " + ex.getMessage(), ex);
+            } catch (InvalidPluginException ex) {
+                server.getLogger().log(Level.SEVERE, "Could not load '" + plannedPlugin.file.getPath() + "' in folder '" + directory.getPath() + "': ", ex.getCause());
+            } catch (InvalidDescriptionException ex) {
+                server.getLogger().log(Level.SEVERE, "Could not load '" + plannedPlugin.file.getPath() + "' in folder '" + directory.getPath() + "': " + ex.getMessage(), ex);
             }
         }
 
@@ -318,6 +293,10 @@ public final class SimplePluginManager implements PluginManager {
 
             try {
                 plugin.getPluginLoader().enablePlugin(plugin);
+                // Record successful enables so shutdown can run in strict reverse dependency order.
+                if (plugin.isEnabled() && !enableOrder.contains(plugin)) {
+                    enableOrder.add(plugin);
+                }
             } catch (Throwable ex) {
                 server.getLogger().log(Level.SEVERE, "Error occurred (in the plugin loader) while enabling " + plugin.getDescription().getFullName() + " (Is it up to date?): " + ex.getMessage(), ex);
             }
@@ -325,8 +304,18 @@ public final class SimplePluginManager implements PluginManager {
     }
 
     public void disablePlugins() {
+        // Tear down plugins in reverse successful enable order so dependents stop before their dependencies.
+        List<Plugin> enabledPlugins = new ArrayList<>(enableOrder); // Create a snapshot as disablePlugin is responsible for removing plugins
+        ListIterator<Plugin> iterator = enabledPlugins.listIterator(enabledPlugins.size());
+        while (iterator.hasPrevious()) {
+            disablePlugin(iterator.previous());
+        }
+
+        // Fall back to any enabled plugin that was not recorded, so shutdown remains complete. This should only be needed if people are using stuff like PlugMan
         for (Plugin plugin : getPlugins()) {
-            disablePlugin(plugin);
+            if (plugin.isEnabled()) {
+                disablePlugin(plugin);
+            }
         }
     }
 
@@ -349,6 +338,8 @@ public final class SimplePluginManager implements PluginManager {
             } catch (Throwable ex) {
                 server.getLogger().log(Level.SEVERE, "Error occurred (in the plugin loader) while unregistering services for " + plugin.getDescription().getFullName() + " (Is it up to date?): " + ex.getMessage(), ex);
             }
+
+            enableOrder.remove(plugin);
         }
     }
 
@@ -359,6 +350,7 @@ public final class SimplePluginManager implements PluginManager {
             lookupNames.clear();
             listeners.clear();
             fileAssociations.clear();
+            enableOrder.clear();
             permissions.clear();
             defaultPerms.get(true).clear();
             defaultPerms.get(false).clear();
