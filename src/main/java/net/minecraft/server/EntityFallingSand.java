@@ -51,14 +51,14 @@ public class EntityFallingSand extends Entity {
             int j = MathHelper.floor(this.locY);
             int k = MathHelper.floor(this.locZ);
 
-            if (this.world.getTypeId(i, j, k) == this.a) {
+            if (this.b == 1 && this.world.getTypeId(i, j, k) == this.a) {
                 this.world.setTypeId(i, j, k, 0);
             }
 
             if (this.onGround) {
-                this.motX *= 0.699999988079071D;
-                this.motZ *= 0.699999988079071D;
-                this.motY *= -0.5D;
+                this.motX = 0.0D;
+                this.motZ = 0.0D;
+                this.motY = -0.0D;
                 this.die();
                 if ((!this.world.a(this.a, i, j, k, true, 1) || BlockSand.c_(this.world, i, j - 1, k) || !this.world.setTypeId(i, j, k, this.a)) && !this.world.isStatic) {
                     this.b(this.a, 1);
