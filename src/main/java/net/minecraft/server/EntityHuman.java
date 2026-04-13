@@ -263,6 +263,10 @@ public abstract class EntityHuman extends EntityLiving {
     }
 
     public void a(ItemStack itemstack, boolean flag) {
+        this.dropItemStack(itemstack, flag);
+    }
+
+    public void dropItemStack(ItemStack itemstack, boolean randomDirection) {
         if (itemstack != null) {
             EntityItem entityitem = new EntityItem(this.world, this.locX, this.locY - 0.30000001192092896D + (double) this.t(), this.locZ, itemstack);
 
@@ -270,7 +274,7 @@ public abstract class EntityHuman extends EntityLiving {
             float f = 0.1F;
             float f1;
 
-            if (flag) {
+            if (randomDirection) {
                 f1 = this.random.nextFloat() * 0.5F;
                 float f2 = this.random.nextFloat() * 3.1415927F * 2.0F;
 

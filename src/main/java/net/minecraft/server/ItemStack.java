@@ -202,7 +202,7 @@ public final class ItemStack {
     }
 
     public String toString() {
-        return this.count + "x" + Item.byId[this.id].a() + "@" + this.damage;
+        return this.count + "x" + (this.id < 0 ||  this.id >= Item.byId.length ? "missingno" : Item.byId[this.id].a()) + "@" + this.damage; // Project Poseidon: Fixes ArrayIndexOutOfBoundsException
     }
 
     public void a(World world, Entity entity, int i, boolean flag) {

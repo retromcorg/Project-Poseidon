@@ -179,6 +179,9 @@ public class ServerConfigurationManager {
 //        PlayerTracker.getInstance().removePlayer(entityplayer.name);
         //Project POSEIDON End
 
+        // Flush transient cursor/crafting state before save so disconnects cannot lose those items.
+        entityplayer.defaultContainer.a((EntityHuman) entityplayer);
+        entityplayer.A();
         this.playerFileData.a(entityplayer);
         this.server.getWorldServer(entityplayer.dimension).kill(entityplayer);
         this.players.remove(entityplayer);

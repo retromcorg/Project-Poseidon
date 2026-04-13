@@ -1,7 +1,10 @@
 package net.minecraft.server;
 
+import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.player.PlayerPickupItemEvent;
+
+import java.util.logging.Level;
 
 public class EntityItem extends Entity {
 
@@ -24,6 +27,14 @@ public class EntityItem extends Entity {
             this.itemStack.count = 1;
         }
         // CraftBukkit end
+        // Project Poseidon start - kill ourselves if the item is null
+        if (this.itemStack.id < 0 ||  this.itemStack.id >= Item.byId.length || Item.byId[this.itemStack.id] == null) {
+            this.die();
+            MinecraftException e = new MinecraftException("Unknown item id " + this.itemStack.id);
+            Bukkit.getLogger().log(Level.WARNING, "Created the EntityItem object with an unknown item: " + this.itemStack, e);
+            this.itemStack = new ItemStack(Block.STONE); // Workaround for the EntityTracker
+        }
+        // Project Poseidon end
         this.yaw = (float) (Math.random() * 360.0D);
         this.motX = (double) ((float) (Math.random() * 0.20000000298023224D - 0.10000000149011612D));
         this.motY = 0.20000000298023224D;
@@ -49,6 +60,12 @@ public class EntityItem extends Entity {
         this.pickupDelay -= (currentTick - this.lastTick);
         this.lastTick = currentTick;
         // CraftBukkit end
+        // Project Poseidon start - kill ourselves if the item is null
+        if (this.itemStack.id < 0 || this.itemStack.id >= Item.byId.length || Item.byId[this.itemStack.id] == null) {
+            this.b = 6000_174; //TODO: Configurable lifetime of the EntityItem
+            this.die();
+        }
+        // Project Poseidon end
 
         this.lastX = this.locX;
         this.lastY = this.locY;
@@ -85,7 +102,7 @@ public class EntityItem extends Entity {
         ++this.b;
         if (this.b >= 6000) {
             //Project Poseidon Start
-            if(CraftEventFactory.callItemDespawnEvent(this).isCancelled()) {
+            if (CraftEventFactory.callItemDespawnEvent(this).isCancelled()) {
                 this.b = 0;
                 return;
             }
