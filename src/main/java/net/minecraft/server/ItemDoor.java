@@ -20,8 +20,6 @@ public class ItemDoor extends Item {
         if (l != 1) {
             return false;
         } else {
-            int clickedX = i, clickedY = j, clickedZ = k; // CraftBukkit
-
             ++j;
             Block block;
 
@@ -72,26 +70,22 @@ public class ItemDoor extends Item {
                 }
 
                 CraftBlockState blockState = CraftBlockState.getBlockState(world, i, j, k); // CraftBukkit
-
                 world.suppressPhysics = true;
                 world.setTypeIdAndData(i, j, k, block.id, i1);
 
-                // CraftBukkit start - bed
-                world.suppressPhysics = false;
-                world.applyPhysics(i, j, k, Block.REDSTONE_WIRE.id);
-                BlockPlaceEvent event = CraftEventFactory.callBlockPlaceEvent(world, entityhuman, blockState, clickedX, clickedY, clickedZ, block);
+                // CraftBukkit start
+                BlockPlaceEvent event = CraftEventFactory.callBlockPlaceEvent(world, entityhuman, blockState, i, j, k, block);
 
                 if (event.isCancelled() || !event.canBuild()) {
                     event.getBlockPlaced().setTypeIdAndData(blockState.getTypeId(), blockState.getRawData(), false);
                     return false;
                 }
-
-                world.suppressPhysics = true;
                 // CraftBukkit end
+
                 world.setTypeIdAndData(i, j + 1, k, block.id, i1 + 8);
                 world.suppressPhysics = false;
-                // world.applyPhysics(i, j, k, block.id); // CraftBukkit - moved up
-                world.applyPhysics(i, j + 1, k, Block.REDSTONE_WIRE.id);
+                world.applyPhysics(i, j, k, block.id);
+                world.applyPhysics(i, j + 1, k, block.id);
                 --itemstack.count;
                 return true;
             }
