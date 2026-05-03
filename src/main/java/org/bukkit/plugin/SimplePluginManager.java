@@ -40,7 +40,7 @@ public final class SimplePluginManager implements PluginManager {
     private final Map<Boolean, Set<Permission>> defaultPerms = new LinkedHashMap<Boolean, Set<Permission>>();
     private final Map<String, Map<Permissible, Boolean>> permSubs = new HashMap<String, Map<Permissible, Boolean>>();
     private final Map<Boolean, Map<Permissible, Boolean>> defSubs = new HashMap<Boolean, Map<Permissible, Boolean>>();
-    private final List<Plugin> enableOrder = new ArrayList<Plugin>();
+    private final List<Plugin> enableOrder = new ArrayList<>();
     private final Comparator<RegisteredListener> comparer = new Comparator<RegisteredListener>() {
         public int compare(RegisteredListener i, RegisteredListener j) {
             int result = i.getPriority().compareTo(j.getPriority());
@@ -161,12 +161,8 @@ public final class SimplePluginManager implements PluginManager {
                 if (plugin != null) {
                     result.add(plugin);
                 }
-            } catch (UnknownDependencyException ex) {
-                server.getLogger().log(Level.SEVERE, "Could not load '" + plannedPlugin.file.getPath() + "' in folder '" + directory.getPath() + "': " + ex.getMessage(), ex);
-            } catch (InvalidPluginException ex) {
-                server.getLogger().log(Level.SEVERE, "Could not load '" + plannedPlugin.file.getPath() + "' in folder '" + directory.getPath() + "': ", ex.getCause());
-            } catch (InvalidDescriptionException ex) {
-                server.getLogger().log(Level.SEVERE, "Could not load '" + plannedPlugin.file.getPath() + "' in folder '" + directory.getPath() + "': " + ex.getMessage(), ex);
+            } catch (UnknownDependencyException | InvalidPluginException | InvalidDescriptionException ex) {
+                server.getLogger().log(Level.SEVERE, "Could not load '" + plannedPlugin.file.getPath() + "' in folder '" + directory.getPath() + "'.", ex);
             }
         }
 
@@ -294,7 +290,7 @@ public final class SimplePluginManager implements PluginManager {
             try {
                 plugin.getPluginLoader().enablePlugin(plugin);
                 // Record successful enables so shutdown can run in strict reverse dependency order.
-                if (plugin.isEnabled() && !enableOrder.contains(plugin)) {
+                if (plugin.isEnabled()) {
                     enableOrder.add(plugin);
                 }
             } catch (Throwable ex) {

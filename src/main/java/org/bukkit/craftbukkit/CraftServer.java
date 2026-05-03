@@ -146,9 +146,12 @@ public final class CraftServer implements Server {
     public void enablePlugins(PluginLoadOrder type) {
         Plugin[] plugins = pluginManager.getPlugins();
 
+        // Enable startup plugins first, then postworld plugins later.
+        // If a plugin depends on another plugin from the current phase, enable that dependency first.
+        // Dependencies from a later phase stay disabled until that phase runs.
         for (Plugin plugin : plugins) {
             // Re-evaluate every disabled plugin on each phase so deferred dependencies can come alive later.
-            if ((!plugin.isEnabled()) && shouldAttemptEnable(plugin, type)) {
+            if (!plugin.isEnabled() && shouldAttemptEnable(plugin, type)) {
                 enablePlugin(plugin, type, new LinkedHashSet<String>());
             }
         }

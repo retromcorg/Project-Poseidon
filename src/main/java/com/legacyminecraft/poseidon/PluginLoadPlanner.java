@@ -38,7 +38,7 @@ public final class PluginLoadPlanner {
         Arrays.sort(files, (left, right) -> left.getName().compareToIgnoreCase(right.getName()));
 
         // Index plugin metadata up front so dependency decisions can be made before any plugin code runs.
-        LinkedHashMap<String, PluginCandidate> candidates = new LinkedHashMap<String, PluginCandidate>();
+        LinkedHashMap<String, PluginCandidate> candidates = new LinkedHashMap<>();
 
         // Loop through files in the directory and parse plugin descriptions, skipping duplicates and invalid plugins.
         //TODO: We should figure out how we want to handle dupe plugins in Poseidon in the future. No reason exists for them and they just cause hard to trobleshoot issues
@@ -57,16 +57,16 @@ public final class PluginLoadPlanner {
             candidates.put(candidate.name, candidate);
         }
 
-        List<PlannedPlugin> plan = new ArrayList<PlannedPlugin>();
+        List<PlannedPlugin> plan = new ArrayList<>();
 
 
         // Create a deterministic load order
-        Set<String> loadedNames = new LinkedHashSet<String>();
-        LinkedHashSet<PluginCandidate> remaining = new LinkedHashSet<PluginCandidate>(candidates.values());
+        Set<String> loadedNames = new LinkedHashSet<>();
+        LinkedHashSet<PluginCandidate> remaining = new LinkedHashSet<>(candidates.values());
 
         // Iterate until no plugins remain or no progress can be made due to missing or circular dependencies.
         while (!remaining.isEmpty()) {
-            List<PluginCandidate> ready = new ArrayList<PluginCandidate>();
+            List<PluginCandidate> ready = new ArrayList<>();
 
             // First try to satisfy both hard dependencies
             for (PluginCandidate candidate : remaining) {
@@ -146,11 +146,8 @@ public final class PluginLoadPlanner {
 
         try {
             description = getPluginDescription(file);
-        } catch (InvalidPluginException ex) {
-            server.getLogger().log(Level.SEVERE, "Could not load '" + file.getPath() + "': ", ex.getCause());
-            return null;
-        } catch (InvalidDescriptionException ex) {
-            server.getLogger().log(Level.SEVERE, "Could not load '" + file.getPath() + "': " + ex.getMessage(), ex);
+        } catch (InvalidPluginException | InvalidDescriptionException ex) {
+            server.getLogger().log(Level.SEVERE, "Could not load '" + file.getPath() + "'.", ex);
             return null;
         }
 
@@ -172,35 +169,20 @@ public final class PluginLoadPlanner {
                 continue;
             }
 
-            JarFile jar = null;
-            InputStream stream = null;
-            try {
-                jar = new JarFile(descriptionSource);
+            try (JarFile jar = new JarFile(descriptionSource)) {
                 JarEntry entry = jar.getJarEntry("plugin.yml");
 
                 if (entry == null) {
                     throw new InvalidPluginException(new IOException("Jar does not contain plugin.yml"));
                 }
 
-                stream = jar.getInputStream(entry);
-                return new PluginDescriptionFile(stream);
+                try (InputStream stream = jar.getInputStream(entry)) {
+                    return new PluginDescriptionFile(stream);
+                }
             } catch (IOException ex) {
                 throw new InvalidPluginException(ex);
             } catch (YAMLException ex) {
                 throw new InvalidPluginException(ex);
-            } finally {
-                if (stream != null) {
-                    try {
-                        stream.close();
-                    } catch (IOException ignored) {
-                    }
-                }
-                if (jar != null) {
-                    try {
-                        jar.close();
-                    } catch (IOException ignored) {
-                    }
-                }
             }
         }
 
@@ -267,7 +249,7 @@ public final class PluginLoadPlanner {
         }
 
         private List<String> getMissingHardDependencies(Map<String, PluginCandidate> candidates) {
-            List<String> missing = new ArrayList<String>();
+            List<String> missing = new ArrayList<>();
             for (String dependency : hardDependencies) {
                 if (!candidates.containsKey(dependency)) {
                     missing.add(dependency);
@@ -277,7 +259,7 @@ public final class PluginLoadPlanner {
         }
 
         private List<String> getPresentSoftDependencies(Map<String, PluginCandidate> candidates) {
-            List<String> present = new ArrayList<String>();
+            List<String> present = new ArrayList<>();
             for (String dependency : softDependencies) {
                 if (candidates.containsKey(dependency)) {
                     present.add(dependency);
