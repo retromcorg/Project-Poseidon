@@ -235,3 +235,7 @@ hs_err_pid*
 
 # Don't need dependecy reduced pom
 dependency-reduced-pom.xml
+
+
+# Monitoring local test setup
+monitoring/poseidon-data/

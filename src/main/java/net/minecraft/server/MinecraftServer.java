@@ -3,6 +3,7 @@ package net.minecraft.server;
 import com.legacyminecraft.poseidon.Poseidon;
 import com.legacyminecraft.poseidon.PoseidonConfig;
 import com.legacyminecraft.poseidon.PoseidonPlugin;
+import com.legacyminecraft.poseidon.monitoring.PrometheusMonitoringService;
 import com.legacyminecraft.poseidon.util.ServerLogRotator;
 import com.legacyminecraft.poseidon.utility.PerformanceStatistic;
 import com.legacyminecraft.poseidon.utility.PoseidonVersionChecker;
@@ -72,6 +73,7 @@ public class MinecraftServer implements Runnable, ICommandListener {
 //    private WatchDogThread watchDogThread;
     private boolean modLoaderSupport = false;
 //    private PoseidonVersionChecker poseidonVersionChecker;
+    private PrometheusMonitoringService monitoringService;
     //Poseidon End
 
     public MinecraftServer(OptionSet options) { // CraftBukkit - adds argument OptionSet
@@ -159,6 +161,7 @@ public class MinecraftServer implements Runnable, ICommandListener {
         }
 
         this.serverConfigurationManager = new ServerConfigurationManager(this);
+        this.monitoringService = PrometheusMonitoringService.startIfEnabled(this);
         // CraftBukkit - removed trackers
         long j = System.nanoTime();
         String s1 = this.propertyManager.getString("level-name", "world");
@@ -357,6 +360,9 @@ public class MinecraftServer implements Runnable, ICommandListener {
 
     public void stop() { // CraftBukkit - private -> public
         log.info("Stopping server");
+        if (this.monitoringService != null) {
+            this.monitoringService.stop();
+        }
 
         //Project Poseidon Start
 
@@ -540,6 +546,7 @@ public class MinecraftServer implements Runnable, ICommandListener {
     //Project Poseidon End - Tick Update
 
     private void h() {
+        long tickStartNanos = System.nanoTime();
         ArrayList arraylist = new ArrayList();
         Iterator iterator = trackerList.keySet().iterator();
 
@@ -628,6 +635,10 @@ public class MinecraftServer implements Runnable, ICommandListener {
             this.b();
         } catch (Exception exception) {
             log.log(Level.WARNING, "Unexpected exception while parsing console command", exception);
+        }
+
+        if (this.monitoringService != null) {
+            this.monitoringService.onTickComplete(System.nanoTime() - tickStartNanos);
         }
     }
 
