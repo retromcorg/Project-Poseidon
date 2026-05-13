@@ -112,7 +112,10 @@ public class BlockDiode extends Block {
     }
 
     public boolean isPowerSource() {
-        return false;
+        // Project Poseidon start - Fix for BlockNote activation
+        //return false;
+        return this.c;
+        // Project Poseidon end
     }
 
     public void postPlace(World world, int i, int j, int k, EntityLiving entityliving) {
