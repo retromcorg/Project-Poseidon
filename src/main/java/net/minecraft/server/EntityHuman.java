@@ -425,17 +425,23 @@ public abstract class EntityHuman extends EntityLiving {
 
                     // We handle projectiles in their individual classes!
                     if (!(entity.getBukkitEntity() instanceof Projectile)) {
+                        int damage = this.getEffectiveDamage(i);
+
+                        if (damage <= 0) {
+                            return false;
+                        }
+
                         org.bukkit.entity.Entity damager = ((Entity) object).getBukkitEntity();
                         org.bukkit.entity.Entity damagee = this.getBukkitEntity();
 
-                        EntityDamageByEntityEvent event = new EntityDamageByEntityEvent(damager, damagee, EntityDamageEvent.DamageCause.ENTITY_ATTACK, i);
+                        EntityDamageByEntityEvent event = new EntityDamageByEntityEvent(damager, damagee, EntityDamageEvent.DamageCause.ENTITY_ATTACK, damage);
                         this.world.getServer().getPluginManager().callEvent(event);
 
                         if (event.isCancelled() || event.getDamage() == 0) {
                             return false;
                         }
 
-                        i = event.getDamage();
+                        i = this.getDamageForEffectiveDamage(event.getDamage());
                     }
                     // CraftBukkit end
 
@@ -553,17 +559,24 @@ public abstract class EntityHuman extends EntityLiving {
 
             // CraftBukkit start - Don't call the event when the entity is human since it will be called with damageEntity
             if (entity instanceof EntityLiving && !(entity instanceof EntityHuman)) {
+                EntityLiving entityliving = (EntityLiving) entity;
+                int damage = entityliving.getEffectiveDamage(i);
+
+                if (damage <= 0) {
+                    return;
+                }
+
                 org.bukkit.entity.Entity damager = this.getBukkitEntity();
                 org.bukkit.entity.Entity damagee = (entity == null) ? null : entity.getBukkitEntity();
 
-                EntityDamageByEntityEvent event = new EntityDamageByEntityEvent(damager, damagee, EntityDamageEvent.DamageCause.ENTITY_ATTACK, i);
+                EntityDamageByEntityEvent event = new EntityDamageByEntityEvent(damager, damagee, EntityDamageEvent.DamageCause.ENTITY_ATTACK, damage);
                 this.world.getServer().getPluginManager().callEvent(event);
 
                 if (event.isCancelled() || event.getDamage() == 0) {
                     return;
                 }
 
-                i = event.getDamage();
+                i = entityliving.getDamageForEffectiveDamage(event.getDamage());
             }
             // CraftBukkit end
 

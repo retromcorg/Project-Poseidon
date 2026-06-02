@@ -403,6 +403,30 @@ public abstract class EntityLiving extends Entity {
         }
     }
 
+    public int getEffectiveDamage(int i) {
+        if (this.health <= 0) {
+            return 0;
+        }
+
+        if ((float) this.noDamageTicks > (float) this.maxNoDamageTicks / 2.0F) {
+            if (i <= this.lastDamage) {
+                return 0;
+            }
+
+            return i - this.lastDamage;
+        }
+
+        return i;
+    }
+
+    public int getDamageForEffectiveDamage(int i) {
+        if ((float) this.noDamageTicks > (float) this.maxNoDamageTicks / 2.0F) {
+            return i + this.lastDamage;
+        }
+
+        return i;
+    }
+
     protected void c(int i) {
         this.health -= i;
     }
