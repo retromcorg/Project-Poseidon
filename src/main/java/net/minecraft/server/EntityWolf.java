@@ -333,18 +333,35 @@ public class EntityWolf extends EntityAnimal {
                 b0 = 4;
             }
             // CraftBukkit start
+            if (entity instanceof EntityHuman) {
+                entity.damageEntity(this, b0);
+                return;
+            }
+
+            EntityLiving entityliving = null;
+            int damage = b0;
+
+            if (entity instanceof EntityLiving) {
+                entityliving = (EntityLiving) entity;
+                damage = entityliving.getEffectiveDamage(b0);
+
+                if (damage <= 0) {
+                    return;
+                }
+            }
+
             org.bukkit.entity.Entity damager = this.getBukkitEntity();
             org.bukkit.entity.Entity damagee = entity == null ? null : entity.getBukkitEntity();
 
-            EntityDamageByEntityEvent event = new EntityDamageByEntityEvent(damager, damagee, EntityDamageEvent.DamageCause.ENTITY_ATTACK, b0);
+            EntityDamageByEntityEvent event = new EntityDamageByEntityEvent(damager, damagee, EntityDamageEvent.DamageCause.ENTITY_ATTACK, damage);
             this.world.getServer().getPluginManager().callEvent(event);
 
-            if (event.isCancelled()) {
+            if (event.isCancelled() || event.getDamage() == 0) {
                 return;
             }
             // CraftBukkit end
 
-            entity.damageEntity(this, b0);
+            entity.damageEntity(this, entityliving == null ? event.getDamage() : entityliving.getDamageForEffectiveDamage(event.getDamage()));
         }
     }
 
