@@ -486,6 +486,12 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
         this.activeContainer.a((ICrafting) this);
     }
 
+    // Poseidon start - check if player editing sign is the same player who placed the sign
+    public void a(TileEntitySign tileentitysign) {
+        tileentitysign.setEditingPlayer(this);
+    }
+    // Poseidon end
+
     public void a(Container container, int i, ItemStack itemstack) {
         if (!(container.b(i) instanceof SlotResult)) {
             if (!this.h) {
@@ -592,10 +598,4 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
         return super.toString() + "(" + this.name + " at " + this.locX + "," + this.locY + "," + this.locZ + ")";
     }
     // CraftBukkit end
-
-    // Poseidon Start
-    public void a(TileEntitySign tileentitysign) {
-        tileentitysign.setEditingPlayer(this);
-    }
-    // Poseidon End
 }
