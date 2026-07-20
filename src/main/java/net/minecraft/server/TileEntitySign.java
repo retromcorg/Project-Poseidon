@@ -5,6 +5,7 @@ public class TileEntitySign extends TileEntity {
     public String[] lines = new String[] { "", "", "", ""};
     public int b = -1;
     private boolean isEditable = true;
+    private String editingPlayer;
 
     public TileEntitySign() {}
 
@@ -18,6 +19,7 @@ public class TileEntitySign extends TileEntity {
 
     public void a(NBTTagCompound nbttagcompound) {
         this.isEditable = false;
+        this.editingPlayer = null;
         super.a(nbttagcompound);
 
         for (int i = 0; i < 4; ++i) {
@@ -50,5 +52,17 @@ public class TileEntitySign extends TileEntity {
 
     public void a(boolean flag) {
         this.isEditable = flag;
+        if (!flag) {
+            this.editingPlayer = null;
+        }
+    }
+
+    public void setEditingPlayer(EntityHuman entityhuman) {
+        this.editingPlayer = entityhuman.name;
+        this.isEditable = true;
+    }
+
+    public boolean isEditableBy(EntityHuman entityhuman) {
+        return this.isEditable && this.editingPlayer != null && this.editingPlayer.equals(entityhuman.name);
     }
 }

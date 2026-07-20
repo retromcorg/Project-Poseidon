@@ -1154,6 +1154,12 @@ public class NetServerHandler extends NetHandler implements ICommandListener {
                     this.sendPacket(new Packet130UpdateSign(packet130updatesign.x, packet130updatesign.y, packet130updatesign.z, tileentitysign.lines));
                     return;
                 }
+
+                if (!tileentitysign.isEditableBy(this.player)) {
+                    this.minecraftServer.c("Player " + this.player.name + " just tried to change a sign they are not editing");
+                    this.sendPacket(new Packet130UpdateSign(packet130updatesign.x, packet130updatesign.y, packet130updatesign.z, tileentitysign.lines));
+                    return;
+                }
             }
 
             int i;
@@ -1193,6 +1199,8 @@ public class NetServerHandler extends NetHandler implements ICommandListener {
                     for (int l = 0; l < 4; ++l) {
                         tileentitysign1.lines[l] = event.getLine(l);
                     }
+                    tileentitysign1.a(false);
+                } else {
                     tileentitysign1.a(false);
                 }
                 // CraftBukkit end

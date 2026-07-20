@@ -592,4 +592,10 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
         return super.toString() + "(" + this.name + " at " + this.locX + "," + this.locY + "," + this.locZ + ")";
     }
     // CraftBukkit end
+
+    // Poseidon Start
+    public void a(TileEntitySign tileentitysign) {
+        tileentitysign.setEditingPlayer(this);
+    }
+    // Poseidon End
 }
