@@ -5,6 +5,7 @@ public class TileEntitySign extends TileEntity {
     public String[] lines = new String[] { "", "", "", ""};
     public int b = -1;
     private boolean isEditable = true;
+    private EntityHuman editingPlayer; // Poseidon
 
     public TileEntitySign() {}
 
@@ -18,6 +19,7 @@ public class TileEntitySign extends TileEntity {
 
     public void a(NBTTagCompound nbttagcompound) {
         this.isEditable = false;
+        this.editingPlayer = null; // Poseidon
         super.a(nbttagcompound);
 
         for (int i = 0; i < 4; ++i) {
@@ -50,5 +52,18 @@ public class TileEntitySign extends TileEntity {
 
     public void a(boolean flag) {
         this.isEditable = flag;
+        // Poseidon start - check if player editing sign is the same player who placed the sign
+        if (!flag) {
+            this.editingPlayer = null;
+        }
     }
+
+    public void setEditingPlayer(EntityHuman entityhuman) {
+        this.editingPlayer = entityhuman;
+    }
+
+    public boolean isEditableBy(EntityHuman entityhuman) {
+        return this.isEditable && this.editingPlayer != null && this.editingPlayer.equals(entityhuman);
+    }
+    // Poseidon end
 }
