@@ -301,8 +301,8 @@ public class NetworkManager {
         }
     }
 
-    public SocketAddress getSocketAddress() {
-        return this.i;
+    public InetSocketAddress getSocketAddress() {
+        return ((InetSocketAddress) this.i);
     }
 
     public void d() {

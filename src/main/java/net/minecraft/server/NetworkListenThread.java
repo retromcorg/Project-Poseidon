@@ -14,8 +14,8 @@ public class NetworkListenThread {
     private Thread e;
     public volatile boolean b = false;
     private int f = 0;
-    private ArrayList g = new ArrayList();
-    private ArrayList h = new ArrayList();
+    private ArrayList<NetLoginHandler> g = new ArrayList<>();
+    private ArrayList<NetServerHandler> h = new ArrayList<>();
     public MinecraftServer c;
 
     public NetworkListenThread(MinecraftServer minecraftserver, InetAddress inetaddress, int i) throws IOException {

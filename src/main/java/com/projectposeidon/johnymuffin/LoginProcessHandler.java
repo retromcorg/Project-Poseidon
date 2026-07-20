@@ -72,7 +72,7 @@ public class LoginProcessHandler {
     }
 
     private void processAuthentication() {
-        PlayerConnectionInitializationEvent event = new PlayerConnectionInitializationEvent(this.packet1Login.name, this.netLoginHandler.getSocket().getInetAddress(), loginProcessHandler);
+        PlayerConnectionInitializationEvent event = new PlayerConnectionInitializationEvent(this.packet1Login.name, this.netLoginHandler.networkManager.getSocketAddress().getAddress(), loginProcessHandler);
         this.server.getPluginManager().callEvent(event);
         if (loginCancelled) {
             return;
@@ -236,7 +236,7 @@ public class LoginProcessHandler {
             }
 
 
-            PlayerPreLoginEvent event = new PlayerPreLoginEvent(this.packet1Login.name, ((InetSocketAddress) netLoginHandler.networkManager.getSocketAddress()).getAddress(), loginProcessHandler);
+            PlayerPreLoginEvent event = new PlayerPreLoginEvent(this.packet1Login.name, netLoginHandler.networkManager.getSocketAddress().getAddress(), loginProcessHandler);
             this.server.getPluginManager().callEvent(event);
             if (event.getResult() != PlayerPreLoginEvent.Result.ALLOWED) {
                 cancelLoginProcess(event.getKickMessage());

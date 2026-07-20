@@ -2,15 +2,11 @@ package net.minecraft.server;
 
 import com.legacyminecraft.poseidon.Poseidon;
 import com.legacyminecraft.poseidon.PoseidonConfig;
-import com.legacyminecraft.poseidon.PoseidonPlugin;
 import com.legacyminecraft.poseidon.util.ServerLogRotator;
 import com.legacyminecraft.poseidon.utility.PerformanceStatistic;
-import com.legacyminecraft.poseidon.utility.PoseidonVersionChecker;
-import com.projectposeidon.johnymuffin.UUIDManager;
 import com.legacyminecraft.poseidon.watchdog.WatchDogThread;
 import jline.ConsoleReader;
 import joptsimple.OptionSet;
-import org.bukkit.Bukkit;
 import org.bukkit.World.Environment;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.LoggerOutputStream;
@@ -40,7 +36,7 @@ import java.util.logging.Logger;
 public class MinecraftServer implements Runnable, ICommandListener {
 
     public static Logger log = Logger.getLogger("Minecraft");
-    public static HashMap trackerList = new HashMap();
+    public static HashMap trackerList = new HashMap<>();
     public NetworkListenThread networkListenThread;
     public PropertyManager propertyManager;
     // public WorldServer[] worldServer; // CraftBukkit - removed!
@@ -51,8 +47,8 @@ public class MinecraftServer implements Runnable, ICommandListener {
     int ticks = 0;
     public String i;
     public int j;
-    private List r = new ArrayList();
-    private List s = Collections.synchronizedList(new ArrayList());
+    private List r = new ArrayList<>();
+    private List s = Collections.synchronizedList(new ArrayList<>());
     // public EntityTracker[] tracker = new EntityTracker[2]; // CraftBukkit - removed!
     public boolean onlineMode;
     public boolean spawnAnimals;
