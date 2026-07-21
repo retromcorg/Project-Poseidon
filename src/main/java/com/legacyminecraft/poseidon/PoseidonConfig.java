@@ -214,6 +214,10 @@ public class PoseidonConfig extends Configuration {
         generateConfigOption("settings.update-checker.interval.ticks", 20 * 60 * 60);
         generateConfigOption("settings.update-checker.interval.info", "Controls how often the update checker will query the latest Poseidon version");
 
+        // Text wrapping
+        generateConfigOption("settings.optimize-text-wrapping.enabled", false);
+        generateConfigOption("settings.optimize-text-wrapping.info", "If enabled, an optimized algorithm will be used for line wrapping chat messages.");
+
         //Messages
         generateConfigOption("message.kick.banned", "You are banned from this server!");
         generateConfigOption("message.kick.ip-banned", "Your IP address is banned from this server!");
