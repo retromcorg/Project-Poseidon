@@ -378,7 +378,10 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     }
 
     public boolean isBanned() {
-        return server.getHandle().banByName.contains(getName().toLowerCase());
+        if (server.getHandle().isUUIDListMode()) {
+            return server.getHandle().isBannedByUUID(getHandle().playerUUID) || server.getHandle().isBanned(getName());
+        }
+        return server.getHandle().isBanned(getName());
     }
 
     public void setBanned(boolean value) {
@@ -390,7 +393,10 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     }
 
     public boolean isWhitelisted() {
-        return server.getHandle().e().contains(getName().toLowerCase());
+        if (server.getHandle().isUUIDListMode()) {
+            return server.getHandle().isWhitelistedByUUID(getHandle().playerUUID);
+        }
+        return server.getHandle().isWhitelisted(getName());
     }
 
     public void setWhitelisted(boolean value) {

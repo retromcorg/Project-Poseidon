@@ -57,6 +57,7 @@ public class PoseidonConfig extends Configuration {
 //        generateConfigOption("settings.allow-graceful-uuids", true);
         generateConfigOption("settings.delete-duplicate-uuids", false);
         generateConfigOption("settings.save-playerdata-by-uuid", true);
+        generateConfigOption("settings.use-uuid-based-player-lists", false);
         // Log management and rotation
         generateConfigOption("settings.per-day-log-file.info", "This setting causes the server to create a new log file each day. This is useful for log rotation and log file management.");
         generateConfigOption("settings.per-day-log-file.enabled", false);
