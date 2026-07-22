@@ -211,4 +211,8 @@ public abstract class NetHandler {
     public void a(Packet61 packet61) {
         this.a((Packet) packet61);
     }
+
+    public void a(Packet254GetInfo packet254getinfo) {
+        this.a((Packet) packet254getinfo);
+    }
 }
