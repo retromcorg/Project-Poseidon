@@ -1,6 +1,7 @@
 package org.bukkit.entity;
 
 import com.projectposeidon.ConnectionType;
+import net.minecraft.server.IInventory;
 import net.minecraft.server.Packet;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
@@ -350,4 +351,10 @@ public interface Player extends HumanEntity, CommandSender, OfflinePlayer {
 
     public void sendPacket(final Player player, final Packet packet);
 
+    /**
+     * Presents inventory to player
+     *
+     * @param inventory IIventory object to send to player
+     */
+    public void openContainer(IInventory inventory);
 }
