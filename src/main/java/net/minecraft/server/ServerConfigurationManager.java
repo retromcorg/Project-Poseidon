@@ -2,10 +2,14 @@ package net.minecraft.server;
 
 import com.legacyminecraft.poseidon.Poseidon;
 import com.legacyminecraft.poseidon.PoseidonConfig;
+import com.legacyminecraft.poseidon.util.UUIDPlayerList;
+import com.projectposeidon.johnymuffin.UUIDManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.PortalTravelAgent;
 import org.bukkit.craftbukkit.command.ColouredConsoleSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.*;
@@ -25,15 +29,23 @@ public class ServerConfigurationManager {
     // private PlayerManager[] d = new PlayerManager[2]; // CraftBukkit - removed
     public int maxPlayers; // CraftBukkit - private -> public
     public Set banByName = new HashSet(); // CraftBukkit - private -> public
-    public Set banByIP = new HashSet(); // CraftBukkit - private -> public
-    private Set h = new HashSet();
-    private Set i = new HashSet();
+    public Set banByIP = new HashSet<String>(); // CraftBukkit - private -> public
+    private Set h = new HashSet(); // operators list
+    private Set i = new HashSet(); // players whitelist
     private File j;
     private File k;
-    private File l;
-    private File m;
+    private File l; // operators plain text file
+    private File m; // whitelist plain text file
     public PlayerFileData playerFileData; // CraftBukkit - private - >public
     public boolean o; // Craftbukkit - private -> public
+
+    // Poseidon UUID-based player lists
+    private UUIDPlayerList bansByUUID = new UUIDPlayerList();
+    private UUIDPlayerList opsByUUID = new UUIDPlayerList();
+    private UUIDPlayerList whitelistByUUID = new UUIDPlayerList();
+    private File bannedPlayersJsonFile;
+    private File opsJsonFile;
+    private File whitelistJsonFile;
 
     // CraftBukkit start
     private CraftServer cserver;
@@ -56,6 +68,12 @@ public class ServerConfigurationManager {
         this.k = minecraftserver.a("banned-ips.txt");
         this.l = minecraftserver.a("ops.txt");
         this.m = minecraftserver.a("white-list.txt");
+
+        // Poseidon - UUID-based player list JSON files
+        this.bannedPlayersJsonFile = minecraftserver.a("banned-players.json");
+        this.opsJsonFile = minecraftserver.a("ops.json");
+        this.whitelistJsonFile = minecraftserver.a("whitelist.json");
+
         int i = minecraftserver.propertyManager.getInt("view-distance", 10);
 
         // CraftBukkit - removed playermanagers
@@ -69,6 +87,10 @@ public class ServerConfigurationManager {
         this.j();
         this.l();
         this.n();
+    }
+
+    public boolean isUUIDListMode() {
+        return PoseidonConfig.getInstance().getConfigBoolean("settings.use-uuid-based-player-lists", false);
     }
 
     public void setPlayerFileData(WorldServer[] aworldserver) {
@@ -108,6 +130,11 @@ public class ServerConfigurationManager {
     }
 
     public void c(EntityPlayer entityplayer) {
+        // Poseidon - UUID reconciliation on join
+        if (isUUIDListMode() && entityplayer.playerUUID != null) {
+            reconcileUUIDEntry(entityplayer);
+        }
+
         this.players.add(entityplayer);
         //PlayerTracker.getInstance().addPlayer(entityplayer.name);
         WorldServer worldserver = this.server.getWorldServer(entityplayer.dimension);
@@ -146,6 +173,42 @@ public class ServerConfigurationManager {
 
         worldserver.addEntity(entityplayer);
         this.getPlayerManager(entityplayer.dimension).addPlayer(entityplayer);
+    }
+
+    // Poseidon - Reconcile UUID entries when a player joins
+    private void reconcileUUIDEntry(EntityPlayer entityplayer) {
+        UUID realUUID = entityplayer.playerUUID;
+        String playerName = entityplayer.name;
+        boolean changed = false;
+
+        // Check each list: if the player's name is present under a different UUID, update it
+        if (bansByUUID.containsName(playerName) && !bansByUUID.containsUUID(realUUID)) {
+            bansByUUID.removeByName(playerName);
+            bansByUUID.add(realUUID, playerName);
+            changed = true;
+        }
+        if (opsByUUID.containsName(playerName) && !opsByUUID.containsUUID(realUUID)) {
+            opsByUUID.removeByName(playerName);
+            opsByUUID.add(realUUID, playerName);
+            changed = true;
+        }
+        if (whitelistByUUID.containsName(playerName) && !whitelistByUUID.containsUUID(realUUID)) {
+            whitelistByUUID.removeByName(playerName);
+            whitelistByUUID.add(realUUID, playerName);
+            changed = true;
+        }
+
+        if (changed) {
+            a.info("[Poseidon] Reconciled UUID entries for player " + playerName + " (" + realUUID + ")");
+            this.bansByUUID.saveToJson(bannedPlayersJsonFile);
+            this.saveBansToPlainText();
+
+            this.opsByUUID.saveToJson(opsJsonFile);
+            this.saveOpsToPlainText();
+
+            this.whitelistByUUID.saveToJson(whitelistJsonFile);
+            this.saveWhitelistToPlainFile();
+        }
     }
 
     public void d(EntityPlayer entityplayer) {
@@ -204,12 +267,25 @@ public class ServerConfigurationManager {
         s1 = s1.substring(s1.indexOf("/") + 1);
         s1 = s1.substring(0, s1.indexOf(":"));
 
-        PlayerLoginEvent.Result result =
-                this.banByName.contains(s.trim().toLowerCase()) ? PlayerLoginEvent.Result.KICK_BANNED :
-                this.banByIP.contains(s1) ? PlayerLoginEvent.Result.KICK_BANNED_IP :
-                !this.isWhitelisted(s) ? PlayerLoginEvent.Result.KICK_WHITELIST :
-                this.players.size() >= this.maxPlayers ? PlayerLoginEvent.Result.KICK_FULL :
-                PlayerLoginEvent.Result.ALLOWED;
+        // Poseidon - UUID-based login checks
+        PlayerLoginEvent.Result result;
+        if (isUUIDListMode()) {
+            boolean isBanned = bansByUUID.containsUUID(entity.playerUUID) || bansByUUID.containsName(s.trim().toLowerCase());
+            boolean isIPBanned = this.banByIP.contains(s1);
+            boolean isWhitelisted = isWhitelistedInternal(s, entity.playerUUID);
+            result = isBanned ? PlayerLoginEvent.Result.KICK_BANNED :
+                    isIPBanned ? PlayerLoginEvent.Result.KICK_BANNED_IP :
+                    !isWhitelisted ? PlayerLoginEvent.Result.KICK_WHITELIST :
+                    this.players.size() >= this.maxPlayers ? PlayerLoginEvent.Result.KICK_FULL :
+                    PlayerLoginEvent.Result.ALLOWED;
+        } else {
+            result =
+                    this.banByName.contains(s.trim().toLowerCase()) ? PlayerLoginEvent.Result.KICK_BANNED :
+                    this.banByIP.contains(s1) ? PlayerLoginEvent.Result.KICK_BANNED_IP :
+                    !this.isWhitelisted(s) ? PlayerLoginEvent.Result.KICK_WHITELIST :
+                    this.players.size() >= this.maxPlayers ? PlayerLoginEvent.Result.KICK_FULL :
+                    PlayerLoginEvent.Result.ALLOWED;
+        }
 
         String kickMessage =
                 result.equals(PlayerLoginEvent.Result.KICK_BANNED) ? this.msgKickBanned :
@@ -254,7 +330,7 @@ public class ServerConfigurationManager {
 
         // CraftBukkit start
         EntityPlayer entityplayer1 = entityplayer;
-        org.bukkit.World fromWorld = entityplayer1.getBukkitEntity().getWorld();
+        World fromWorld = entityplayer1.getBukkitEntity().getWorld();
 
         if (location == null) {
             boolean isBedSpawn = false;
@@ -315,7 +391,7 @@ public class ServerConfigurationManager {
         entityplayer1.x();
         // CraftBukkit start - don't fire on respawn
         if (fromWorld != location.getWorld()) {
-            org.bukkit.event.player.PlayerChangedWorldEvent event = new org.bukkit.event.player.PlayerChangedWorldEvent((Player) entityplayer1.getBukkitEntity(), fromWorld);
+            PlayerChangedWorldEvent event = new PlayerChangedWorldEvent((Player) entityplayer1.getBukkitEntity(), fromWorld);
             Bukkit.getServer().getPluginManager().callEvent(event);
         }
         // CraftBukkit end
@@ -340,7 +416,7 @@ public class ServerConfigurationManager {
         Location fromLocation = new Location(fromWorld.getWorld(), entityplayer.locX, entityplayer.locY, entityplayer.locZ, entityplayer.yaw, entityplayer.pitch);
         Location toLocation = toWorld == null ? null : new Location(toWorld.getWorld(), (entityplayer.locX * blockRatio), entityplayer.locY, (entityplayer.locZ * blockRatio), entityplayer.yaw, entityplayer.pitch);
 
-        org.bukkit.craftbukkit.PortalTravelAgent pta = new org.bukkit.craftbukkit.PortalTravelAgent();
+        PortalTravelAgent pta = new PortalTravelAgent();
         PlayerPortalEvent event = new PlayerPortalEvent((Player) entityplayer.getBukkitEntity(), fromLocation, toLocation, pta);
         Bukkit.getServer().getPluginManager().callEvent(event);
         if (event.isCancelled() || event.getTo() == null) {
@@ -401,16 +477,40 @@ public class ServerConfigurationManager {
     }
 
     public void a(String s) {
+        this.banPlayer(s);
+    }
+
+    // Ban by name
+    public void banPlayer(String s) {
         this.banByName.add(s.toLowerCase());
-        this.h();
+
+        if (isUUIDListMode()) {
+            UUID uuid = UUIDManager.getInstance().getUUIDGraceful(s);
+            bansByUUID.add(uuid, s);
+            bansByUUID.saveToJson(bannedPlayersJsonFile);
+        }
+        this.saveBansToPlainText();
     }
 
     public void b(String s) {
+        this.unbanByName(s);
+    }
+
+    // UnBan by name - remove (pardon)
+    public void unbanByName(String s) {
         this.banByName.remove(s.toLowerCase());
-        this.h();
+        if (isUUIDListMode()) {
+            bansByUUID.removeByName(s);
+            bansByUUID.saveToJson(bannedPlayersJsonFile);
+        }
+        this.saveBansToPlainText();
     }
 
     private void g() {
+        this.loadBansFromDisk();
+    }
+
+    private void loadBansFromDisk(){
         try {
             this.banByName.clear();
             BufferedReader bufferedreader = new BufferedReader(new FileReader(this.j));
@@ -424,20 +524,32 @@ public class ServerConfigurationManager {
         } catch (Exception exception) {
             a.warning("Failed to load ban list: " + exception);
         }
+
+        // Poseidon - Load UUID ban list
+        if (isUUIDListMode()) {
+            if (bannedPlayersJsonFile.exists()) {
+                bansByUUID.loadFromJson(bannedPlayersJsonFile);
+            } else if (!this.banByName.isEmpty()) {
+                migrateToUUID(this.banByName, bansByUUID, "bans");
+                bansByUUID.saveToJson(bannedPlayersJsonFile);
+                this.saveBansToPlainText();
+            }
+        }
     }
 
     private void h() {
+        this.saveBansToPlainText();
+    }
+
+    private void saveBansToPlainText(){
         try {
-            PrintWriter printwriter = new PrintWriter(new FileWriter(this.j, false));
-            Iterator iterator = this.banByName.iterator();
-
-            while (iterator.hasNext()) {
-                String s = (String) iterator.next();
-
-                printwriter.println(s);
+            FileWriter fw = new FileWriter(this.j, false);
+            // Poseidon - if UUID mode, regenerate txt from UUID list
+            if (isUUIDListMode()) {
+                this.writeToPlainFile(bansByUUID.getNames().iterator(), fw);
+            } else {
+                this.writeToPlainFile(this.banByName.iterator(), fw);
             }
-
-            printwriter.close();
         } catch (Exception exception) {
             a.warning("Failed to save ban list: " + exception);
         }
@@ -471,24 +583,35 @@ public class ServerConfigurationManager {
 
     private void j() {
         try {
-            PrintWriter printwriter = new PrintWriter(new FileWriter(this.k, false));
-            Iterator iterator = this.banByIP.iterator();
-
-            while (iterator.hasNext()) {
-                String s = (String) iterator.next();
-
-                printwriter.println(s);
-            }
-
-            printwriter.close();
+            this.writeToPlainFile(this.banByIP.iterator(), new FileWriter(this.k, false));
         } catch (Exception exception) {
             a.warning("Failed to save ip ban list: " + exception);
         }
     }
 
+    private void writeToPlainFile(Iterator i, FileWriter fw) {
+        PrintWriter printwriter = new PrintWriter(fw);
+        while (i.hasNext()) {
+            printwriter.println(i.next().toString());
+        }
+        printwriter.close();
+    }
+
+
     public void e(String s) {
+        this.addOp(s);
+    }
+
+    // Op - add
+    public void addOp(String s) {
         this.h.add(s.toLowerCase());
-        this.l();
+        // Poseidon - also add to UUID list
+        if (isUUIDListMode()) {
+            UUID uuid = UUIDManager.getInstance().getUUIDGraceful(s);
+            opsByUUID.add(uuid, s);
+            opsByUUID.saveToJson(opsJsonFile);
+        }
+        this.saveOpsToPlainText();
 
         // Craftbukkit start
         Player player = server.server.getPlayer(s);
@@ -499,8 +622,18 @@ public class ServerConfigurationManager {
     }
 
     public void f(String s) {
+        this.removeOp(s);
+    }
+
+    // Op - remove (deop)
+    public void removeOp(String s){
         this.h.remove(s.toLowerCase());
-        this.l();
+        // Poseidon - also remove from UUID list
+        if (isUUIDListMode()) {
+            opsByUUID.removeByName(s);
+            opsByUUID.saveToJson(opsJsonFile);
+        }
+        this.saveOpsToPlainText();
 
         // Craftbukkit start
         Player player = server.server.getPlayer(s);
@@ -511,6 +644,11 @@ public class ServerConfigurationManager {
     }
 
     private void k() {
+        this.loadOpFromDisk();
+    }
+
+    // Load ops from txt
+    private void loadOpFromDisk(){
         try {
             this.h.clear();
             BufferedReader bufferedreader = new BufferedReader(new FileReader(this.l));
@@ -525,20 +663,34 @@ public class ServerConfigurationManager {
             // CraftBukkit - corrected text
             a.warning("Failed to load ops: " + exception);
         }
+
+        // Poseidon - Load UUID ops list
+        if (isUUIDListMode()) {
+            if (opsJsonFile.exists()) {
+                opsByUUID.loadFromJson(opsJsonFile);
+            } else if (!this.h.isEmpty()) {
+                migrateToUUID(this.h, opsByUUID, "ops");
+                opsByUUID.saveToJson(opsJsonFile);
+                this.saveOpsToPlainText();
+            }
+        }
     }
 
+
     private void l() {
+        this.saveOpsToPlainText();
+    }
+
+    // Save ops to txt
+    private void saveOpsToPlainText(){
         try {
-            PrintWriter printwriter = new PrintWriter(new FileWriter(this.l, false));
-            Iterator iterator = this.h.iterator();
-
-            while (iterator.hasNext()) {
-                String s = (String) iterator.next();
-
-                printwriter.println(s);
+            FileWriter fw = new FileWriter(this.l, false);
+            // Poseidon - if UUID mode, regenerate txt from UUID list
+            if (isUUIDListMode()) {
+                this.writeToPlainFile(opsByUUID.getNames().iterator(), fw);
+            } else {
+                this.writeToPlainFile(this.h.iterator(), fw);
             }
-
-            printwriter.close();
         } catch (Exception exception) {
             // CraftBukkit - corrected text
             a.warning("Failed to save ops: " + exception);
@@ -546,6 +698,10 @@ public class ServerConfigurationManager {
     }
 
     private void m() {
+        this.loadWhitelistFromDisk();
+    }
+
+    private void loadWhitelistFromDisk(){
         try {
             this.i.clear();
             BufferedReader bufferedreader = new BufferedReader(new FileReader(this.m));
@@ -559,32 +715,90 @@ public class ServerConfigurationManager {
         } catch (Exception exception) {
             a.warning("Failed to load white-list: " + exception);
         }
+
+        // Poseidon - Load UUID whitelist
+        if (isUUIDListMode()) {
+            if (whitelistJsonFile.exists()) {
+                whitelistByUUID.loadFromJson(whitelistJsonFile);
+            } else if (!this.i.isEmpty()) {
+                migrateToUUID(this.i, whitelistByUUID, "whitelist");
+                whitelistByUUID.saveToJson(whitelistJsonFile);
+                this.saveWhitelistToPlainFile();
+            }
+        }
     }
 
+    // Save whitelist to txt
     private void n() {
+        this.saveWhitelistToPlainFile();
+    }
+
+    private void saveWhitelistToPlainFile(){
         try {
-            PrintWriter printwriter = new PrintWriter(new FileWriter(this.m, false));
-            Iterator iterator = this.i.iterator();
-
-            while (iterator.hasNext()) {
-                String s = (String) iterator.next();
-
-                printwriter.println(s);
+            FileWriter fw = new FileWriter(this.m, false);
+            // Poseidon - if UUID mode, regenerate txt from UUID list
+            if (isUUIDListMode()) {
+                this.writeToPlainFile(whitelistByUUID.getNames().iterator(), fw);
+            } else {
+                this.writeToPlainFile(this.i.iterator(), fw);
             }
-
-            printwriter.close();
         } catch (Exception exception) {
             a.warning("Failed to save white-list: " + exception);
         }
     }
 
+    // Poseidon - migrate txt entries to UUID list
+    private void migrateToUUID(Set<String> txtSet, UUIDPlayerList uuidList, String listName) {
+        a.info("[Poseidon] Migrating " + listName + " to UUID-based storage (" + txtSet.size() + " entries)...");
+        for (Object entry : txtSet) {
+            String name = (String) entry;
+            UUID uuid = UUIDManager.getInstance().getUUIDGraceful(name);
+            uuidList.add(uuid, name);
+        }
+        a.info("[Poseidon] Migration of " + listName + " complete.");
+    }
+
     public boolean isWhitelisted(String s) {
+        if (isUUIDListMode()) {
+            return isWhitelistedInternal(s, null);
+        }
         s = s.trim().toLowerCase();
         return !this.o || this.h.contains(s) || this.i.contains(s);
     }
 
+    // Poseidon - internal whitelist check supporting both name and UUID
+    private boolean isWhitelistedInternal(String name, UUID uuid) {
+        if (!this.o) return true;
+        String lowerName = name.trim().toLowerCase();
+        // Check ops and whitelist by name
+        if (opsByUUID.containsName(lowerName) || whitelistByUUID.containsName(lowerName)) return true;
+        // Check by UUID if provided
+        return uuid != null && (opsByUUID.containsUUID(uuid) || whitelistByUUID.containsUUID(uuid));
+    }
+
+    public boolean isWhitelistedByUUID(UUID uuid) {
+        if (!this.o) return true;
+        return opsByUUID.containsUUID(uuid) || whitelistByUUID.containsUUID(uuid);
+    }
+
     public boolean isOp(String s) {
+        if (isUUIDListMode()) {
+            return opsByUUID.containsName(s.trim().toLowerCase());
+        }
         return this.h.contains(s.trim().toLowerCase());
+    }
+
+    // Poseidon - check if banned by name (dispatches to UUID if enabled)
+    public boolean isBanned(String s) {
+        if (isUUIDListMode()) {
+            return bansByUUID.containsName(s.trim().toLowerCase());
+        }
+        return this.banByName.contains(s.trim().toLowerCase());
+    }
+
+    // Poseidon - check if banned by UUID
+    public boolean isBannedByUUID(UUID uuid) {
+        return bansByUUID.containsUUID(uuid);
     }
 
     public EntityPlayer i(String s) {
@@ -660,16 +874,39 @@ public class ServerConfigurationManager {
     }
 
     public void k(String s) {
-        this.i.add(s);
-        this.n();
+        this.addToWhitelist(s);
     }
 
+    public void addToWhitelist(String s) {
+        this.i.add(s);
+        // Poseidon - also add to UUID list
+        if (isUUIDListMode()) {
+            UUID uuid = UUIDManager.getInstance().getUUIDGraceful(s);
+            whitelistByUUID.add(uuid, s);
+            whitelistByUUID.saveToJson(whitelistJsonFile);
+        }
+        this.saveWhitelistToPlainFile();
+    }
+
+    // Whitelist - remove
     public void l(String s) {
         this.i.remove(s);
-        this.n();
+        // Poseidon - also remove from UUID list
+        if (isUUIDListMode()) {
+            whitelistByUUID.removeByName(s);
+            whitelistByUUID.saveToJson(whitelistJsonFile);
+        }
+        this.saveWhitelistToPlainFile();
     }
 
     public Set e() {
+        return this.getWhitelistedPlayers();
+    }
+
+    public Set getWhitelistedPlayers() {
+        if (isUUIDListMode()) {
+            return whitelistByUUID.getNames();
+        }
         return this.i;
     }
 
@@ -687,5 +924,18 @@ public class ServerConfigurationManager {
     public void updateClient(EntityPlayer entityplayer) {
         entityplayer.updateInventory(entityplayer.defaultContainer);
         entityplayer.C();
+    }
+
+    // Poseidon - UUID list getters for CraftServer
+    public UUIDPlayerList getBansByUUID() {
+        return bansByUUID;
+    }
+
+    public UUIDPlayerList getOpsByUUID() {
+        return opsByUUID;
+    }
+
+    public UUIDPlayerList getWhitelistByUUID() {
+        return whitelistByUUID;
     }
 }
