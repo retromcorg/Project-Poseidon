@@ -5,9 +5,9 @@ import java.util.List;
 
 public class PlayerManager {
 
-    public List managedPlayers = new ArrayList();
+    public List managedPlayers = new ArrayList<>();
     private PlayerList b = new PlayerList();
-    private List c = new ArrayList();
+    private List c = new ArrayList<>();
     private MinecraftServer server;
     private int e;
     private int f;

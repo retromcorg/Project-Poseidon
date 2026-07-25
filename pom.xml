@@ -27,11 +27,11 @@
         <!--            <id>chew-jenkins</id>-->
         <!--            <url>https://jenkins.chew.pw/plugin/repository/everything</url>-->
         <!--        </repository>-->
-        <repository>
+        <!-- <repository>
             <id>jline</id>
             <name>JLine Project Repository</name>
             <url>http://jline.sourceforge.net/m2repo</url>
-        </repository>
+        </repository> -->
         <!-- Repository for resolving release dependencies -->
         <repository>
             <id>johnymuffin-nexus-releases</id>
@@ -84,11 +84,13 @@
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
+
         <dependency>
             <groupId>net.sf.jopt-simple</groupId>
             <artifactId>jopt-simple</artifactId>
             <version>6.0-alpha-3</version>
         </dependency>
+
         <dependency>
             <groupId>jline</groupId>
             <artifactId>jline</artifactId>
@@ -96,6 +98,7 @@
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
+
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
@@ -103,6 +106,7 @@
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
+
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
@@ -119,7 +123,6 @@
             <systemPath>${project.basedir}/libs/ModLoaderMP.jar</systemPath>
         </dependency>
 
-
         <dependency>
             <groupId>org.avaje</groupId>
             <artifactId>ebean</artifactId>
@@ -127,6 +130,7 @@
             <type>jar</type>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
@@ -134,6 +138,7 @@
             <type>jar</type>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava-collections</artifactId>
@@ -141,6 +146,7 @@
             <type>jar</type>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
@@ -155,6 +161,7 @@
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
+
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
@@ -166,7 +173,6 @@
             <artifactId>gson</artifactId>
             <version>2.9.0</version>
         </dependency>
-
     </dependencies>
     <!-- This builds a completely 'ready to start' jar with all dependencies inside -->
     <build>
