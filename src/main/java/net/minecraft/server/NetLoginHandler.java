@@ -217,6 +217,18 @@ public class NetLoginHandler extends NetHandler {
         this.c = true;
     }
 
+    public void a(Packet254GetInfo packet254getinfo) {
+        try {
+            String response = this.server.messageOfTheDay + "\u00A7" + this.server.serverConfigurationManager.players.size() + "\u00A7" + this.server.serverConfigurationManager.maxPlayers;
+            this.networkManager.queue(new Packet255KickDisconnect(response));
+            this.networkManager.d();
+            this.server.networkListenThread.a(this.networkManager.getSocket());
+            this.c = true;
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+    }
+
     public void a(String s, Object[] aobject) {
         a.info(this.b() + " lost connection");
         this.c = true;

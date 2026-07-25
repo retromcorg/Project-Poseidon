@@ -241,6 +241,7 @@ public abstract class Packet {
         a(130, true, true, Packet130UpdateSign.class);
         a(131, true, false, Packet131.class);
         a(200, true, false, Packet200Statistic.class);
+        a(254, false, true, Packet254GetInfo.class);
         a(255, true, true, Packet255KickDisconnect.class);
         packetClassToIdMap.put(ArtificialPacket53BlockChange.class, 53); //Poseidon - Artificial Block Change Packet
         e = new HashMap();

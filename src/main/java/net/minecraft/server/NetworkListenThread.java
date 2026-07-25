@@ -3,7 +3,9 @@ package net.minecraft.server;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,6 +19,7 @@ public class NetworkListenThread {
     private ArrayList g = new ArrayList();
     private ArrayList h = new ArrayList();
     public MinecraftServer c;
+    private HashMap i = new HashMap();
 
     public NetworkListenThread(MinecraftServer minecraftserver, InetAddress inetaddress, int i) throws IOException {
         this.c = minecraftserver;
@@ -25,6 +28,14 @@ public class NetworkListenThread {
         this.b = true;
         this.e = new NetworkAcceptThread(this, "Listen thread", minecraftserver);
         this.e.start();
+    }
+
+    public void a(Socket socket) {
+        InetAddress inetaddress = socket.getInetAddress();
+        HashMap hashmap = this.i;
+        synchronized (this.i) {
+            this.i.remove(inetaddress);
+        }
     }
 
     public void a(NetServerHandler netserverhandler) {
