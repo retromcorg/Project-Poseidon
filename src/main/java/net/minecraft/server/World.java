@@ -1,5 +1,6 @@
 package net.minecraft.server;
 
+import com.legacyminecraft.poseidon.PoseidonConfig;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.BlockState;
@@ -1772,6 +1773,7 @@ public class World implements IBlockAccess {
                 --this.m;
             }
 
+            if (!PoseidonConfig.getInstance().getConfigBoolean("world.settings.disable-natural-weather-change.enabled", false)) {
             int i = this.worldData.getThunderDuration();
 
             if (i <= 0) {
@@ -1815,6 +1817,7 @@ public class World implements IBlockAccess {
                     }
                     // CraftBukkit end
                 }
+            }
             }
 
             this.i = this.j;
