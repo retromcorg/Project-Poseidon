@@ -1,0 +1,53 @@
+services:
+  poseidon:
+    image: eclipse-temurin:8-jre
+    container_name: poseidon-server
+    working_dir: /opt/poseidon/data
+    command: ["/bin/sh", "/opt/poseidon/scripts/run-poseidon.sh"]
+    ports:
+      - "25565:25565"
+      - "9464:9464"
+    volumes:
+      - ../target:/opt/poseidon/target:ro
+      - ./scripts:/opt/poseidon/scripts:ro
+      - ./poseidon-data:/opt/poseidon/data
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: poseidon-prometheus
+    depends_on:
+      - poseidon
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    extra_hosts:
+      host.docker.internal: host-gateway
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.2.2
+    container_name: poseidon-grafana
+    depends_on:
+      - prometheus
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    restart: unless-stopped
+
+volumes:
+  prometheus-data:
+  grafana-data:

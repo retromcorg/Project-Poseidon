@@ -90,6 +90,15 @@ mvn clean package
 
 You should now have a runnable JAR inside the /target folder!
 
+## Monitoring (Prometheus + Grafana)
+
+Project Poseidon includes a built-in Prometheus endpoint for Java 8 deployments.
+
+- Default endpoint: `http://<server-host>:9464/metrics`
+- Config keys (in `server.properties`): `prometheus.enabled`, `prometheus.host`, `prometheus.port`
+- Local Prometheus/Grafana stack: see [monitoring/README.md](monitoring/README.md)
+- Local smoke test: `./monitoring/scripts/smoke-test.sh`
+
 ## Regarding the DMCA of CraftBukkit in 2014
 The contributor Wolverness who first contributed on CraftBukkit in February 2012 issued a DMCA against CraftBukkit and other major forks of CraftBukkit.
 This project is based on the following commits:
