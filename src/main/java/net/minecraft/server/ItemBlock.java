@@ -82,22 +82,42 @@ public class ItemBlock extends Item {
             * Whenever the call to 'world.setTypeIdAndData' changes we need to figure out again what to
             * replace this with.
             */
-            if (world.setRawTypeIdAndData(i, j, k, this.id, this.filterData(itemstack.getData()))) { // <-- world.setTypeIdAndData does this to place the block
+
+            boolean placed;
+            // Ignore physic at first when the player try to place the block
+            world.suppressPhysics = true;
+            try {
+                placed = world.setRawTypeIdAndData(i, j, k, this.id, this.filterData(itemstack.getData())); // <-- world.setTypeIdAndData does this to place the block
+            } finally {
+                // Always set the physic back
+                world.suppressPhysics = false;
+            }
+            if (placed) {
                 BlockPlaceEvent event = CraftEventFactory.callBlockPlaceEvent(world, entityhuman, eventUseBlockBelow ? blockStateBelow : replacedBlockState, clickedX, clickedY, clickedZ, block);
 
                 if (event.isCancelled() || !event.canBuild()) {
                     if (blockStateBelow != null) { // Used for steps
-                        world.setTypeIdAndData(i, j, k, replacedBlockState.getTypeId(), replacedBlockState.getRawData());
-                        world.setTypeIdAndData(i, j - 1, k, blockStateBelow.getTypeId(), blockStateBelow.getRawData());
-
+                        world.setRawTypeIdAndData(i, j, k, replacedBlockState.getTypeId(), replacedBlockState.getRawData());
+                        world.setRawTypeIdAndData(i, j - 1, k, blockStateBelow.getTypeId(), blockStateBelow.getRawData());
+                        world.notify(i, j, k);
+                        world.notify(i, j - 1, k);
                     } else {
 
                         if (this.id == Block.ICE.id) {
                             // Ice will explode if we set straight to 0
-                            world.setTypeId(i, j, k, 20);
+                            world.setRawTypeId(i, j, k, 20);
                         }
 
-                        world.setTypeIdAndData(i, j, k, replacedBlockState.getTypeId(), replacedBlockState.getRawData());
+                        // Ignore physic at first when the player try to place the block
+                        world.suppressPhysics = true;
+                        try {
+                            world.setRawTypeIdAndData(i, j, k, replacedBlockState.getTypeId(), replacedBlockState.getRawData());
+                            world.notify(i, j, k);
+                        } finally {
+                            // Always set the physic back
+                            world.suppressPhysics = false;
+                        }
+
                     }
                     return true;
 

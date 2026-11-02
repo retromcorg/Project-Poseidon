@@ -64,13 +64,22 @@ public class ItemReed extends Item {
                  * Whenever the call to 'world.setTypeId' changes we need to figure out again what to
                  * replace this with.
                  */
-                if (world.setRawTypeId(i, j, k, this.id)) { // <-- world.e does this to place the block
+
+                boolean placed;
+                // Ignore physic at first when the player try to place the block
+                world.suppressPhysics = true;
+                try {
+                    placed = world.setRawTypeId(i, j, k, this.id); // <-- world.e does this to place the block
+                } finally {
+                    // Always set the physic back
+                    world.suppressPhysics = false;
+                }
+                if (placed) {
                     BlockPlaceEvent event = CraftEventFactory.callBlockPlaceEvent(world, entityhuman, replacedBlockState, clickedX, clickedY, clickedZ, block);
 
                     if (event.isCancelled() || !event.canBuild()) {
                         // CraftBukkit - undo; this only has reed, repeater and pie blocks
-                        world.setTypeIdAndData(i, j, k, replacedBlockState.getTypeId(), replacedBlockState.getRawData());
-
+                        event.getBlockPlaced().setTypeIdAndData(replacedBlockState.getTypeId(), replacedBlockState.getRawData(), false);
                         return true;
                     }
 

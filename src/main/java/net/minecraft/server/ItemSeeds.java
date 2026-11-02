@@ -24,15 +24,24 @@ public class ItemSeeds extends Item {
             if (i1 == Block.SOIL.id && world.isEmpty(i, j + 1, k)) {
                 CraftBlockState blockState = CraftBlockState.getBlockState(world, i, j + 1, k); // CraftBukkit
 
-                world.setTypeId(i, j + 1, k, this.id);
+                // Ignore physic at first when the player try to place the block
+                world.suppressPhysics = true;
+                try {
+                    world.setTypeId(i, j + 1, k, this.id);
+                } finally {
+                    // Always set the physic back
+                    world.suppressPhysics = false;
+                }
 
                 // CraftBukkit start - seeds
                 BlockPlaceEvent event = CraftEventFactory.callBlockPlaceEvent(world, entityhuman, blockState, i, j, k, this.id);
 
                 if (event.isCancelled() || !event.canBuild()) {
-                    event.getBlockPlaced().setTypeId(0);
+                    event.getBlockPlaced().setTypeIdAndData(0, blockState.getRawData(), false);
                     return false;
                 }
+
+                world.update(i, j, k, this.id); // Block update once placed
                 // CraftBukkit end
 
                 --itemstack.count;
