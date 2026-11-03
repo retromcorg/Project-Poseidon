@@ -114,10 +114,11 @@ public class BlockRedstoneWire extends Block {
         // CraftBukkit end
 
         if (k1 != l1) {
-            world.suppressPhysics = true;
-            world.setData(i, j, k, l1);
+            // world.suppressPhysics = true;
+            world.setRawData(i, j, k, l1); // SetRawData doesn't update blocks around, similar result to suppressPhysics
+            world.notify(i, j, k); // Notify players, SetRawData doesn't update blocks client side by default
             world.b(i, j, k, i, j, k);
-            world.suppressPhysics = false;
+            // World.suppressPhysics = false;
 
             for (i2 = 0; i2 < 4; ++i2) {
                 j2 = i;

@@ -85,6 +85,7 @@ public class ItemDoor extends Item {
 
                 if (event.isCancelled() || !event.canBuild()) {
                     event.getBlockPlaced().setTypeIdAndData(blockState.getTypeId(), blockState.getRawData(), false);
+                    world.notify(i, j + 1 ,k);
                     return false;
                 }
 
