@@ -437,4 +437,11 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
             nsh.sendPacket(packet);
         }
     }
+
+    @Override
+    public void openContainer(IInventory inventory) {
+        if (entity instanceof EntityHuman) {
+            ((EntityHuman)entity).a(inventory);
+        }
+    }
 }
