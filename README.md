@@ -1,4 +1,7 @@
-# Project-Poseidon
+# Project Poseidon V1
+
+> **Project Poseidon V1 is now in maintenance mode.** Future updates are expected to be limited to security fixes and critical bug fixes. We recommend migrating to [Project Poseidon V2](https://github.com/retromcorg/Project-Poseidon-V2) which is considered stable and has already been adopted by multiple servers. V2 includes all V1 functionality with updated dependencies, Java 25 support, and a cleaner, modern API that addresses V1's technical debt. Development and documentation are still in progress.
+
 ![](/img/banner.png)
 ## What's Project Poseidon?
 **A CraftBukkit CB1060 fork for Beta 1.7.3 fixing bugs and adding basic features.<br>**
