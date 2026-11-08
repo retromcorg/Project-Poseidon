@@ -316,6 +316,10 @@ public class NetworkManager {
         return this.lowPriorityQueue.size();
     }
 
+    public Socket getSocket() {
+        return this.socket;
+    }
+
     static boolean a(NetworkManager networkmanager) {
         return networkmanager.l;
     }
