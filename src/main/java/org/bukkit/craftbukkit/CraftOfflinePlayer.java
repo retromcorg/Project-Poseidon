@@ -39,7 +39,7 @@ public class CraftOfflinePlayer implements OfflinePlayer {
     }
 
     public boolean isBanned() {
-        return server.getHandle().banByName.contains(name.toLowerCase());
+        return server.getHandle().isBanned(name);
     }
 
     public void setBanned(boolean value) {
@@ -51,7 +51,7 @@ public class CraftOfflinePlayer implements OfflinePlayer {
     }
 
     public boolean isWhitelisted() {
-        return server.getHandle().e().contains(name.toLowerCase());
+        return server.getHandle().isWhitelisted(name);
     }
 
     public void setWhitelisted(boolean value) {
