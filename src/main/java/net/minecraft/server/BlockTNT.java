@@ -15,7 +15,8 @@ public class BlockTNT extends Block {
     public void c(World world, int i, int j, int k) {
         super.c(world, i, j, k);
         if (world.isBlockIndirectlyPowered(i, j, k)) {
-            // Set a timer (2 ticks) before exploding, so we can check PlaceEvent ect (similar system as sands and gravels)
+            // Set a timer (2 ticks) before exploding,
+            // so we can check PlaceEvent ect (similar system as sands and gravels)
             // Only apply if an TNT is placed near redstone signal
             world.c(i, j, k, this.id, 2);
         }

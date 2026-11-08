@@ -66,6 +66,8 @@ public class ItemSign extends Item {
                     event.getBlockPlaced().setTypeIdAndData(blockState.getTypeId(), blockState.getRawData(), false);
                     return false;
                 }
+
+                world.update(i, j, k, l == 1 ? Block.SIGN_POST.id : Block.WALL_SIGN.id); // Block update once placed
                 // CraftBukkit end
 
                 --itemstack.count;

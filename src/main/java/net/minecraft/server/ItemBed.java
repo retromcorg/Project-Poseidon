@@ -56,12 +56,12 @@ public class ItemBed extends Item {
                 BlockPlaceEvent event = CraftEventFactory.callBlockPlaceEvent(world, entityhuman, blockState, clickedX, clickedY, clickedZ, blockbed);
                 if (event.isCancelled() || !event.canBuild()) {
                     event.getBlockPlaced().setTypeIdAndData(blockState.getTypeId(), blockState.getRawData(), false);
-                    world.notify(i + b0, j, k + b1);
+                    world.notify(i + b0, j, k + b1); // Notify the client the bed head has been removed
                     return false;
                 }
 
                 world.setTypeIdAndData(i + b0, j, k + b1, blockbed.id, i1 + 8);
-                world.update(i, j, k, this.id); // Block update once placed
+                world.update(i, j, k, blockbed.id); // Block update once placed
                 // CraftBukkit end
 
                 --itemstack.count;

@@ -85,12 +85,12 @@ public class ItemDoor extends Item {
 
                 if (event.isCancelled() || !event.canBuild()) {
                     event.getBlockPlaced().setTypeIdAndData(blockState.getTypeId(), blockState.getRawData(), false);
-                    world.notify(i, j + 1 ,k);
+                    world.notify(i, j + 1 ,k); // Notify the client the door head has been removed
                     return false;
                 }
 
                 world.setTypeIdAndData(i, j + 1, k, block.id, i1 + 8);
-                world.update(i, j, k, this.id);
+                world.update(i, j, k, block.id); // Block update once placed
                 world.applyPhysics(i, j, k, block.id);
                 world.applyPhysics(i, j + 1, k, block.id);
                 // CraftBukkit end

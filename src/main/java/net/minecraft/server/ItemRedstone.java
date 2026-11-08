@@ -61,6 +61,7 @@ public class ItemRedstone extends Item {
             BlockPlaceEvent event = CraftEventFactory.callBlockPlaceEvent(world, entityhuman, blockState, clickedX, clickedY, clickedZ, Block.REDSTONE_WIRE);
 
             if (event.isCancelled() || !event.canBuild()) {
+                // Ignore physic at first when the player try to place the block
                 world.suppressPhysics = true;
                 try {
                     event.getBlockPlaced().setTypeIdAndData(blockState.getTypeId(), blockState.getRawData(), false);

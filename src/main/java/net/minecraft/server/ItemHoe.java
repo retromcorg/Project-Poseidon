@@ -47,7 +47,7 @@ public class ItemHoe extends Item {
                     return false;
                 }
 
-                world.update(i, j, k, this.id); // Block update once placed
+                world.update(i, j, k, Block.SOIL.id); // Block update once placed
                 // CraftBukkit end
 
                 itemstack.damage(1, entityhuman);

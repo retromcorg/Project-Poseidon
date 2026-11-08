@@ -62,6 +62,7 @@ public class ItemFlintAndSteel extends Item {
             // CraftBukkit end
 
             world.makeSound((double) i + 0.5D, (double) j + 0.5D, (double) k + 0.5D, "fire.ignite", 1.0F, b.nextFloat() * 0.4F + 0.8F);
+
             // Ignore physic at first when the player try to place the block
             world.suppressPhysics = true;
             try {
@@ -79,7 +80,7 @@ public class ItemFlintAndSteel extends Item {
                 return false;
             }
 
-            world.update(i, j, k, this.id);
+            world.update(i, j, k, Block.FIRE.id); // Block update once placed
             // CraftBukkit end
         }
 
