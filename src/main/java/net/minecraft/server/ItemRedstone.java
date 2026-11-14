@@ -73,12 +73,14 @@ public class ItemRedstone extends Item {
                 return false;
             }
 
-            world.update(i, j, k, Block.REDSTONE_WIRE.id); // Must take place after BlockPlaceEvent, we need to update all other blocks.
+            // world.update() only updates the 6 orthogonal neighbours, so it misses the diagonal redstone dust...
+            Block.REDSTONE_WIRE.c(world, i, j, k); // Must take place after BlockPlaceEvent, we need to update all other blocks.
+            world.notify(i, j, k); // c() doesn't notify the placed block itself
             // CraftBukkit end
 
             --itemstack.count; // CraftBukkit - ORDER MATTERS
         }
 
         return true;
-    }
+    }comm
 }
