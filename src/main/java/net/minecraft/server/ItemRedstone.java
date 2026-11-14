@@ -82,5 +82,5 @@ public class ItemRedstone extends Item {
         }
 
         return true;
-    }comm
+    }
 }
