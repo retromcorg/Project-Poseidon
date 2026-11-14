@@ -48,17 +48,34 @@ public class ItemRedstone extends Item {
         if (Block.REDSTONE_WIRE.canPlace(world, i, j, k)) {
             CraftBlockState blockState = CraftBlockState.getBlockState(world, i, j, k); // CraftBukkit
 
-            world.setRawTypeId(i, j, k, Block.REDSTONE_WIRE.id); // CraftBukkit - We update after the event
+            // Ignore physic at first when the player try to place the block
+            world.suppressPhysics = true;
+            try {
+                world.setRawTypeId(i, j, k, Block.REDSTONE_WIRE.id); // CraftBukkit - We update after the event
+            } finally {
+                // Always set the physic backgit remote -v
+                world.suppressPhysics = false;
+            }
 
             // CraftBukkit start - redstone
             BlockPlaceEvent event = CraftEventFactory.callBlockPlaceEvent(world, entityhuman, blockState, clickedX, clickedY, clickedZ, Block.REDSTONE_WIRE);
 
             if (event.isCancelled() || !event.canBuild()) {
-                event.getBlockPlaced().setTypeIdAndData(blockState.getTypeId(), blockState.getRawData(), false);
+                // Ignore physic at first when the player try to place the block
+                world.suppressPhysics = true;
+                try {
+                    event.getBlockPlaced().setTypeIdAndData(blockState.getTypeId(), blockState.getRawData(), false);
+                } finally {
+                    // Always set the physic back
+                    world.suppressPhysics = false;
+                }
+
                 return false;
             }
 
-            world.update( i, j, k, Block.REDSTONE_WIRE.id); // Must take place after BlockPlaceEvent, we need to update all other blocks.
+            // world.update() only updates the 6 orthogonal neighbours, so it misses the diagonal redstone dust...
+            Block.REDSTONE_WIRE.c(world, i, j, k); // Must take place after BlockPlaceEvent, we need to update all other blocks.
+            world.notify(i, j, k); // c() doesn't notify the placed block itself
             // CraftBukkit end
 
             --itemstack.count; // CraftBukkit - ORDER MATTERS

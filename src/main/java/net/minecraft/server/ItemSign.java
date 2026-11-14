@@ -46,10 +46,17 @@ public class ItemSign extends Item {
             } else {
                 CraftBlockState blockState = CraftBlockState.getBlockState(world, i, j, k); // CraftBukkit
 
-                if (l == 1) {
-                    world.setTypeIdAndData(i, j, k, Block.SIGN_POST.id, MathHelper.floor((double) ((entityhuman.yaw + 180.0F) * 16.0F / 360.0F) + 0.5D) & 15);
-                } else {
-                    world.setTypeIdAndData(i, j, k, Block.WALL_SIGN.id, l);
+                // Ignore physic at first when the player try to place the block
+                world.suppressPhysics = true;
+                try {
+                    if (l == 1) {
+                        world.setTypeIdAndData(i, j, k, Block.SIGN_POST.id, MathHelper.floor((double) ((entityhuman.yaw + 180.0F) * 16.0F / 360.0F) + 0.5D) & 15);
+                    } else {
+                        world.setTypeIdAndData(i, j, k, Block.WALL_SIGN.id, l);
+                    }
+                } finally {
+                    // Always set the physic back
+                    world.suppressPhysics = false;
                 }
 
                 // CraftBukkit start - sign
@@ -59,6 +66,8 @@ public class ItemSign extends Item {
                     event.getBlockPlaced().setTypeIdAndData(blockState.getTypeId(), blockState.getRawData(), false);
                     return false;
                 }
+
+                world.update(i, j, k, l == 1 ? Block.SIGN_POST.id : Block.WALL_SIGN.id); // Block update once placed
                 // CraftBukkit end
 
                 --itemstack.count;

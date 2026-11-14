@@ -43,18 +43,27 @@ public class ItemBed extends Item {
             if (world.isEmpty(i, j, k) && world.isEmpty(i + b0, j, k + b1) && world.e(i, j - 1, k) && world.e(i + b0, j - 1, k + b1)) {
                 CraftBlockState blockState = CraftBlockState.getBlockState(world, i, j, k); // CraftBukkit
 
-                world.setTypeIdAndData(i, j, k, blockbed.id, i1);
+                // Ignore physic at first when the player try to place the block
+                world.suppressPhysics = true;
+                try {
+                    world.setTypeIdAndData(i, j, k, blockbed.id, i1);
+                } finally {
+                    // Always set the physic back
+                    world.suppressPhysics = false;
+                }
 
                 // CraftBukkit start - bed
                 BlockPlaceEvent event = CraftEventFactory.callBlockPlaceEvent(world, entityhuman, blockState, clickedX, clickedY, clickedZ, blockbed);
-
                 if (event.isCancelled() || !event.canBuild()) {
                     event.getBlockPlaced().setTypeIdAndData(blockState.getTypeId(), blockState.getRawData(), false);
+                    world.notify(i + b0, j, k + b1); // Notify the client the bed head has been removed
                     return false;
                 }
-                // CraftBukkit end
 
                 world.setTypeIdAndData(i + b0, j, k + b1, blockbed.id, i1 + 8);
+                world.update(i, j, k, blockbed.id); // Block update once placed
+                // CraftBukkit end
+
                 --itemstack.count;
                 return true;
             } else {

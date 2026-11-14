@@ -70,22 +70,31 @@ public class ItemDoor extends Item {
                 }
 
                 CraftBlockState blockState = CraftBlockState.getBlockState(world, i, j, k); // CraftBukkit
+
+                // Ignore physic at first when the player try to place the block
                 world.suppressPhysics = true;
-                world.setTypeIdAndData(i, j, k, block.id, i1);
+                try {
+                    world.setTypeIdAndData(i, j, k, block.id, i1);
+                } finally {
+                    // Always set the physic back
+                    world.suppressPhysics = false;
+                }
 
                 // CraftBukkit start
                 BlockPlaceEvent event = CraftEventFactory.callBlockPlaceEvent(world, entityhuman, blockState, i, j, k, block);
 
                 if (event.isCancelled() || !event.canBuild()) {
                     event.getBlockPlaced().setTypeIdAndData(blockState.getTypeId(), blockState.getRawData(), false);
+                    world.notify(i, j + 1 ,k); // Notify the client the door head has been removed
                     return false;
                 }
-                // CraftBukkit end
 
                 world.setTypeIdAndData(i, j + 1, k, block.id, i1 + 8);
-                world.suppressPhysics = false;
+                world.update(i, j, k, block.id); // Block update once placed
                 world.applyPhysics(i, j, k, block.id);
                 world.applyPhysics(i, j + 1, k, block.id);
+                // CraftBukkit end
+
                 --itemstack.count;
                 return true;
             }

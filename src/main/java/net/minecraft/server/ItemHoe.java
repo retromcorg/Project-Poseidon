@@ -29,15 +29,25 @@ public class ItemHoe extends Item {
             } else {
                 CraftBlockState blockState = CraftBlockState.getBlockState(world, i, j, k); // CraftBukkit
 
-                world.setTypeId(i, j, k, block.id);
+
+                // Ignore physic at first when the player try to place the block
+                world.suppressPhysics = true;
+                try {
+                    world.setTypeId(i, j, k, block.id);;
+                } finally {
+                    // Always set the physic back
+                    world.suppressPhysics = false;
+                }
 
                 // CraftBukkit start - Hoes - blockface -1 for 'SELF'
                 BlockPlaceEvent event = CraftEventFactory.callBlockPlaceEvent(world, entityhuman, blockState, i, j, k, block);
 
                 if (event.isCancelled() || !event.canBuild()) {
-                    event.getBlockPlaced().setTypeId(blockState.getTypeId());
+                    event.getBlockPlaced().setTypeIdAndData(blockState.getTypeId(), blockState.getRawData(), false);
                     return false;
                 }
+
+                world.update(i, j, k, Block.SOIL.id); // Block update once placed
                 // CraftBukkit end
 
                 itemstack.damage(1, entityhuman);

@@ -62,7 +62,15 @@ public class ItemFlintAndSteel extends Item {
             // CraftBukkit end
 
             world.makeSound((double) i + 0.5D, (double) j + 0.5D, (double) k + 0.5D, "fire.ignite", 1.0F, b.nextFloat() * 0.4F + 0.8F);
-            world.setTypeId(i, j, k, Block.FIRE.id);
+
+            // Ignore physic at first when the player try to place the block
+            world.suppressPhysics = true;
+            try {
+                world.setTypeId(i, j, k, Block.FIRE.id);
+            } finally {
+                // Always set the physic back
+                world.suppressPhysics = false;
+            }
 
             // CraftBukkit start
             BlockPlaceEvent placeEvent = CraftEventFactory.callBlockPlaceEvent(world, entityhuman, blockState, clickedX, clickedY, clickedZ, Block.FIRE.id);
@@ -71,6 +79,8 @@ public class ItemFlintAndSteel extends Item {
                 placeEvent.getBlockPlaced().setTypeIdAndData(0, (byte) 0, false);
                 return false;
             }
+
+            world.update(i, j, k, Block.FIRE.id); // Block update once placed
             // CraftBukkit end
         }
 

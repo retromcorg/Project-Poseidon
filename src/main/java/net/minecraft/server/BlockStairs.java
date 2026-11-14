@@ -1,5 +1,7 @@
 package net.minecraft.server;
 
+import com.legacyminecraft.poseidon.PoseidonConfig;
+
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -21,6 +23,9 @@ public class BlockStairs extends Block {
     }
 
     public AxisAlignedBB e(World world, int i, int j, int k) {
+        if (PoseidonConfig.getInstance().getConfigBoolean("world.settings.stair-placement-fix.enabled", true)) { // Poseidon
+            return AxisAlignedBB.b(i, j, k, i + 1.0D, j + 0.5D, k + 1.0D); // Placement collision box (1 x 0.5 x 1)
+        }
         return super.e(world, i, j, k);
     }
 
